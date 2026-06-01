@@ -1,0 +1,188 @@
+# \# 🧠 AI Personality Profile Generator
+
+# 
+
+# > \*"Don't just use AI — become its architect."\*
+
+# 
+
+# \---
+
+# 
+
+# \## 📋 Prompt Template
+
+# 
+
+# Based on:
+
+# 
+
+# \- how I use AI
+
+# \- the prompts I ask
+
+# \- my work, goals, mindset, and personality
+
+# \- my strengths, weaknesses, curiosity, and communication style
+
+# 
+
+# \---
+
+# 
+
+# \## 🎯 Objective
+
+# 
+
+# Create a \*\*deeply personalized\*\* "AI Personality Profile" for me.
+
+# 
+
+# Make it:
+
+# 
+
+# \- ✅ Accurate
+
+# \- ✅ Modern
+
+# \- ✅ Cinematic
+
+# \- ✅ Internet-native
+
+# \- ✅ Realistic but fun
+
+# 
+
+# \---
+
+# 
+
+# \## 📦 Output Requirements
+
+# 
+
+# \### 1️⃣ My AI Working Style
+
+# 
+
+# \### 2️⃣ My Strengths \& Weaknesses
+
+# 
+
+# \### 3️⃣ What Type of AI User I Am
+
+# 
+
+# \### 4️⃣ Best Future Career Paths for Me
+
+# 
+
+# \### 5️⃣ My Learning \& Decision-Making Style
+
+# 
+
+# \### 6️⃣ What Makes Me Different From Most AI Users
+
+# 
+
+# \### 7️⃣ What I Need to Improve to Become Elite With AI
+
+# 
+
+# \### 8️⃣ A Fun AI Title for Me
+
+# 
+
+# \### 9️⃣ A Short Cinematic AI Character Description
+
+# 
+
+# \---
+
+# 
+
+# \## 🎨 Image Generation Request
+
+# 
+
+# Then, generate a \*\*hyper-realistic cinematic AI portrait\*\* of me based on everything above.
+
+# 
+
+# \### Image Specifications
+
+# 
+
+# | Element | Requirement |
+
+# |---------|-------------|
+
+# | \*\*Vibe\*\* | Startup founder / AI engineer energy |
+
+# | \*\*Setting\*\* | Futuristic workspace with AI screens |
+
+# | \*\*Action\*\* | Coding + research vibe |
+
+# | \*\*Lighting\*\* | Dark, cinematic |
+
+# | \*\*Aesthetic\*\* | Modern Gen-Z builder aesthetic |
+
+# | \*\*Details\*\* | Realistic with subtle cyberpunk accents |
+
+# 
+
+# \---
+
+# 
+
+# \## ⚠️ Important Instructions
+
+# 
+
+# > \*\*Don't just write the image prompt\*\* — generate the actual image directly in chat.
+
+# 
+
+# Make it:
+
+# \- 🎬 Professional
+
+# \- 🚀 Futuristic
+
+# \- 🎥 Cinematic
+
+# \- 📊 LinkedIn-shareable
+
+# 
+
+# \---
+
+# 
+
+# \## 📤 Output Format
+
+# 
+
+# In the output, use the generated image and describe:
+
+# \- How it came out
+
+# \- What works well
+
+# \- What could be improved
+
+# 
+
+# \---
+
+# 
+
+# \## 🏁 Ready?
+
+# 
+
+# \*\*Execute the prompt.\*\* Let's see what AI sees in me. 🔥
+
