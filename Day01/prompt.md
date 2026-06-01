@@ -1,188 +1,88 @@
-# \# 🧠 AI Personality Profile Generator
+# AI Personality Profile Generator
 
-# 
+> *"Don't just use AI — become its architect."*
 
-# > \*"Don't just use AI — become its architect."\*
+---
 
-# 
+## Prompt Template
 
-# \---
+Based on:
 
-# 
+- How I use AI
+- The prompts I ask
+- My work, goals, mindset, and personality
+- My strengths, weaknesses, curiosity, and communication style
 
-# \## 📋 Prompt Template
+---
 
-# 
+## Objective
 
-# Based on:
+Create a **deeply personalized** "AI Personality Profile" for me.
 
-# 
+Make it:
 
-# \- how I use AI
+- Accurate
+- Modern
+- Cinematic
+- Internet-native
+- Realistic but fun
 
-# \- the prompts I ask
+---
 
-# \- my work, goals, mindset, and personality
+## Output Requirements
 
-# \- my strengths, weaknesses, curiosity, and communication style
+1. **My AI Working Style**
+2. **My Strengths & Weaknesses**
+3. **What Type of AI User I Am**
+4. **Best Future Career Paths for Me**
+5. **My Learning & Decision-Making Style**
+6. **What Makes Me Different From Most AI Users**
+7. **What I Need to Improve to Become Elite With AI**
+8. **A Fun AI Title for Me**
+9. **A Short Cinematic AI Character Description**
 
-# 
+---
 
-# \---
+## Image Generation Request
 
-# 
+Then, generate a **hyper-realistic cinematic AI portrait** of me based on everything above.
 
-# \## 🎯 Objective
+### Image Specifications
 
-# 
+| Element | Requirement |
+|---------|-------------|
+| **Vibe** | Startup founder / AI engineer energy |
+| **Setting** | Futuristic workspace with AI screens |
+| **Action** | Coding + research vibe |
+| **Lighting** | Dark, cinematic |
+| **Aesthetic** | Modern Gen-Z builder aesthetic |
+| **Details** | Realistic with subtle cyberpunk accents |
 
-# Create a \*\*deeply personalized\*\* "AI Personality Profile" for me.
+---
 
-# 
+## Important Instructions
 
-# Make it:
+> **Don't just write the image prompt** — generate the actual image directly in chat.
 
-# 
+Make it:
 
-# \- ✅ Accurate
+- Professional
+- Futuristic
+- Cinematic
+- LinkedIn-shareable
 
-# \- ✅ Modern
+---
 
-# \- ✅ Cinematic
+## Output Format
 
-# \- ✅ Internet-native
+In the output, use the generated image and describe:
 
-# \- ✅ Realistic but fun
+- How it came out
+- What works well
+- What could be improved
 
-# 
+---
 
-# \---
+## Ready?
 
-# 
-
-# \## 📦 Output Requirements
-
-# 
-
-# \### 1️⃣ My AI Working Style
-
-# 
-
-# \### 2️⃣ My Strengths \& Weaknesses
-
-# 
-
-# \### 3️⃣ What Type of AI User I Am
-
-# 
-
-# \### 4️⃣ Best Future Career Paths for Me
-
-# 
-
-# \### 5️⃣ My Learning \& Decision-Making Style
-
-# 
-
-# \### 6️⃣ What Makes Me Different From Most AI Users
-
-# 
-
-# \### 7️⃣ What I Need to Improve to Become Elite With AI
-
-# 
-
-# \### 8️⃣ A Fun AI Title for Me
-
-# 
-
-# \### 9️⃣ A Short Cinematic AI Character Description
-
-# 
-
-# \---
-
-# 
-
-# \## 🎨 Image Generation Request
-
-# 
-
-# Then, generate a \*\*hyper-realistic cinematic AI portrait\*\* of me based on everything above.
-
-# 
-
-# \### Image Specifications
-
-# 
-
-# | Element | Requirement |
-
-# |---------|-------------|
-
-# | \*\*Vibe\*\* | Startup founder / AI engineer energy |
-
-# | \*\*Setting\*\* | Futuristic workspace with AI screens |
-
-# | \*\*Action\*\* | Coding + research vibe |
-
-# | \*\*Lighting\*\* | Dark, cinematic |
-
-# | \*\*Aesthetic\*\* | Modern Gen-Z builder aesthetic |
-
-# | \*\*Details\*\* | Realistic with subtle cyberpunk accents |
-
-# 
-
-# \---
-
-# 
-
-# \## ⚠️ Important Instructions
-
-# 
-
-# > \*\*Don't just write the image prompt\*\* — generate the actual image directly in chat.
-
-# 
-
-# Make it:
-
-# \- 🎬 Professional
-
-# \- 🚀 Futuristic
-
-# \- 🎥 Cinematic
-
-# \- 📊 LinkedIn-shareable
-
-# 
-
-# \---
-
-# 
-
-# \## 📤 Output Format
-
-# 
-
-# In the output, use the generated image and describe:
-
-# \- How it came out
-
-# \- What works well
-
-# \- What could be improved
-
-# 
-
-# \---
-
-# 
-
-# \## 🏁 Ready?
-
-# 
-
-# \*\*Execute the prompt.\*\* Let's see what AI sees in me. 🔥
-
+**Execute the prompt.** Let's see what AI sees in me.

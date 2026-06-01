@@ -1,122 +1,68 @@
-# \# 📝 Day 1 Notes - AI Personality Profile
+# Day 1 Notes - AI Personality Profile
 
-# 
+> *"The first step to mastering AI is understanding how it sees you."*
 
-# > \*"The first step to mastering AI is understanding how it sees you."\*
+---
 
-# 
+## Date
 
-# \---
+Day 1 of #ABTalks-60-Day-Claude-Challenge
 
-# 
+---
 
-# \## 🗓️ Date
+## What I Did Today
 
-# 
+### Step 1: The Prompt
 
-# Day 1 of #ABTalks-60-Day-Claude-Challenge
+Used the custom `prompt.md` template in **Claude** to generate my AI Personality Profile.
 
-# 
+### Step 2: The Output
 
-# \---
+Claude generated a cinematic poster with:
 
-# 
+- Dark cyberpunk aesthetic
+- Futuristic coding workspace vibe
+- My AI working style & strengths
+- LinkedIn-shareable quality
 
-# \## 🎯 What I Did Today
+**But there was one problem...**
 
-# 
+### Step 3: The Problem
 
-# \### Step 1: The Prompt
+The poster had a **generic AI-generated face** — not me.
 
-# Used the custom `prompt.md` template in \*\*Claude\*\* to generate my AI Personality Profile.
+### Step 4: The Fix
 
-# 
+Used a **face-swapper tool** to replace the generic face with **my actual photo**.
 
-# \### Step 2: The Output
+### Step 5: The Result
 
-# Claude generated a cinematic poster with:
+Final output = Cinematic AI poster + MY face
 
-# \- 🔥 Dark cyberpunk aesthetic
+---
 
-# \- 💻 Futuristic coding workspace vibe
+## Key Takeaway
 
-# \- 🧠 My AI working style \& strengths
+> AI can generate 90% of the magic. The last 10% (your face, your identity) — that's on YOU.
 
-# \- 🎬 LinkedIn-shareable quality
+---
 
-# 
+## Files Created Today
 
-# \*\*But there was one problem...\*\* ❌
+| File | Purpose |
+|------|---------|
+| `prompt.md` | The prompt template used in Claude |
+| `output.md` | Description of final result |
+| `Screenshot/` | Final face-swapped poster |
 
-# 
+---
 
-# \### Step 3: The Problem
+## Workflow Summary
 
-# The poster had a \*\*generic AI-generated face\*\* — not me.
-
-# 
-
-# \### Step 4: The Fix
-
-# Used a \*\*face-swapper tool\*\* to replace the generic face with \*\*my actual photo\*\*.
-
-# 
-
-# \### Step 5: The Result
-
-# ✅ Final output = Cinematic AI poster + MY face
-
-# 
-
-# \---
-
-# 
-
-# \## 🧠 Key Takeaway
-
-# 
-
-# > AI can generate 90% of the magic. The last 10% (your face, your identity) — that's on YOU.
-
-# 
-
-# \---
-
-# 
-
-# \## 📂 Files Created Today
-
-# 
-
-# | File | Purpose |
-
-# |------|---------|
-
-# | `prompt.md` | The prompt template used in Claude |
-
-# | `output.md` | Description of final result |
-
-# | `Screenshot/` | Final face-swapped poster |
-
-# 
-
-# \---
-
-# 
-
-# \## 🔄 Workflow Summary
-
-# 
-
-# ```mermaid
-
-# flowchart LR
-
-# &#x20;   A\[Prompt Template] --> B\[Claude AI]
-
-# &#x20;   B --> C\[Generic Poster]
-
-# &#x20;   C --> D\[Face Swapper]
-
-# &#x20;   D --> E\[🔥 Final Poster with MY Face]
-
+```mermaid
+flowchart LR
+    A[Prompt Template] --> B[Claude AI]
+    B --> C[Generic Poster]
+    C --> D[Face Swapper]
+    D --> E[Final Poster with MY Face]
+```
