@@ -173,6 +173,7 @@ On Day 2, I saw that structure in the prompt produces structure in the output. O
 
 | Prompt With Context | Prompt Without Context |
 |---|---|
+| ![Title - Prompt With Context](Screenshots/With Context/Title_PWC.png) | ![Title - Prompt Without Context](Screenshots/Without Context/Title_P-NC.png) |
 | ![Prompt with Context](Screenshots/With Context/PromptWithContext.png) | ![Prompt without Context](Screenshots/Without Context/PromptWithoutContext.png) |
 | ![Week 1 - Data Foundations and Python Refresh](Screenshots/With Context/Week1pwc.png) | ![Week 1 - Python Power-Up](Screenshots/Without Context/Week1p-nc.png) |
 | ![Week 2 - Machine Learning Essentials](Screenshots/With Context/Week2pwc.png) | ![Week 2 - AI and Automation](Screenshots/Without Context/Week2p-nc.png) |
