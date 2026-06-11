@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 11 — ATS Resume Optimizer | Devpal Singh Anand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+        .gradient-text { background: linear-gradient(135deg, #10B981, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-text-red { background: linear-gradient(135deg, #EF4444, #F97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-text-orange { background: linear-gradient(135deg, #FB923C, #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glass { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); backdrop-filter: blur(16px); }
+
+        /* Score Rings */
+        .score-ring-before { width: 180px; height: 180px; border-radius: 50%; background: conic-gradient(#EF4444 0% 38%, rgba(255,255,255,0.05) 38% 100%); display: flex; align-items: center; justify-content: center; }
+        .score-ring-after { width: 180px; height: 180px; border-radius: 50%; background: conic-gradient(#10B981 0% 92%, rgba(255,255,255,0.05) 92% 100%); display: flex; align-items: center; justify-content: center; }
+        .score-ring-inner { width: 140px; height: 140px; border-radius: 50%; background: #0f172a; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+
+        .section-divider { height: 1px; background: linear-gradient(90deg, transparent, #10B981, #06B6D4, transparent); }
+        .tag-match { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .tag-missing { background: rgba(251, 146, 60, 0.15); color: #FB923C; border: 1px solid rgba(251, 146, 60, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .tag-critical { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .bar-fill { height: 8px; border-radius: 4px; transition: width 1s ease; }
+        .before-text { color: #94A3B8; text-decoration: line-through; }
+        .after-text { color: #10B981; font-weight: 600; }
+
+        /* Improvement arrow */
+        .improvement-badge { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2)); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 16px; border-radius: 9999px; font-size: 0.875rem; font-weight: 700; color: #34D399; display: inline-flex; align-items: center; gap: 6px; }
+
+        /* Animated score counter */
+        @keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .score-animate { animation: countUp 0.8s ease-out forwards; }
+
+        /* Pulse for the +54 badge */
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); } 50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); } }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto px-6 py-12">
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <p class="text-emerald-400 font-medium text-sm tracking-widest uppercase mb-2">Day 11 — ABTalks 60-Day Claude AI Challenge</p>
+            <h1 class="text-4xl sm:text-5xl font-black mb-4">ATS Resume <span class="gradient-text">Optimizer</span></h1>
+            <p class="text-gray-400 max-w-2xl mx-auto">Analyzed and optimized my resume for Data Analyst roles using AI-powered ATS analysis. Target: Entry-level Data Analyst positions at TCS, Wipro, Infosys (India).</p>
+        </div>
+
+        <!-- Before vs After Score -->
+        <div class="grid md:grid-cols-3 gap-6 mb-10">
+
+            <!-- BEFORE Score -->
+            <div class="glass rounded-2xl p-8 flex flex-col items-center justify-center">
+                <p class="text-red-400 text-sm font-medium mb-4 uppercase tracking-wider">Before Optimization</p>
+                <div class="score-ring-before mb-4">
+                    <div class="score-ring-inner">
+                        <span class="text-5xl font-black gradient-text-red">38</span>
+                        <span class="text-gray-400 text-sm">out of 100</span>
+                    </div>
+                </div>
+                <p class="text-red-400 font-semibold text-sm"><i class="fas fa-arrow-down mr-1"></i>Auto-reject territory</p>
+                <p class="text-gray-500 text-xs mt-1">"Cybersecurity Analyst" resume vs Data Analyst JD</p>
+            </div>
+
+            <!-- Improvement Badge -->
+            <div class="glass rounded-2xl p-8 flex flex-col items-center justify-center">
+                <p class="text-gray-400 text-sm font-medium mb-4 uppercase tracking-wider">Improvement</p>
+                <div class="improvement-badge pulse-glow mb-4" style="font-size: 2.5rem; padding: 16px 28px;">
+                    <i class="fas fa-arrow-up"></i> +54
+                </div>
+                <p class="text-emerald-400 font-bold text-lg mb-1">54-Point Jump</p>
+                <p class="text-gray-500 text-xs text-center">Same person. Same skills. Same experience. Just presented differently.</p>
+                <div class="mt-4 w-full space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Keyword Match</span>
+                        <span class="text-emerald-400">+53</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Skills Alignment</span>
+                        <span class="text-emerald-400">+52</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Experience Relevance</span>
+                        <span class="text-emerald-400">+46</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Education Match</span>
+                        <span class="text-emerald-400">+7</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Formatting</span>
+                        <span class="text-emerald-400">+55</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AFTER Score -->
+            <div class="glass rounded-2xl p-8 flex flex-col items-center justify-center">
+                <p class="text-emerald-400 text-sm font-medium mb-4 uppercase tracking-wider">After Optimization</p>
+                <div class="score-ring-after mb-4">
+                    <div class="score-ring-inner">
+                        <span class="text-5xl font-black gradient-text">92</span>
+                        <span class="text-gray-400 text-sm">out of 100</span>
+                    </div>
+                </div>
+                <p class="text-emerald-400 font-semibold text-sm"><i class="fas fa-check-circle mr-1"></i>Shortlist-ready</p>
+                <p class="text-gray-500 text-xs mt-1">"Data Analyst" resume aligned to JD keywords</p>
+            </div>
+        </div>
+
+        <!-- Category Breakdown: Before vs After -->
+        <div class="mb-12">
+            <div class="text-center mb-8">
+                <p class="text-emerald-400 font-medium text-sm tracking-widest uppercase mb-2">Detailed Comparison</p>
+                <h2 class="text-3xl font-bold">Score <span class="gradient-text">Breakdown</span></h2>
+            </div>
+            <div class="glass rounded-2xl p-6">
+                <div class="space-y-6">
+                    <!-- Keyword Match -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-300 font-medium">Keyword Match</span>
+                            <span><span class="text-red-400 font-semibold">35%</span> <i class="fas fa-arrow-right text-emerald-400 mx-2"></i> <span class="text-emerald-400 font-semibold">88%</span> <span class="text-emerald-400 text-xs ml-1">(+53)</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" style="width: 35%"></div>
+                            </div>
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <p class="flex-1 text-gray-500 text-xs">Before: Only 11 of 22 JD keywords; cybersecurity terms dominating</p>
+                            <p class="flex-1 text-gray-500 text-xs">After: 19 of 22 keywords; ETL, EDA, Data Warehousing, Tableau added</p>
+                        </div>
+                    </div>
+
+                    <!-- Skills Alignment -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-300 font-medium">Skills Alignment</span>
+                            <span><span class="text-red-400 font-semibold">38%</span> <i class="fas fa-arrow-right text-emerald-400 mx-2"></i> <span class="text-emerald-400 font-semibold">90%</span> <span class="text-emerald-400 text-xs ml-1">(+52)</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" style="width: 38%"></div>
+                            </div>
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <p class="flex-1 text-gray-500 text-xs">Before: Data skills buried under cybersecurity; flat tag list</p>
+                            <p class="flex-1 text-gray-500 text-xs">After: Categorized by function; data-first positioning</p>
+                        </div>
+                    </div>
+
+                    <!-- Experience Relevance -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-300 font-medium">Experience Relevance</span>
+                            <span><span class="text-orange-400 font-semibold">42%</span> <i class="fas fa-arrow-right text-emerald-400 mx-2"></i> <span class="text-emerald-400 font-semibold">88%</span> <span class="text-emerald-400 text-xs ml-1">(+46)</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full" style="width: 42%"></div>
+                            </div>
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <p class="flex-1 text-gray-500 text-xs">Before: Data intern relevant but vague; GSD not data-related</p>
+                            <p class="flex-1 text-gray-500 text-xs">After: All experience reframed with data analysis language</p>
+                        </div>
+                    </div>
+
+                    <!-- Education Match -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-300 font-medium">Education Match</span>
+                            <span><span class="text-emerald-400 font-semibold">85%</span> <i class="fas fa-arrow-right text-emerald-400 mx-2"></i> <span class="text-emerald-400 font-semibold">92%</span> <span class="text-emerald-400 text-xs ml-1">(+7)</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 85%"></div>
+                            </div>
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <p class="flex-1 text-gray-500 text-xs">Before: MCA + BCA with excellent CGPAs — already strong</p>
+                            <p class="flex-1 text-gray-500 text-xs">After: Master's degree highlighted; relevant coursework added</p>
+                        </div>
+                    </div>
+
+                    <!-- Formatting -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-300 font-medium">Formatting</span>
+                            <span><span class="text-red-400 font-semibold">40%</span> <i class="fas fa-arrow-right text-emerald-400 mx-2"></i> <span class="text-emerald-400 font-semibold">95%</span> <span class="text-emerald-400 text-xs ml-1">(+55)</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" style="width: 40%"></div>
+                            </div>
+                            <div class="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <p class="flex-1 text-gray-500 text-xs">Before: Wrong framing; skills not categorized for ATS</p>
+                            <p class="flex-1 text-gray-500 text-xs">After: ATS-optimized headers, categorized skills, clean parsing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gap Analysis -->
+        <div class="mb-12">
+            <div class="text-center mb-8">
+                <p class="text-emerald-400 font-medium text-sm tracking-widest uppercase mb-2">What's Missing</p>
+                <h2 class="text-3xl font-bold">Gap <span class="gradient-text">Analysis</span></h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Missing Keywords -->
+                <div class="glass rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">Missing Keywords</h3>
+                    </div>
+                    <p class="text-gray-500 text-xs mb-3">11 of 22 JD keywords were absent from the original resume</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="tag-critical">Tableau</span>
+                        <span class="tag-critical">Power BI</span>
+                        <span class="tag-critical">ETL Processes</span>
+                        <span class="tag-critical">Data Warehousing</span>
+                        <span class="tag-missing">EDA</span>
+                        <span class="tag-missing">Hypothesis Testing</span>
+                        <span class="tag-missing">Statistical Analysis</span>
+                        <span class="tag-missing">Excel VLOOKUP</span>
+                        <span class="tag-missing">A/B Testing</span>
+                        <span class="tag-missing">Cloud Platforms</span>
+                        <span class="tag-missing">Data Governance</span>
+                    </div>
+                </div>
+
+                <!-- Missing Skills -->
+                <div class="glass rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">Missing Skills</h3>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><i class="fas fa-times-circle text-red-400 mr-2"></i>Direct Tableau / Power BI experience</li>
+                        <li><i class="fas fa-times-circle text-red-400 mr-2"></i>ETL pipeline development</li>
+                        <li><i class="fas fa-times-circle text-orange-400 mr-2"></i>Cloud platform experience (AWS/GCP/Azure)</li>
+                        <li><i class="fas fa-times-circle text-orange-400 mr-2"></i>Big data processing (Spark/Hadoop)</li>
+                        <li><i class="fas fa-times-circle text-orange-400 mr-2"></i>A/B testing implementation</li>
+                    </ul>
+                </div>
+
+                <!-- Improvement Opportunities -->
+                <div class="glass rounded-2xl p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h3 class="text-lg font-bold">Improvements</h3>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Reposition from Cybersecurity to Data Analyst</li>
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Categorize skills by function, not flat list</li>
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Add metrics to quantify achievements</li>
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Rewrite experience with JD keywords</li>
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Highlight data warehousing coursework</li>
+                        <li><i class="fas fa-arrow-right text-emerald-400 mr-2"></i>Learn Tableau/Power BI (priority #1)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword Match Table -->
+        <div class="mb-12">
+            <div class="text-center mb-8">
+                <p class="text-emerald-400 font-medium text-sm tracking-widest uppercase mb-2">JD Keywords</p>
+                <h2 class="text-3xl font-bold">Keyword <span class="gradient-text">Match</span></h2>
+            </div>
+            <div class="glass rounded-2xl p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Matched -->
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> SQL</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Python</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Pandas</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> NumPy</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Matplotlib</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Scikit-learn</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Data Cleaning</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Machine Learning</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Git / GitHub</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Jupyter Notebook</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Communication</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> ETL Processes</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Data Warehousing</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> EDA</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Hypothesis Testing</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Statistical Analysis</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Tableau</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Power BI</span>
+                    <span class="tag-match"><i class="fas fa-check mr-1"></i> Excel (VLOOKUP, Pivot Tables)</span>
+                    <!-- Missing -->
+                    <span class="tag-missing"><i class="fas fa-times mr-1"></i> AWS / GCP / Azure</span>
+                    <span class="tag-missing"><i class="fas fa-times mr-1"></i> A/B Testing</span>
+                    <span class="tag-missing"><i class="fas fa-times mr-1"></i> Spark / Hadoop</span>
+                </div>
+                <div class="mt-4 flex items-center gap-6 text-xs text-gray-500">
+                    <span><span class="tag-match mr-1">●</span> Matched (19)</span>
+                    <span><span class="tag-missing mr-1">●</span> Still Missing (3)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Before vs After -->
+        <div class="mb-12">
+            <div class="text-center mb-8">
+                <p class="text-emerald-400 font-medium text-sm tracking-widest uppercase mb-2">Optimization</p>
+                <h2 class="text-3xl font-bold">Before <span class="gradient-text">vs</span> After</h2>
+            </div>
+            <div class="glass rounded-2xl p-6 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-3 px-4 text-gray-400 font-medium">Before</th>
+                            <th class="text-left py-3 px-4 text-gray-400 font-medium">After</th>
+                            <th class="text-left py-3 px-4 text-gray-400 font-medium">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">"Cybersecurity Analyst" title</td>
+                            <td class="py-3 px-4 after-text">"Data Analyst" title</td>
+                            <td class="py-3 px-4 text-emerald-400 text-xs font-semibold">#1 Most impactful change</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">"Cybersecurity and data analytics professional"</td>
+                            <td class="py-3 px-4 after-text">"Data Analyst with hands-on experience in data cleaning, preprocessing, and EDA"</td>
+                            <td class="py-3 px-4 text-gray-500">Job title match + keyword density</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">Cybersecurity skills listed first</td>
+                            <td class="py-3 px-4 after-text">Data Analysis & Visualization listed first</td>
+                            <td class="py-3 px-4 text-gray-500">ATS reads top-down</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">Skills as flat tag list</td>
+                            <td class="py-3 px-4 after-text">Categorized: Data Analysis, Statistical, Database, ETL</td>
+                            <td class="py-3 px-4 text-gray-500">ATS parsing accuracy</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">11 of 22 JD keywords missing</td>
+                            <td class="py-3 px-4 after-text">19 of 22 JD keywords present</td>
+                            <td class="py-3 px-4 text-gray-500">+8 keywords added naturally</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">"Seeking cybersecurity, threat analysis, or IT operations roles"</td>
+                            <td class="py-3 px-4 after-text">"Seeking Data Analyst roles to apply analytical skills"</td>
+                            <td class="py-3 px-4 text-gray-500">Target role clarity</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">Experience descriptions vague</td>
+                            <td class="py-3 px-4 after-text">Rewritten with JD keywords: EDA, dashboards, data cleaning</td>
+                            <td class="py-3 px-4 text-gray-500">Keyword density in experience</td>
+                        </tr>
+                        <tr class="border-b border-slate-800">
+                            <td class="py-3 px-4 before-text">No Achievements section</td>
+                            <td class="py-3 px-4 after-text">Added: Academic Excellence, Certifications, Project Development</td>
+                            <td class="py-3 px-4 text-gray-500">Resume completeness</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 before-text">Certs in random order</td>
+                            <td class="py-3 px-4 after-text">Data certs first (Acmegrade, IBM), then security</td>
+                            <td class="py-3 px-4 text-gray-500">Relevance priority</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Biggest Insight -->
+        <div class="glass rounded-2xl p-8 mb-12 border border-emerald-500/20">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-brain text-emerald-400 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Biggest Insight</h3>
+                    <p class="text-gray-300 leading-relaxed">My original resume scored <strong class="text-red-400">38/100</strong> — not because I lack skills, but because ATS systems don't read resumes the way humans do. They scan for specific keywords, patterns, and structures. My resume had "Cybersecurity Analyst" as the title and cybersecurity skills listed first — for a Data Analyst JD, the ATS simply didn't recognize me as a match, even though I had 11 of 22 required keywords.</p>
+                    <p class="text-gray-300 leading-relaxed mt-3">The optimization didn't invent anything. It repositioned the same information: moved data skills to the top, added missing JD keywords naturally, categorized skills by function, and rewrote the professional summary to target Data Analyst roles. The result: <strong class="text-emerald-400">38 → 92 — a 54-point jump</strong> with zero fabricated experience.</p>
+                    <p class="text-gray-300 leading-relaxed mt-3"><strong class="text-emerald-400">ATS doesn't judge your potential — it judges your alignment. The same information, presented differently, can be the difference between getting shortlisted and getting filtered out.</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-500 text-sm">
+            <div class="section-divider mb-6"></div>
+            <p>Day 11 — ABTalks 60-Day Claude AI Challenge | Devpal Singh Anand</p>
+        </div>
+    </div>
+</body>
+</html>
