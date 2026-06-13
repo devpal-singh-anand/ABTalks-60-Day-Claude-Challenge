@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Job Analysis — Devpal Singh Anand</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:#0a0f1c;color:#e2e8f0}
+        .wrap{padding:2rem 2.5rem;max-width:1000px;margin:0 auto}
+        .section{margin-bottom:2.5rem}
+        .sec-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#34d399;margin-bottom:1rem}
+        .page-title{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:2rem}
+        .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+        .fb{font-size:12px;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;font-weight:600}
+        .fb.active{background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(6,182,212,0.2));color:#34d399;border-color:rgba(16,185,129,0.4)}
+        .tbl-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th{text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.1);color:#94a3b8;font-weight:600;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+        td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;color:#e2e8f0;word-break:break-word}
+        tr:hover td{background:rgba(255,255,255,0.02)}
+        .score-pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;white-space:nowrap}
+        .s-high{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3)}
+        .s-med{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+        .apply-a{color:#38bdf8;text-decoration:none;font-size:11px;display:inline-flex;align-items:center;gap:4px;font-weight:600}
+        .ctc-tag{font-size:11px;background:rgba(255,255,255,0.06);color:#94a3b8;padding:3px 8px;border-radius:6px}
+        .skill-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .skill-card{background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:.85rem 1rem}
+        .skill-name{font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:6px}
+        .skill-bar-wrap{background:rgba(255,255,255,0.06);border-radius:4px;height:6px;overflow:hidden}
+        .skill-bar{height:6px;border-radius:4px}
+        .bar-high{background:linear-gradient(90deg,#10b981,#34d399)}
+        .bar-med{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+        .bar-low{background:linear-gradient(90deg,#ef4444,#f87171)}
+        .skill-pct{font-size:11px;color:#94a3b8;margin-top:4px}
+        .gap-table{width:100%;border-collapse:collapse;font-size:13px}
+        .gap-table td,.gap-table th{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .gap-table th{color:#94a3b8;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+        .tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+        .has{color:#34d399;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)}
+        .gap-tag{color:#f87171;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)}
+        .gap-priority-crit{color:#f87171;font-weight:700;font-size:12px}
+        .gap-priority-high{color:#fbbf24;font-weight:600;font-size:12px}
+        .gap-priority-med{color:#94a3b8;font-size:12px}
+        .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        .insight-card{background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1.2rem;text-align:center}
+        .ins-num{font-size:28px;font-weight:800;background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .ins-label{font-size:13px;color:#94a3b8;margin-top:6px;line-height:1.5}
+        .rec-list{display:flex;flex-direction:column;gap:10px}
+        .rec-item{display:flex;gap:14px;align-items:flex-start;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1rem 1.2rem}
+        .rec-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+        .rec-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
+        .rec-body{font-size:12px;color:#94a3b8;line-height:1.6}
+        .fit-bar{display:flex;gap:16px;align-items:center;margin-top:.75rem}
+        .fit-seg{flex:1;text-align:center}
+        .fit-seg-bar{height:10px;border-radius:5px;margin-bottom:6px}
+        .fit-seg-label{font-size:11px;color:#94a3b8}
+        .fit-seg-val{font-size:14px;font-weight:700}
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="page-title">🔍 Full Cybersecurity Job Market Analysis — Devpal Singh Anand</div>
+
+<div class="section">
+  <div class="sec-label">Top Matching Opportunities</div>
+  <div class="filters">
+    <button class="fb active">All (8)</button>
+    <button class="fb">Strong fit</button>
+    <button class="fb">Bangalore</button>
+    <button class="fb">Hyderabad</button>
+    <button class="fb">Pune</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">Company</th>
+          <th style="width:16%">Role</th>
+          <th style="width:9%">Location</th>
+          <th style="width:7%">Posted</th>
+          <th style="width:7%">Score</th>
+          <th style="width:8%">CTC</th>
+          <th style="width:34%">Why it fits</th>
+          <th style="width:7%">Apply</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;color:#34d399">Obopay</td>
+          <td>Junior InfoSec Analyst</td>
+          <td>Bengaluru</td>
+          <td>Jun 8</td>
+          <td><span class="score-pill s-high">92/100</span></td>
+          <td><span class="ctc-tag">₹3–5 LPA</span></td>
+          <td>Exact title match, 1–3 yr exp req, SIEM+incident triage+vuln mgmt+risk register — maps to your NIIT Cyber Ops and IBM certs. Reports to CISO. Fintech = strong compliance exposure.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aa74mmwkkhgy" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#22d3ee">Cyber Mindsets</td>
+          <td>Cyber Security Analyst (Intern → FTE)</td>
+          <td>Hyderabad</td>
+          <td>Jun 11</td>
+          <td><span class="score-pill s-high">88/100</span></td>
+          <td><span class="ctc-tag">₹1.2–2.4 LPA → FTE</span></td>
+          <td>Structured SOC internship converting to FTE. Explicitly welcomes career transitioners. Mentorship from 20+ yr veterans.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aatwqfldnltk" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#a78bfa">HackerOne</td>
+          <td>Triage Intake Analyst</td>
+          <td>Pune</td>
+          <td>May 28</td>
+          <td><span class="score-pill s-high">85/100</span></td>
+          <td><span class="ctc-tag">₹20.8–23.4 LPA</span></td>
+          <td>World-leading bug bounty platform. 1+ yr vuln disclosure experience req. Salary far exceeds target.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aal697fc946q" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#fbbf24">ProArch</td>
+          <td>Security Analyst L1</td>
+          <td>Hyderabad</td>
+          <td>Jun 4</td>
+          <td><span class="score-pill s-high">82/100</span></td>
+          <td><span class="ctc-tag">Not listed</span></td>
+          <td>Global MSP with US/UK clients. L1 SOC with Microsoft Sentinel, MITRE ATT&CK, SOAR. ITIL knowledge = bonus.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aa7gd9kdspvt" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#fda4af">Mimecast</td>
+          <td>Threat Response Analyst I</td>
+          <td>Bengaluru</td>
+          <td>May 22</td>
+          <td><span class="score-pill s-med">74/100</span></td>
+          <td><span class="ctc-tag">Not listed</span></td>
+          <td>Gartner MQ leader. Email threat analysis — packet analysis & network fundamentals relevant. 24/7 SOC.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aar6l4zkx8v9" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#5eead4">Systems Plus</td>
+          <td>Security Analyst (SOC)</td>
+          <td>Pune</td>
+          <td>May 21</td>
+          <td><span class="score-pill s-med">70/100</span></td>
+          <td><span class="ctc-tag">Not listed</span></td>
+          <td>US-client MSP. SIEM, EDR, phishing IR, IAM, vuln mgmt. CompTIA Security+ preferred cert.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aardtd4kppkt" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#fdba74">Flatworld Solutions</td>
+          <td>SOC Analyst</td>
+          <td>Bengaluru</td>
+          <td>Feb 20</td>
+          <td><span class="score-pill s-med">68/100</span></td>
+          <td><span class="ctc-tag">Not listed</span></td>
+          <td>Smaller firm = lower barrier. Good launchpad for SOC experience before MNCs.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aayrgffx47kz" target="_blank">Apply →</a></td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:#7dd3fc">Mattel Inc.</td>
+          <td>IT Security Ops Specialist</td>
+          <td>Hyderabad</td>
+          <td>May 13</td>
+          <td><span class="score-pill s-med">58/100</span></td>
+          <td><span class="ctc-tag">Not listed</span></td>
+          <td>Global MNC. Strong on EDR, SIEM, DFIR — Python skills relevant for scripting. Good cert culture.</td>
+          <td><a class="apply-a" href="https://to.indeed.com/aaxymtmph8vw" target="_blank">Apply →</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label">Most Commonly Required Skills Across All Postings</div>
+  <div class="skill-grid">
+    <div class="skill-card"><div class="skill-name">SIEM tools</div><div class="skill-bar-wrap"><div class="skill-bar bar-high" style="width:95%"></div></div><div class="skill-pct">95% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Incident response</div><div class="skill-bar-wrap"><div class="skill-bar bar-high" style="width:90%"></div></div><div class="skill-pct">90% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">MITRE ATT&CK</div><div class="skill-bar-wrap"><div class="skill-bar bar-high" style="width:85%"></div></div><div class="skill-pct">85% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Network security</div><div class="skill-bar-wrap"><div class="skill-bar bar-high" style="width:82%"></div></div><div class="skill-pct">82% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Vulnerability mgmt</div><div class="skill-bar-wrap"><div class="skill-bar bar-med" style="width:78%"></div></div><div class="skill-pct">78% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">CompTIA Security+</div><div class="skill-bar-wrap"><div class="skill-bar bar-med" style="width:75%"></div></div><div class="skill-pct">75% preferred cert</div></div>
+    <div class="skill-card"><div class="skill-name">EDR tools</div><div class="skill-bar-wrap"><div class="skill-bar bar-med" style="width:70%"></div></div><div class="skill-pct">70% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Python / scripting</div><div class="skill-bar-wrap"><div class="skill-bar bar-med" style="width:65%"></div></div><div class="skill-pct">65% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Threat intelligence</div><div class="skill-bar-wrap"><div class="skill-bar bar-med" style="width:60%"></div></div><div class="skill-pct">60% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Microsoft Sentinel</div><div class="skill-bar-wrap"><div class="skill-bar bar-low" style="width:55%"></div></div><div class="skill-pct">55% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">SOAR platforms</div><div class="skill-bar-wrap"><div class="skill-bar bar-low" style="width:48%"></div></div><div class="skill-pct">48% of postings</div></div>
+    <div class="skill-card"><div class="skill-name">Linux admin</div><div class="skill-bar-wrap"><div class="skill-bar bar-low" style="width:45%"></div></div><div class="skill-pct">45% of postings</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label">Skill Gap Analysis</div>
+  <table class="gap-table">
+    <thead><tr><th>Skill Area</th><th>Your Status</th><th>Market Demand</th><th>Gap Priority</th></tr></thead>
+    <tbody>
+      <tr><td>Network packet analysis (Scapy)</td><td><span class="tag has">✓ Have it</span></td><td>High</td><td>—</td></tr>
+      <tr><td>Python scripting</td><td><span class="tag has">✓ Have it</span></td><td>High</td><td>—</td></tr>
+      <tr><td>Incident response fundamentals</td><td><span class="tag has">✓ Have it</span></td><td>Very high</td><td>—</td></tr>
+      <tr><td>Vulnerability assessment</td><td><span class="tag has">✓ Have it</span></td><td>High</td><td>—</td></tr>
+      <tr><td>Data analytics (Pandas/NumPy)</td><td><span class="tag has">✓ Have it</span></td><td>Medium</td><td>—</td></tr>
+      <tr><td>ITIL framework</td><td><span class="tag has">✓ Have it</span></td><td>Medium</td><td>—</td></tr>
+      <tr><td>SIEM hands-on (Splunk/Sentinel)</td><td><span class="tag gap-tag">✗ Gap</span></td><td>Very high</td><td class="gap-priority-crit">Critical</td></tr>
+      <tr><td>MITRE ATT&CK application</td><td><span class="tag gap-tag">✗ Gap</span></td><td>Very high</td><td class="gap-priority-crit">Critical</td></tr>
+      <tr><td>EDR tools (CrowdStrike/Defender)</td><td><span class="tag gap-tag">✗ Gap</span></td><td>High</td><td class="gap-priority-high">High</td></tr>
+      <tr><td>CompTIA Security+</td><td><span class="tag gap-tag">✗ Not certified</span></td><td>Very high</td><td class="gap-priority-high">High</td></tr>
+      <tr><td>KQL / Sentinel query language</td><td><span class="tag gap-tag">✗ Gap</span></td><td>High</td><td class="gap-priority-med">Medium</td></tr>
+      <tr><td>OWASP Top 10 / web app security</td><td><span class="tag gap-tag">✗ Gap</span></td><td>Medium</td><td class="gap-priority-med">Medium</td></tr>
+      <tr><td>BurpSuite</td><td><span class="tag gap-tag">✗ Gap</span></td><td>Medium</td><td class="gap-priority-med">Medium</td></tr>
+      <tr><td>Cloud security (GCP/Azure basics)</td><td><span class="tag gap-tag">✗ Gap</span></td><td>Medium-high</td><td class="gap-priority-med">Medium</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="sec-label">Market Demand Insights</div>
+  <div class="insight-grid">
+    <div class="insight-card"><div class="ins-num">30+</div><div class="ins-label">Active cybersecurity openings across Bangalore, Hyderabad, Pune, Mumbai (last 30 days)</div></div>
+    <div class="insight-card"><div class="ins-num">₹4–8L</div><div class="ins-label">Realistic range for L1 SOC / junior analyst with 1–2 yrs experience + Security+ cert in metro India</div></div>
+    <div class="insight-card"><div class="ins-num">₹20L+</div><div class="ins-label">Top of range at specialist firms like HackerOne for niche vuln / bug bounty triage roles</div></div>
+    <div class="insight-card"><div class="ins-num">24/7</div><div class="ins-label">Nearly all SOC roles involve shift or rotational schedules — comfort with this is a competitive advantage</div></div>
+    <div class="insight-card"><div class="ins-num">#1</div><div class="ins-label">CompTIA Security+ is the single most-cited preferred certification across every posting reviewed</div></div>
+    <div class="insight-card"><div class="ins-num">MSP</div><div class="ins-label">Managed security providers (ProArch, Systems Plus, Flatworld) are most likely to hire at entry level with training</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-label">Recommendations to Improve Interview Chances</div>
+  <div class="rec-list">
+    <div class="rec-item"><span class="rec-icon">🏆</span><div><div class="rec-title">Pursue CompTIA Security+ within 90 days</div><div class="rec-body">It appears in 75%+ of job postings as a preferred or required cert. Your existing Cisco Networking Essentials and IBM certs make the study significantly faster. This single action unlocks the most roles.</div></div></div>
+    <div class="rec-item"><span class="rec-icon">🛡️</span><div><div class="rec-title">Get hands-on SIEM experience via free labs</div><div class="rec-body">Microsoft Sentinel has a free 30-day Azure trial. Splunk offers a free developer instance. TryHackMe's SOC Level 1 path (~40 hrs) gives structured SIEM + MITRE ATT&CK practice. Add this to your resume as "lab experience".</div></div></div>
+    <div class="rec-item"><span class="rec-icon">💻</span><div><div class="rec-title">Build and publish 2–3 security Python projects on GitHub</div><div class="rec-body">You already have Scapy and Pandas skills. Create a network packet analyzer, a log parser, or a simple threat detection script. A public GitHub profile is a strong differentiator at the entry level.</div></div></div>
+    <div class="rec-item"><span class="rec-icon">🎯</span><div><div class="rec-title">Participate in CTFs or bug bounty platforms</div><div class="rec-body">HackerOne explicitly requires vuln disclosure experience. TryHackMe, HackTheBox, and PicoCTF are free. Even 2–3 documented challenge completions differentiate you from candidates with only classroom knowledge.</div></div></div>
+    <div class="rec-item"><span class="rec-icon">📄</span><div><div class="rec-title">Tailor your resume for each role type</div><div class="rec-body">You have a dual profile (security + data analytics). For SOC roles, lead with Cisco, IBM CyberSec, NIIT Cyber Ops. For data security roles, lead with Python + Pandas + predictive modeling. One generic resume will underperform both.</div></div></div>
+    <div class="rec-item"><span class="rec-icon">🔗</span><div><div class="rec-title">Optimize your LinkedIn for recruiter searches</div><div class="rec-body">Add "SOC Analyst", "Security Operations", "Threat Detection" to your headline and About section. Recruiters at MNCs like Mimecast and Mastercard actively search these keywords.</div></div></div>
+  </div>
+</div>
+
+<div class="section" style="margin-bottom:0">
+  <div class="sec-label">Overall Fit Assessment</div>
+  <div style="background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1.2rem 1.4rem">
+    <div style="font-size:14px;color:#94a3b8;margin-bottom:1rem;line-height:1.7">Your profile is a <strong style="color:#34d399">solid entry-level match</strong> for L1 SOC, Junior InfoSec Analyst, and Security Operations roles. You meet the foundational knowledge bar — the gap is primarily in hands-on SIEM tool experience and the Security+ cert, both of which are closeable in under 3 months.</div>
+    <div class="fit-bar">
+      <div class="fit-seg"><div class="fit-seg-bar" style="background:#10b981"></div><div class="fit-seg-val" style="color:#34d399">Strong</div><div class="fit-seg-label">Knowledge Fit</div></div>
+      <div class="fit-seg"><div class="fit-seg-bar" style="background:#f59e0b"></div><div class="fit-seg-val" style="color:#fbbf24">Moderate</div><div class="fit-seg-label">Tool Experience</div></div>
+      <div class="fit-seg"><div class="fit-seg-bar" style="background:#10b981"></div><div class="fit-seg-val" style="color:#34d399">Strong</div><div class="fit-seg-label">Cert Portfolio</div></div>
+      <div class="fit-seg"><div class="fit-seg-bar" style="background:#f59e0b"></div><div class="fit-seg-val" style="color:#fbbf24">Moderate</div><div class="fit-seg-label">Salary Target</div></div>
+      <div class="fit-seg"><div class="fit-seg-bar" style="background:#10b981"></div><div class="fit-seg-val" style="color:#34d399">Strong</div><div class="fit-seg-label">Location Options</div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
