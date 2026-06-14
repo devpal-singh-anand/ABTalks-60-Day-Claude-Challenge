@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Job Red Flag Detector — Day 14 | #60DayClaudeChallenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0f1c;
+    --bg-card: #111827;
+    --bg-card-hover: #1a2332;
+    --bg-card-alt: #0d1322;
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --border-danger: rgba(239, 68, 68, 0.3);
+    --border-success: rgba(34, 197, 94, 0.3);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-danger: #ef4444;
+    --text-success: #22c55e;
+    --text-warning: #f59e0b;
+    --gradient-danger: linear-gradient(135deg, #ef4444, #f97316);
+    --gradient-danger-subtle: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(249, 115, 22, 0.15));
+    --gradient-success: linear-gradient(135deg, #22c55e, #10b981);
+    --gradient-success-subtle: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.12));
+    --gradient-accent: linear-gradient(135deg, #f97316, #ef4444);
+    --gradient-header: linear-gradient(135deg, #0a0f1c 0%, #111827 50%, #0a0f1c 100%);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --shadow-glow-red: 0 0 40px rgba(239, 68, 68, 0.15);
+    --shadow-glow-green: 0 0 40px rgba(34, 197, 94, 0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+  /* Animated Background */
+  .bg-grid {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow-1 {
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: floatGlow1 15s ease-in-out infinite;
+  }
+
+  .bg-glow-2 {
+    position: fixed;
+    bottom: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: floatGlow2 18s ease-in-out infinite;
+  }
+
+  @keyframes floatGlow1 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-60px, 80px); }
+  }
+
+  @keyframes floatGlow2 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(60px, -80px); }
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 48px 24px 40px;
+    position: relative;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ef4444;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .header-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.5); }
+  }
+
+  .header h1 {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    animation: fadeInDown 0.6s ease-out 0.1s both;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+    animation: fadeInDown 0.6s ease-out 0.2s both;
+  }
+
+  .header-subtitle span {
+    background: var(--gradient-danger);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-card), transparent);
+    margin: 8px 0 32px;
+  }
+
+  /* Section Titles */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+  }
+
+  .section-title .icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .section-title .icon.danger {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .section-title .icon.success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .section-title .icon.info {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .section-title .icon.profile {
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+  }
+
+  .section-title .icon.question {
+    background: rgba(249, 115, 22, 0.12);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+  }
+
+  /* Job Info Card */
+  .job-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .job-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gradient-danger);
+  }
+
+  .job-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .job-company {
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--gradient-danger);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .job-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .job-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* Risk Score Section */
+  .risk-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 36px;
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+  }
+
+  .risk-ring-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+  }
+
+  .risk-ring-svg {
+    width: 200px;
+    height: 200px;
+    transform: rotate(-90deg);
+  }
+
+  .risk-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 10;
+  }
+
+  .risk-ring-progress {
+    fill: none;
+    stroke: url(#dangerGradient);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 502.65;
+    stroke-dashoffset: 502.65;
+    animation: ringProgress 2s ease-out 0.8s forwards;
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+  }
+
+  @keyframes ringProgress {
+    to {
+      stroke-dashoffset: 110.58;
+    }
+  }
+
+  .risk-ring-inner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .risk-score-number {
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    background: var(--gradient-danger);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .risk-score-total {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .risk-score-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+
+  .risk-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 10px 24px;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 700;
+    color: #ef4444;
+    animation: verdictPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes verdictPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+    50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.15); }
+  }
+
+  .risk-level-badge {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--gradient-danger);
+    color: white;
+  }
+
+  /* Red Flag Cards */
+  .red-flag-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-danger);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  .red-flag-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--gradient-danger);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .red-flag-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-glow-red);
+  }
+
+  .red-flag-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .red-flag-number {
+    width: 32px; height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: white;
+    background: var(--gradient-danger);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+
+  .red-flag-title-row {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .red-flag-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .severity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .severity-badge.critical {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .severity-badge.high {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.25);
+  }
+
+  .severity-badge.medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+
+  .severity-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .red-flag-description {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-left: 46px;
+  }
+
+  /* Positive Signal Cards */
+  .positive-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-success);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  .positive-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--gradient-success);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .positive-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(34, 197, 94, 0.4);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-glow-green);
+  }
+
+  .positive-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .positive-icon {
+    width: 28px; height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: white;
+    background: var(--gradient-success);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  }
+
+  .positive-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Risk Breakdown */
+  .risk-breakdown {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .risk-bar-item {
+    margin-bottom: 18px;
+  }
+
+  .risk-bar-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .risk-bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .risk-bar-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .risk-bar-value {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+
+  .risk-bar-value.very-high {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  .risk-bar-value.high {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+  }
+
+  .risk-bar-value.medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+  }
+
+  .risk-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .risk-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0;
+    animation: barFill 1.2s ease-out forwards;
+    position: relative;
+  }
+
+  .risk-bar-fill.very-high {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+  }
+
+  .risk-bar-fill.high {
+    background: linear-gradient(90deg, #f97316, #ea580c);
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+  }
+
+  .risk-bar-fill.medium {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  }
+
+  @keyframes barFill {
+    from { width: 0; }
+  }
+
+  /* Profile Match */
+  .profile-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .profile-match-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .match-percentage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .match-percentage-value {
+    font-size: 28px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .match-percentage-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .skill-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    transition: background 0.2s;
+  }
+
+  .skill-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .skill-status {
+    width: 22px; height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .skill-status.matched {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .skill-status.missing {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .skill-status.partial {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .skill-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .skill-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .skill-label.matched { color: #22c55e; }
+  .skill-label.missing { color: #ef4444; }
+  .skill-label.partial { color: #f59e0b; }
+
+  .profile-note {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .profile-note strong {
+    color: #f59e0b;
+    font-weight: 600;
+  }
+
+  .gap-closing-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gap-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(168, 85, 247, 0.06);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+
+  .gap-item:hover {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+
+  .gap-item .gap-icon {
+    color: #a855f7;
+    font-size: 14px;
+    min-width: 18px;
+  }
+
+  .salary-note {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .salary-note strong {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  /* Interview Questions */
+  .question-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, #f97316, #a855f7);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .question-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(249, 115, 22, 0.25);
+    transform: translateX(4px);
+  }
+
+  .question-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    margin-right: 10px;
+  }
+
+  .question-text {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    display: inline;
+  }
+
+  .question-focus {
+    display: inline;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 20px 20px;
+    border-top: 1px solid var(--border-subtle);
+    margin-top: 48px;
+  }
+
+  .footer-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .footer-text .gradient {
+    background: var(--gradient-danger);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+  }
+
+  .footer-challenge {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    opacity: 0.6;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Delay utilities for staggered animations */
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+  .delay-7 { animation-delay: 0.7s; }
+
+  /* Section spacing */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 16px 14px 40px; }
+    .header { padding: 32px 16px 28px; }
+    .header h1 { font-size: 20px; }
+    .job-card { padding: 20px; }
+    .job-title { font-size: 18px; }
+    .risk-ring-container { width: 160px; height: 160px; }
+    .risk-ring-svg { width: 160px; height: 160px; }
+    .risk-score-number { font-size: 38px; }
+    .red-flag-description { margin-left: 0; margin-top: 8px; }
+    .red-flag-header { flex-direction: column; gap: 8px; }
+    .section-title { font-size: 16px; }
+    .profile-section, .risk-breakdown { padding: 20px; }
+    .job-meta { gap: 6px; }
+  }
+
+  /* Shimmer effect on cards */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    animation: shimmer 6s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { left: -100%; }
+    50% { left: 200%; }
+    100% { left: 200%; }
+  }
+
+  /* Ring glow */
+  .ring-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%);
+    animation: ringGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes ringGlow {
+    0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeInUp 0.6s ease-out 0.5s both;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+
+  .stat-value.danger { color: #ef4444; }
+  .stat-value.warning { color: #f59e0b; }
+  .stat-value.success { color: #22c55e; }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-grid"></div>
+<div class="bg-glow-1"></div>
+<div class="bg-glow-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-badge">Red Flag Detector</div>
+    <h1>AI Job Red Flag Detector &mdash; Day 14</h1>
+    <p class="header-subtitle"><span>#60DayClaudeChallenge</span> &middot; by Devpal Singh Anand</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- Job Info Card -->
+  <div class="job-card shimmer">
+    <div class="job-title">Junior Cyber Security Analyst</div>
+    <div class="job-company">WebKit24</div>
+    <div class="job-meta">
+      <span class="job-meta-item">&#x1F310; India / Remote</span>
+      <span class="job-meta-item">&#x1F4BC; Full-Time</span>
+      <span class="job-meta-item">&#x1F4C5; 0&ndash;2 yrs</span>
+      <span class="job-meta-item">&#x1F4C6; Posted Feb 2026</span>
+    </div>
+  </div>
+
+  <!-- Risk Score -->
+  <div class="risk-section">
+    <div class="risk-ring-container">
+      <div class="ring-glow"></div>
+      <svg class="risk-ring-svg" viewBox="0 0 180 180">
+        <defs>
+          <linearGradient id="dangerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="100%" stop-color="#f97316" />
+          </linearGradient>
+        </defs>
+        <circle class="risk-ring-bg" cx="90" cy="90" r="80" />
+        <circle class="risk-ring-progress" cx="90" cy="90" r="80" />
+      </svg>
+      <div class="risk-ring-inner">
+        <div class="risk-score-number" id="scoreCounter">0</div>
+        <div class="risk-score-total">/100</div>
+        <div class="risk-score-label">Risk Score</div>
+      </div>
+    </div>
+    <div class="risk-verdict">
+      &#x274C; AVOID
+      <span class="risk-level-badge">HIGH RISK</span>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value danger">7</div>
+      <div class="stat-label">Red Flags</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value warning">4</div>
+      <div class="stat-label">Positives</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value success">~40%</div>
+      <div class="stat-label">Profile Match</div>
+    </div>
+  </div>
+
+  <!-- Red Flags Section -->
+  <section class="section">
+    <div class="section-title">
+      <div class="icon danger">&#x1F6A9;</div>
+      Red Flags &mdash; 7 Issues Detected
+    </div>
+
+    <!-- Flag 1 -->
+    <div class="red-flag-card delay-1">
+      <div class="red-flag-header">
+        <div class="red-flag-number">1</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Company is NOT a cybersecurity firm</div>
+          <span class="severity-badge critical"><span class="dot"></span>10/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        WebKit24 is a digital marketing &amp; SEO agency (Lucknow, 73 employees). Their LinkedIn confirms services are SEO, Digital Marketing, App Dev &mdash; zero cybersecurity operations. Hiring a dedicated security analyst makes no coherent business sense.
+      </div>
+    </div>
+
+    <!-- Flag 2 -->
+    <div class="red-flag-card delay-2">
+      <div class="red-flag-header">
+        <div class="red-flag-number">2</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Wildly conflicting salary data</div>
+          <span class="severity-badge critical"><span class="dot"></span>9/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        LinkedIn posts &#x20B9;10K&ndash;50K/yr; Jaabz lists $138,550/yr for the same role. A 10&times; discrepancy signals either data scraping error, intentionally misleading listings, or extremely poor hiring practices.
+      </div>
+    </div>
+
+    <!-- Flag 3 -->
+    <div class="red-flag-card delay-3">
+      <div class="red-flag-header">
+        <div class="red-flag-number">3</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Unrealistic skill stack for 0&ndash;2 years</div>
+          <span class="severity-badge critical"><span class="dot"></span>9/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        Demanding CEH, QRadar SIEM, GCP cloud security, penetration testing, NIST framework, IDS/IPS, and full incident response from a fresher is a 4&ndash;7 year skill set.
+      </div>
+    </div>
+
+    <!-- Flag 4 -->
+    <div class="red-flag-card delay-4">
+      <div class="red-flag-header">
+        <div class="red-flag-number">4</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Copy-paste job description</div>
+          <span class="severity-badge high"><span class="dot"></span>8/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        &ldquo;Monitor security events, analyze risks, and respond to incidents&rdquo; appears in three nearly identical bullet points. Strong indicator of non-technical staff or AI assembling the JD without review.
+      </div>
+    </div>
+
+    <!-- Flag 5 -->
+    <div class="red-flag-card delay-5">
+      <div class="red-flag-header">
+        <div class="red-flag-number">5</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Severely limited employer transparency</div>
+          <span class="severity-badge high"><span class="dot"></span>8/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        No Glassdoor page, minimal AmbitionBox reviews, Facebook page shows only 4 reviews and &ldquo;closed&rdquo; status. A 2014-founded company with 73 employees having near-zero review footprint is a trust failure.
+      </div>
+    </div>
+
+    <!-- Flag 6 -->
+    <div class="red-flag-card delay-6">
+      <div class="red-flag-header">
+        <div class="red-flag-number">6</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">Remote claim unverified</div>
+          <span class="severity-badge medium"><span class="dot"></span>6/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        WebKit24 lists two Lucknow office locations. &ldquo;Work From Home&rdquo; listed as a benefit, not confirmed policy. Risk of in-office mandate post-hire.
+      </div>
+    </div>
+
+    <!-- Flag 7 -->
+    <div class="red-flag-card delay-7">
+      <div class="red-flag-header">
+        <div class="red-flag-number">7</div>
+        <div class="red-flag-title-row">
+          <div class="red-flag-title">No mention of security team or infrastructure</div>
+          <span class="severity-badge high"><span class="dot"></span>7/10</span>
+        </div>
+      </div>
+      <div class="red-flag-description">
+        A real security role should name the existing SOC setup, SIEM vendor, team size, and reporting line. This JD has none of that &mdash; suggesting no existing security infrastructure.
+      </div>
+    </div>
+  </section>
+
+  <!-- Positive Signals Section -->
+  <section class="section">
+    <div class="section-title">
+      <div class="icon success">&#x2705;</div>
+      Positive Signals &mdash; 4 Found
+    </div>
+
+    <div class="positive-card delay-1">
+      <div class="positive-header">
+        <div class="positive-icon">&#x2713;</div>
+        <div class="positive-title">Remote-first listed &mdash; WFH and 5-day workweek explicitly stated</div>
+      </div>
+    </div>
+
+    <div class="positive-card delay-2">
+      <div class="positive-header">
+        <div class="positive-icon">&#x2713;</div>
+        <div class="positive-title">Day shift only &mdash; No night shift or on-call pressure</div>
+      </div>
+    </div>
+
+    <div class="positive-card delay-3">
+      <div class="positive-header">
+        <div class="positive-icon">&#x2713;</div>
+        <div class="positive-title">Entry-level framing &mdash; 0&ndash;2 years experience acknowledges freshers</div>
+      </div>
+    </div>
+
+    <div class="positive-card delay-4">
+      <div class="positive-header">
+        <div class="positive-icon">&#x2713;</div>
+        <div class="positive-title">Company established 2014 &mdash; 10+ years of operation</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Risk Breakdown Section -->
+  <section class="section">
+    <div class="section-title">
+      <div class="icon info">&#x1F4CA;</div>
+      Risk Breakdown by Category
+    </div>
+
+    <div class="risk-breakdown shimmer">
+      <!-- Requirements -->
+      <div class="risk-bar-item">
+        <div class="risk-bar-label-row">
+          <span class="risk-bar-label">Requirements</span>
+          <span class="risk-bar-value very-high">Very High &mdash; 90%</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill very-high" style="animation-delay: 0.5s;" data-width="90%"></div>
+        </div>
+      </div>
+
+      <!-- Culture -->
+      <div class="risk-bar-item">
+        <div class="risk-bar-label-row">
+          <span class="risk-bar-label">Culture</span>
+          <span class="risk-bar-value medium">Medium &mdash; 55%</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill medium" style="animation-delay: 0.7s;" data-width="55%"></div>
+        </div>
+      </div>
+
+      <!-- Remote -->
+      <div class="risk-bar-item">
+        <div class="risk-bar-label-row">
+          <span class="risk-bar-label">Remote</span>
+          <span class="risk-bar-value medium">Medium &mdash; 50%</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill medium" style="animation-delay: 0.9s;" data-width="50%"></div>
+        </div>
+      </div>
+
+      <!-- Hiring -->
+      <div class="risk-bar-item">
+        <div class="risk-bar-label-row">
+          <span class="risk-bar-label">Hiring</span>
+          <span class="risk-bar-value very-high">Very High &mdash; 85%</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill very-high" style="animation-delay: 1.1s;" data-width="85%"></div>
+        </div>
+      </div>
+
+      <!-- Company -->
+      <div class="risk-bar-item">
+        <div class="risk-bar-label-row">
+          <span class="risk-bar-label">Company</span>
+          <span class="risk-bar-value high">High &mdash; 75%</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill high" style="animation-delay: 1.3s;" data-width="75%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Profile Match Section -->
+  <section class="section">
+    <div class="section-title">
+      <div class="icon profile">&#x1F464;</div>
+      Profile Match &mdash; Devpal Singh Anand
+    </div>
+
+    <div class="profile-section">
+      <div class="profile-match-header">
+        <div></div>
+        <div class="match-percentage">
+          <div class="match-percentage-value">~40%</div>
+          <div class="match-percentage-label">Overall Match<br>(requirements unrealistic)</div>
+        </div>
+      </div>
+
+      <div class="skills-grid">
+        <!-- Matched -->
+        <div class="skill-row">
+          <div class="skill-status matched">&#x2713;</div>
+          <span class="skill-name">Incident Response</span>
+          <span class="skill-label matched">Matched</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status matched">&#x2713;</div>
+          <span class="skill-name">Security Monitoring</span>
+          <span class="skill-label matched">Matched</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status matched">&#x2713;</div>
+          <span class="skill-name">Vulnerability Assessment</span>
+          <span class="skill-label matched">Matched</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status matched">&#x2713;</div>
+          <span class="skill-name">Firewalls (foundational)</span>
+          <span class="skill-label matched">Matched</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status matched">&#x2713;</div>
+          <span class="skill-name">NIST Framework (awareness)</span>
+          <span class="skill-label matched">Matched</span>
+        </div>
+
+        <!-- Missing -->
+        <div class="skill-row">
+          <div class="skill-status missing">&#x2717;</div>
+          <span class="skill-name">SIEM / QRadar</span>
+          <span class="skill-label missing">Missing</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status missing">&#x2717;</div>
+          <span class="skill-name">CEH Certification</span>
+          <span class="skill-label missing">Missing</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status missing">&#x2717;</div>
+          <span class="skill-name">GCP Cloud Security</span>
+          <span class="skill-label missing">Missing</span>
+        </div>
+        <div class="skill-row">
+          <div class="skill-status missing">&#x2717;</div>
+          <span class="skill-name">Penetration Testing</span>
+          <span class="skill-label missing">Missing</span>
+        </div>
+
+        <!-- Partial -->
+        <div class="skill-row">
+          <div class="skill-status partial">~</div>
+          <span class="skill-name">IDS/IPS (conceptual)</span>
+          <span class="skill-label partial">Partial</span>
+        </div>
+      </div>
+
+      <div class="profile-note">
+        <strong>&#x26A0;&#xFE0F; Key Insight:</strong> ~40% match but the requirements themselves are unrealistic for the stated experience level. No entry-level candidate would have CEH + QRadar + GCP + Pentesting.
+      </div>
+
+      <div class="gap-closing-list">
+        <div class="gap-item">
+          <span class="gap-icon">&#x2192;</span>
+          <span>Hands-on SIEM practice (Splunk free trial)</span>
+        </div>
+        <div class="gap-item">
+          <span class="gap-icon">&#x2192;</span>
+          <span>CompTIA Security+ certification path</span>
+        </div>
+        <div class="gap-item">
+          <span class="gap-icon">&#x2192;</span>
+          <span>Home lab setup for practical security skills</span>
+        </div>
+      </div>
+
+      <div class="salary-note">
+        <strong>&#x1F4B0; Salary Reality:</strong> Target &#x20B9;4&ndash;8 LPA is realistic for entry-level &mdash; but not at a company with no cybersecurity practice.
+      </div>
+    </div>
+  </section>
+
+  <!-- Interview Questions Section -->
+  <section class="section">
+    <div class="section-title">
+      <div class="icon question">&#x2753;</div>
+      5 Smart Interview Questions
+    </div>
+
+    <div class="question-card delay-1">
+      <span class="question-number">1</span>
+      <span class="question-text"><span class="question-focus">WebKit24's website describes you primarily as a digital marketing and SEO agency.</span> Can you walk me through the size of your current security team and the cybersecurity clients this role would support?</span>
+    </div>
+
+    <div class="question-card delay-2">
+      <span class="question-number">2</span>
+      <span class="question-text"><span class="question-focus">Which SIEM platform is currently deployed &mdash; QRadar, Splunk, or another?</span> And what is the existing alerting infrastructure I'd be monitoring on day one?</span>
+    </div>
+
+    <div class="question-card delay-3">
+      <span class="question-number">3</span>
+      <span class="question-text"><span class="question-focus">Different job boards list this role at very different salary ranges.</span> Can you confirm the actual CTC band and what the structured appraisal cycle looks like?</span>
+    </div>
+
+    <div class="question-card delay-4">
+      <span class="question-number">4</span>
+      <span class="question-text"><span class="question-focus">The listing says Work From Home &mdash; is this fully remote permanently,</span> or is there an expectation to report to the Lucknow office? Is this written into the offer letter?</span>
+    </div>
+
+    <div class="question-card delay-5">
+      <span class="question-number">5</span>
+      <span class="question-text"><span class="question-focus">Since CEH and penetration testing are listed as requirements for an entry-level role,</span> does WebKit24 provide study leave, certification reimbursement, or a structured upskilling path?</span>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-text">Built with <span class="gradient">Claude AI</span> &middot; <span class="gradient">#60DayClaudeChallenge</span> &middot; Day 14</div>
+    <div class="footer-challenge">by Devpal Singh Anand</div>
+  </footer>
+
+</div>
+
+<script>
+  // Animated score counter
+  function animateScore(target, duration) {
+    const el = document.getElementById('scoreCounter');
+    const start = 0;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + (target - start) * eased);
+      el.textContent = current;
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+
+    requestAnimationFrame(update);
+  }
+
+  // Animate progress bars with Intersection Observer
+  function initBarAnimations() {
+    const bars = document.querySelectorAll('.risk-bar-fill');
+    bars.forEach(bar => {
+      const width = bar.getAttribute('data-width');
+      bar.style.width = '0';
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              bar.style.width = width;
+            }, 300);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+
+      observer.observe(bar);
+    });
+  }
+
+  // Staggered card animations with Intersection Observer
+  function initCardAnimations() {
+    const cards = document.querySelectorAll('.red-flag-card, .positive-card, .question-card');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, index * 80);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      observer.observe(card);
+    });
+  }
+
+  // Initialize on load
+  window.addEventListener('DOMContentLoaded', () => {
+    // Start score animation after a delay
+    setTimeout(() => animateScore(78, 2000), 800);
+
+    // Init bar animations
+    initBarAnimations();
+
+    // Init card animations
+    initCardAnimations();
+  });
+</script>
+
+</body>
+</html>

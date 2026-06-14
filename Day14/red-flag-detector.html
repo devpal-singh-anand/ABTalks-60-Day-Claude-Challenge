@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚩 Red Flag Detector — AI Job Risk Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #0a0f1c; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* HEADER */
+        .header { border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(10,15,28,0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50; }
+        .header-inner { max-width: 900px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo-box { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(249,115,22,0.15)); border: 1px solid rgba(239,68,68,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .header-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+        .header-sub { font-size: 11px; color: #64748b; }
+        .badge { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(16,185,129,0.3); color: #34d399; background: rgba(16,185,129,0.1); }
+
+        /* MAIN */
+        .main { max-width: 900px; margin: 0 auto; padding: 20px; width: 100%; flex: 1; }
+
+        /* API KEY BAR */
+        .api-bar { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; }
+        .api-bar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .api-bar-label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .api-bar-toggle { font-size: 11px; color: #38bdf8; cursor: pointer; background: none; border: none; font-family: inherit; }
+        .api-bar-toggle:hover { text-decoration: underline; }
+        .api-bar-body { display: none; flex-direction: column; gap: 10px; }
+        .api-bar-body.open { display: flex; }
+        .api-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .api-input { flex: 1; min-width: 200px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10,15,28,0.8); color: #e2e8f0; font-size: 13px; font-family: inherit; outline: none; }
+        .api-input:focus { border-color: rgba(239,68,68,0.4); }
+        .api-input::placeholder { color: #475569; }
+        .api-select { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10,15,28,0.8); color: #e2e8f0; font-size: 13px; font-family: inherit; outline: none; cursor: pointer; }
+        .api-select:focus { border-color: rgba(239,68,68,0.4); }
+        .api-hint { font-size: 11px; color: #475569; line-height: 1.5; }
+        .api-hint a { color: #38bdf8; text-decoration: none; }
+        .api-hint a:hover { text-decoration: underline; }
+        .api-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; }
+        .api-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .api-dot.green { background: #10b981; }
+        .api-dot.red { background: #ef4444; }
+        .api-dot.yellow { background: #fbbf24; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+        .tab { padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+        .tab.active { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+        .tab.inactive { background: transparent; color: #64748b; border: 1px solid transparent; }
+        .tab.inactive:hover { color: #94a3b8; }
+        .tab.disabled { color: #334155; cursor: not-allowed; }
+
+        /* FORM CARDS */
+        .form-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; margin-bottom: 14px; overflow: hidden; }
+        .form-card-header { padding: 14px 18px 0; display: flex; align-items: center; gap: 8px; }
+        .form-card-label { font-size: 13px; font-weight: 600; color: #cbd5e1; }
+        .form-card-required { font-size: 11px; color: #ef4444; }
+        .form-card-optional { font-size: 11px; color: #475569; }
+        .form-card-body { padding: 10px 18px 16px; }
+        textarea { width: 100%; min-height: 140px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(10,15,28,0.6); color: #e2e8f0; font-size: 13px; font-family: inherit; line-height: 1.6; outline: none; resize: vertical; }
+        textarea:focus { border-color: rgba(239,68,68,0.3); }
+        textarea::placeholder { color: #334155; }
+
+        /* BUTTONS */
+        .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+        .btn-primary { padding: 12px 28px; border-radius: 12px; border: none; background: linear-gradient(135deg, #dc2626, #ea580c); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-secondary { padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #64748b; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ERROR */
+        .error-box { padding: 14px 18px; border-radius: 12px; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2); color: #fca5a5; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; }
+
+        /* RESULTS */
+        .results { display: none; }
+        .results.active { display: block; }
+        .input-section { display: block; }
+        .input-section.hidden { display: none; }
+
+        /* Warning Banner */
+        .warning-banner { padding: 14px 18px; border-radius: 14px; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2); color: #fca5a5; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; }
+        .warning-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+        /* Score Section */
+        .score-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; margin-bottom: 14px; }
+        .score-row { display: flex; align-items: center; gap: 24px; }
+        .ring-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+        .ring-wrap svg { width: 110px; height: 110px; }
+        .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+        .score-text h2 { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+        .score-text p { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 10px; }
+        .verdict-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; }
+        .verdict-avoid { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+        .verdict-caution { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .verdict-apply { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+        /* Section Title */
+        .sec-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 10px; }
+
+        /* Flag Card */
+        .flag-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 18px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+        .flag-label { font-size: 13px; color: #f1f5f9; font-weight: 600; margin-bottom: 3px; }
+        .flag-desc { font-size: 12px; color: #94a3b8; line-height: 1.55; }
+        .severity-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
+        .sev-critical { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+        .sev-high { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .sev-med { background: rgba(234,179,8,0.1); color: #fcd34d; border: 1px solid rgba(234,179,8,0.2); }
+        .sev-low { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .flag-cat { font-size: 9px; text-transform: uppercase; color: #475569; margin-top: 4px; }
+
+        /* Positive Card */
+        .positive-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 10px 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #34d399; }
+        .pos-icon { color: #10b981; flex-shrink: 0; }
+
+        /* Risk Grid */
+        .risk-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+        .risk-cell { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 12px 8px; text-align: center; }
+        .risk-cell .label { font-size: 10px; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
+        .risk-cell .level { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+        .level-critical { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+        .level-high { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .level-medium { background: rgba(234,179,8,0.1); color: #fcd34d; border: 1px solid rgba(234,179,8,0.2); }
+        .level-low { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+        /* Demand Card */
+        .demand-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid #f87171; border-radius: 14px; padding: 14px 18px; margin-bottom: 6px; }
+        .demand-title { font-size: 13px; font-weight: 600; color: #f1f5f9; margin-bottom: 3px; }
+        .demand-note { font-size: 12px; color: #94a3b8; line-height: 1.55; }
+
+        /* Question Card */
+        .q-card { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 18px; margin-bottom: 6px; display: flex; gap: 12px; align-items: flex-start; font-size: 13px; color: #e2e8f0; line-height: 1.5; }
+        .q-num { font-size: 10px; font-weight: 700; color: #38bdf8; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; flex-shrink: 0; }
+
+        /* Final Note */
+        .final-note { background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px 20px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
+
+        /* Divider */
+        .divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0; }
+
+        /* Footer */
+        .footer { border-top: 1px solid rgba(255,255,255,0.05); padding: 14px 20px; text-align: center; font-size: 11px; color: #334155; margin-top: auto; }
+        .footer span { color: #10b981; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            .risk-grid { grid-template-columns: repeat(3, 1fr); }
+            .score-row { flex-direction: column; align-items: flex-start; }
+            .api-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <div class="logo-box">🚩</div>
+                <div>
+                    <div class="header-title">Red Flag Detector</div>
+                    <div class="header-sub">AI-Powered Job Risk Analysis</div>
+                </div>
+            </div>
+            <div class="badge">Powered by AI</div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+        <!-- API KEY BAR -->
+        <div class="api-bar">
+            <div class="api-bar-top">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="api-bar-label">🔑 API Configuration</span>
+                    <span class="api-status" id="apiStatus"><span class="api-dot yellow" id="apiDot"></span><span id="apiStatusText">No key set</span></span>
+                </div>
+                <button class="api-bar-toggle" id="apiToggle" onclick="toggleApiBar()">Configure ▾</button>
+            </div>
+            <div class="api-bar-body" id="apiBody">
+                <div class="api-row">
+                    <select class="api-select" id="provider">
+                        <option value="claude">Claude (Anthropic)</option>
+                        <option value="openrouter">OpenRouter (Claude + GPT + more)</option>
+                        <option value="openai">OpenAI (GPT-4o)</option>
+                        <option value="groq">Groq (Fast)</option>
+                        <option value="custom">Custom Endpoint</option>
+                    </select>
+                    <input type="password" class="api-input" id="apiKey" placeholder="sk-ant-... / sk-... / sk-or-... (your API key)" />
+                </div>
+                <div class="api-row" id="customRow" style="display:none;">
+                    <input type="text" class="api-input" id="customUrl" placeholder="https://api.example.com/v1/chat/completions" />
+                    <input type="text" class="api-input" id="customModel" placeholder="model name (e.g. claude-3.5-sonnet)" style="max-width:220px;" />
+                </div>
+                <div class="api-hint">
+                    <strong>Claude (Anthropic)</strong> is the recommended provider — the prompt was built & tested with Claude. 
+                    Get your key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>. 
+                    <strong>OpenRouter</strong> is a great alternative — one key gives access to Claude, GPT-4o, Llama & 100+ models. 
+                    Free key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. 
+                    Your key stays in your browser and is never stored or sent anywhere else.
+                </div>
+            </div>
+        </div>
+
+        <!-- INPUT SECTION -->
+        <div class="input-section" id="inputSection">
+            <div class="form-card">
+                <div class="form-card-header">
+                    <span>📋</span>
+                    <span class="form-card-label">Job Description</span>
+                    <span class="form-card-required">*required</span>
+                </div>
+                <div class="form-card-body">
+                    <textarea id="jdInput" placeholder="Paste the full job description here — role title, responsibilities, requirements, qualifications, benefits, salary info..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-header">
+                    <span>🏢</span>
+                    <span class="form-card-label">Company Information</span>
+                    <span class="form-card-required">*required</span>
+                </div>
+                <div class="form-card-body">
+                    <textarea id="companyInput" placeholder="Company name, founding year, funding status, Glassdoor ratings, recent news, layoffs, leadership, product status, employee count..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-card-header">
+                    <span>👤</span>
+                    <span class="form-card-label">Your Profile</span>
+                    <span class="form-card-optional">(optional — improves demand analysis)</span>
+                </div>
+                <div class="form-card-body">
+                    <textarea id="profileInput" placeholder="Your name, experience level, skills, certifications, target salary, known gaps..." style="min-height:100px;"></textarea>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-primary" id="analyzeBtn" onclick="analyze()">
+                    🚩 Detect Red Flags
+                </button>
+                <button class="btn-secondary" onclick="resetAll()">Reset</button>
+            </div>
+            <div id="errorBox" style="display:none;" class="error-box"></div>
+        </div>
+
+        <!-- RESULTS SECTION -->
+        <div class="results" id="resultsSection">
+            <div id="resultsContent"></div>
+            <div style="margin-top:16px;">
+                <button class="btn-secondary" onclick="goBack()">← Analyze Another Job</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        Built with <span>AI</span> · Red Flag Detector · #60DayClaudeChallenge · Day 14
+    </footer>
+
+    <script>
+        // ========== CONFIG ==========
+        const PROVIDERS = {
+            claude: { url: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-4-20250514' },
+            openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions', model: 'anthropic/claude-3.5-sonnet' },
+            openai: { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o' },
+            groq: { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile' },
+            custom: { url: '', model: '' },
+        };
+
+        const SYSTEM_PROMPT = `You are an AI Red Flag Detector for job seekers.
+
+Analyze the Job Description and Company Information provided by the user.
+
+Identify and analyze these 5 categories:
+
+1. Unrealistic Requirements
+- Excessive experience for the role
+- Too many skills/responsibilities
+- Contradictory expectations
+
+2. Toxic Workplace Signals
+- Burnout indicators
+- 'Wear many hats'
+- 'Fast-paced', 'rockstar', 'hustle culture'
+- Poor work-life balance signals
+
+3. Remote Job Authenticity
+- Hidden office requirements
+- Relocation expectations
+- Misleading remote claims
+
+4. Hiring Risks
+- Missing salary information
+- Vague responsibilities
+- Excessive qualifications
+- Suspicious hiring practices
+
+5. Company Risks
+- Reputation concerns
+- Stability concerns
+- Growth or layoff indicators
+
+You MUST respond with ONLY valid JSON in this exact format (no markdown, no code blocks, just raw JSON):
+
+{
+  "riskScore": <number 0-100>,
+  "verdict": "<APPLY|CAUTION|AVOID>",
+  "warningBanner": "<brief warning if critical flags found, or null>",
+  "redFlags": [
+    {
+      "title": "<flag title>",
+      "description": "<detailed explanation>",
+      "severity": <number 1-10>,
+      "category": "<REQUIREMENTS|CULTURE|REMOTE|HIRING|COMPANY>"
+    }
+  ],
+  "positiveSignals": [
+    "<positive signal text>"
+  ],
+  "riskBreakdown": {
+    "Requirements": "<Critical|High|Medium|Low>",
+    "Culture": "<Critical|High|Medium|Low>",
+    "Remote": "<Critical|High|Medium|Low>",
+    "Hiring": "<Critical|High|Medium|Low>",
+    "Company": "<Critical|High|Medium|Low>"
+  },
+  "jdDemands": [
+    {
+      "title": "<what the JD demands>",
+      "realityCheck": "<why this is unreasonable or a trap>"
+    }
+  ],
+  "interviewQuestions": [
+    "<smart question to validate the risk>"
+  ],
+  "finalNote": "<honest assessment paragraph>"
+}`;
+
+        // ========== STATE ==========
+        let analysis = null;
+
+        // ========== API BAR ==========
+        function toggleApiBar() {
+            const body = document.getElementById('apiBody');
+            const toggle = document.getElementById('apiToggle');
+            body.classList.toggle('open');
+            toggle.textContent = body.classList.contains('open') ? 'Hide ▴' : 'Configure ▾';
+        }
+
+        document.getElementById('provider').addEventListener('change', function() {
+            document.getElementById('customRow').style.display = this.value === 'custom' ? 'flex' : 'none';
+        });
+
+        document.getElementById('apiKey').addEventListener('input', updateApiStatus);
+
+        function updateApiStatus() {
+            const key = document.getElementById('apiKey').value.trim();
+            const dot = document.getElementById('apiDot');
+            const text = document.getElementById('apiStatusText');
+            if (key) { dot.className = 'api-dot green'; text.textContent = 'Key set'; }
+            else { dot.className = 'api-dot yellow'; text.textContent = 'No key set'; }
+        }
+
+        // ========== ANALYZE ==========
+        async function analyze() {
+            const jd = document.getElementById('jdInput').value.trim();
+            const company = document.getElementById('companyInput').value.trim();
+            const profile = document.getElementById('profileInput').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const provider = document.getElementById('provider').value;
+
+            const errorBox = document.getElementById('errorBox');
+            errorBox.style.display = 'none';
+
+            if (!jd || !company) {
+                showError('Job Description and Company Information are required.');
+                return;
+            }
+            if (!apiKey) {
+                const keyHints = {
+                    claude: 'console.anthropic.com',
+                    openrouter: 'openrouter.ai/keys',
+                    openai: 'platform.openai.com/api-keys',
+                    groq: 'console.groq.com/keys',
+                    custom: 'your provider',
+                };
+                showError(`Please add your API key above. Get a key at ${keyHints[provider] || 'openrouter.ai/keys'}`);
+                document.getElementById('apiBody').classList.add('open');
+                return;
+            }
+
+            // Build request
+            let url, model;
+            if (provider === 'custom') {
+                url = document.getElementById('customUrl').value.trim();
+                model = document.getElementById('customModel').value.trim();
+                if (!url || !model) { showError('Please provide both custom URL and model name.'); return; }
+            } else {
+                url = PROVIDERS[provider].url;
+                model = PROVIDERS[provider].model;
+            }
+
+            const userMessage = `Job Description:\n${jd}\n\nCompany Information:\n${company}${profile ? `\n\nCandidate Profile:\n${profile}` : ''}`;
+
+            // UI: loading
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+
+            try {
+                let rawContent;
+
+                if (provider === 'claude') {
+                    // Anthropic Claude API — different format
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': apiKey,
+                            'anthropic-version': '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true',
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            max_tokens: 4096,
+                            system: SYSTEM_PROMPT,
+                            messages: [
+                                { role: 'user', content: userMessage },
+                            ],
+                            temperature: 0.3,
+                        }),
+                    });
+
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `API error: ${res.status} ${res.statusText}`);
+                    }
+
+                    const data = await res.json();
+                    rawContent = data.content?.[0]?.text;
+
+                } else {
+                    // OpenAI-compatible format (OpenRouter, OpenAI, Groq, Custom)
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
+                            ...(provider === 'openrouter' ? { 'HTTP-Referer': window.location.href, 'X-Title': 'Red Flag Detector' } : {}),
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            messages: [
+                                { role: 'system', content: SYSTEM_PROMPT },
+                                { role: 'user', content: userMessage },
+                            ],
+                            temperature: 0.3,
+                        }),
+                    });
+
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `API error: ${res.status} ${res.statusText}`);
+                    }
+
+                    const data = await res.json();
+                    rawContent = data.choices?.[0]?.message?.content;
+                }
+
+                if (!rawContent) throw new Error('Empty response from AI.');
+
+                let cleaned = rawContent.trim();
+                if (cleaned.startsWith('```')) {
+                    cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+                }
+
+                analysis = JSON.parse(cleaned);
+                renderResults();
+                showResults();
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚩 Detect Red Flags';
+            }
+        }
+
+        function showError(msg) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.style.display = 'flex';
+            errorBox.innerHTML = `<span>⚠️</span><span>${msg}</span>`;
+        }
+
+        function showResults() {
+            document.getElementById('inputSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('active');
+        }
+
+        function goBack() {
+            document.getElementById('inputSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.remove('active');
+        }
+
+        function resetAll() {
+            document.getElementById('jdInput').value = '';
+            document.getElementById('companyInput').value = '';
+            document.getElementById('profileInput').value = '';
+            document.getElementById('errorBox').style.display = 'none';
+            analysis = null;
+        }
+
+        // ========== RENDER RESULTS ==========
+        function getScoreColor(s) { return s >= 70 ? '#f87171' : s >= 40 ? '#fbbf24' : '#34d399'; }
+        function getSevClass(s) { return s >= 9 ? 'sev-critical' : s >= 7 ? 'sev-high' : s >= 4 ? 'sev-med' : 'sev-low'; }
+        function getLevelClass(l) {
+            const v = l.toLowerCase();
+            return v === 'critical' ? 'level-critical' : v === 'high' ? 'level-high' : v === 'medium' ? 'level-medium' : 'level-low';
+        }
+        function getVerdictClass(v) {
+            if (v === 'AVOID') return 'verdict-avoid';
+            if (v === 'CAUTION') return 'verdict-caution';
+            return 'verdict-apply';
+        }
+        function getVerdictEmoji(v) {
+            if (v === 'AVOID') return '❌';
+            if (v === 'CAUTION') return '⚠️';
+            return '✅';
+        }
+        function getVerdictLabel(v) {
+            if (v === 'AVOID') return 'Avoid';
+            if (v === 'CAUTION') return 'Apply with Caution';
+            return 'Apply';
+        }
+        function getScoreDesc(s) {
+            if (s >= 70) return 'Very high risk — multiple compounding red flags across categories.';
+            if (s >= 40) return 'Moderate risk — some concerns that warrant investigation.';
+            return 'Low risk — mostly positive signals with minor concerns.';
+        }
+
+        function renderResults() {
+            const a = analysis;
+            const scoreColor = getScoreColor(a.riskScore);
+            const dashArray = (a.riskScore / 100) * 263.89;
+
+            let html = '';
+
+            // Warning Banner
+            if (a.warningBanner) {
+                html += `<div class="warning-banner"><span class="warning-icon">⚠️</span><span>${a.warningBanner}</span></div>`;
+            }
+
+            // Score Card
+            html += `
+            <div class="score-card">
+                <div class="score-row">
+                    <div class="ring-wrap">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="${scoreColor}" stroke-width="7"
+                                stroke-dasharray="${dashArray} 263.89" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                        </svg>
+                        <div class="ring-num" style="color:${scoreColor}">${a.riskScore}</div>
+                    </div>
+                    <div class="score-text">
+                        <h2>Overall Risk Score</h2>
+                        <p>${getScoreDesc(a.riskScore)}</p>
+                        <div class="verdict-badge ${getVerdictClass(a.verdict)}">${getVerdictEmoji(a.verdict)} ${getVerdictLabel(a.verdict)}</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // Red Flags
+            if (a.redFlags?.length) {
+                html += `<div class="sec-title">🚩 Top Red Flags (${a.redFlags.length})</div>`;
+                a.redFlags.forEach(f => {
+                    html += `<div class="flag-card">
+                        <div>
+                            <div class="flag-label">${f.title}</div>
+                            <div class="flag-desc">${f.description}</div>
+                            <div class="flag-cat">${f.category}</div>
+                        </div>
+                        <span class="severity-badge ${getSevClass(f.severity)}">${f.severity}/10</span>
+                    </div>`;
+                });
+            }
+
+            // Positive Signals
+            if (a.positiveSignals?.length) {
+                html += `<hr class="divider"><div class="sec-title">✅ Positive Signals (${a.positiveSignals.length})</div>`;
+                a.positiveSignals.forEach(s => {
+                    html += `<div class="positive-card"><span class="pos-icon">✓</span><span>${s}</span></div>`;
+                });
+            }
+
+            // Risk Breakdown
+            if (a.riskBreakdown) {
+                html += `<hr class="divider"><div class="sec-title">📊 Risk Breakdown</div><div class="risk-grid">`;
+                Object.entries(a.riskBreakdown).forEach(([cat, level]) => {
+                    html += `<div class="risk-cell"><div class="label">${cat}</div><span class="level ${getLevelClass(level)}">${level}</span></div>`;
+                });
+                html += `</div>`;
+            }
+
+            // JD Demands
+            if (a.jdDemands?.length) {
+                html += `<hr class="divider"><div class="sec-title">📋 What This JD Actually Demands (${a.jdDemands.length})</div>`;
+                a.jdDemands.forEach(d => {
+                    html += `<div class="demand-card"><div class="demand-title">${d.title}</div><div class="demand-note">${d.realityCheck}</div></div>`;
+                });
+            }
+
+            // Interview Questions
+            if (a.interviewQuestions?.length) {
+                html += `<hr class="divider"><div class="sec-title">💡 Smart Interview Questions (${a.interviewQuestions.length})</div>`;
+                a.interviewQuestions.forEach((q, i) => {
+                    html += `<div class="q-card"><span class="q-num">${String(i+1).padStart(2,'0')}</span><span>${q}</span></div>`;
+                });
+            }
+
+            // Final Note
+            if (a.finalNote) {
+                html += `<hr class="divider"><div class="final-note">${a.finalNote}</div>`;
+            }
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
