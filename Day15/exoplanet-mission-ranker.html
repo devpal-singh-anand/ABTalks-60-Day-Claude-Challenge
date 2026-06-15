@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 15 — Exoplanet Mission Priority Ranker</title>
+<style>
+  /* ═══════════════════════ CSS VARIABLES ═══════════════════════ */
+  :root {
+    --bg: #0a0e17;
+    --bg2: #111827;
+    --bg3: #1e293b;
+    --fg: #e2e8f0;
+    --fg-muted: #94a3b8;
+    --accent: #06b6d4;
+    --accent2: #8b5cf6;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --orange: #f97316;
+    --card: #111827;
+    --card-hover: #1e293b;
+    --border: #1e293b;
+    --input-bg: #0f172a;
+    --shadow: 0 4px 24px rgba(0,0,0,.4);
+    --radius: 12px;
+    --transition: .3s ease;
+  }
+  [data-theme="light"] {
+    --bg: #f1f5f9;
+    --bg2: #ffffff;
+    --bg3: #e2e8f0;
+    --fg: #0f172a;
+    --fg-muted: #475569;
+    --accent: #0891b2;
+    --accent2: #7c3aed;
+    --card: #ffffff;
+    --card-hover: #f8fafc;
+    --border: #cbd5e1;
+    --input-bg: #f8fafc;
+    --shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
+
+  /* ═══════════════════════ RESET & BASE ═══════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ═══════════════════════ STARFIELD ═══════════════════════ */
+  .starfield {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { 0%{opacity:.2} 100%{opacity:.9} }
+
+  /* ═══════════════════════ LAYOUT ═══════════════════════ */
+  .container {
+    max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px;
+    position: relative; z-index: 1;
+  }
+
+  /* ═══════════════════════ HEADER ═══════════════════════ */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+  .header-left h1 {
+    font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-left p { color: var(--fg-muted); font-size: .85rem; margin-top: 2px; }
+  .theme-toggle {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--fg);
+    padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: .85rem;
+    transition: all var(--transition);
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* ═══════════════════════ API CONFIG ═══════════════════════ */
+  .api-config {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow);
+  }
+  .api-config h2 {
+    font-size: 1rem; font-weight: 700; margin-bottom: 14px; color: var(--accent);
+  }
+  .api-row {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: end;
+  }
+  .api-row label {
+    font-size: .78rem; color: var(--fg-muted); display: block; margin-bottom: 4px;
+  }
+  .api-row select, .api-row input {
+    background: var(--input-bg); border: 1px solid var(--border); color: var(--fg);
+    padding: 10px 12px; border-radius: 8px; font-size: .85rem;
+    transition: border var(--transition);
+  }
+  .api-row select:focus, .api-row input:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .api-row select { min-width: 150px; }
+  .api-row input[type="password"], .api-row input[type="text"] { flex: 1; min-width: 200px; }
+  .api-row input[type="text"] { flex: 2; min-width: 280px; }
+
+  /* ═══════════════════════ PLANET CARDS ═══════════════════════ */
+  .planets-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+  .planet-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 18px; cursor: pointer; transition: all var(--transition); position: relative;
+    overflow: hidden;
+  }
+  .planet-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: var(--radius);
+    background: linear-gradient(135deg, transparent 60%, rgba(6,182,212,.05));
+    pointer-events: none;
+  }
+  .planet-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .planet-card.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(6,182,212,.15); }
+  .planet-card.selected::after {
+    content: '✓'; position: absolute; top: 12px; right: 12px;
+    background: var(--accent); color: #fff; width: 24px; height: 24px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700;
+  }
+  .planet-name {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;
+  }
+  .planet-detail {
+    font-size: .78rem; color: var(--fg-muted); margin-bottom: 3px;
+  }
+  .planet-detail span { color: var(--fg); font-weight: 600; }
+  .planet-tag {
+    display: inline-block; margin-top: 8px; font-size: .7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .tag-rocky { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .tag-habitable { background: rgba(16,185,129,.15); color: var(--green); }
+  .tag-super-earth { background: rgba(139,92,246,.15); color: var(--accent2); }
+  .tag-hycean { background: rgba(6,182,212,.15); color: var(--accent); }
+
+  /* ═══════════════════════ SYSTEM PROMPT ═══════════════════════ */
+  .system-prompt-section {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow);
+  }
+  .system-prompt-section h2 {
+    font-size: 1rem; font-weight: 700; margin-bottom: 10px; color: var(--accent2);
+  }
+  .system-prompt-section textarea {
+    width: 100%; min-height: 140px; background: var(--input-bg);
+    border: 1px solid var(--border); color: var(--fg); padding: 12px;
+    border-radius: 8px; font-size: .82rem; font-family: inherit; resize: vertical;
+    transition: border var(--transition);
+  }
+  .system-prompt-section textarea:focus { outline: none; border-color: var(--accent2); }
+
+  /* ═══════════════════════ ANALYZE BUTTON ═══════════════════════ */
+  .analyze-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-size: 1.05rem; font-weight: 700; border: none;
+    border-radius: var(--radius); cursor: pointer; transition: all var(--transition);
+    box-shadow: 0 4px 20px rgba(6,182,212,.3); margin-bottom: 32px;
+  }
+  .analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(6,182,212,.4); }
+  .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .spinner {
+    width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .8s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ═══════════════════════ OUTPUT SECTION ═══════════════════════ */
+  .output { display: none; }
+  .output.visible { display: block; animation: fadeUp .6s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── DUAL RANKINGS ─── */
+  .dual-rankings {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  }
+  @media (max-width: 640px) { .dual-rankings { grid-template-columns: 1fr; } }
+  .rank-panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .rank-panel h3 {
+    font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 14px;
+  }
+  .rank-panel.feasibility h3 { color: var(--accent); }
+  .rank-panel.habitability h3 { color: var(--green); }
+  .rank-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+    background: var(--input-bg); transition: background var(--transition);
+  }
+  .rank-item:hover { background: var(--card-hover); }
+  .rank-num {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 800;
+    font-size: .8rem; flex-shrink: 0;
+  }
+  .feasibility .rank-num { background: rgba(6,182,212,.15); color: var(--accent); }
+  .habitability .rank-num { background: rgba(16,185,129,.15); color: var(--green); }
+  .rank-name { font-weight: 600; font-size: .9rem; flex: 1; }
+  .rank-value { font-size: .8rem; color: var(--fg-muted); font-weight: 600; }
+
+  /* ─── CORE TENSION BANNER ─── */
+  .core-tension {
+    background: linear-gradient(135deg, rgba(239,68,68,.08), rgba(245,158,11,.08));
+    border: 1px solid rgba(239,68,68,.3); border-radius: var(--radius);
+    padding: 20px 24px; margin-bottom: 28px; text-align: center;
+  }
+  .core-tension .label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--red); font-weight: 700; margin-bottom: 6px;
+  }
+  .core-tension .message {
+    font-size: 1.1rem; font-weight: 700; color: var(--fg);
+  }
+  .core-tension .message em { font-style: normal; color: var(--orange); }
+
+  /* ─── SCORE CIRCLES ─── */
+  .score-circles {
+    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .score-circle-wrap { text-align: center; }
+  .score-circle {
+    width: 120px; height: 120px; position: relative;
+  }
+  .score-circle svg { transform: rotate(-90deg); }
+  .score-circle .bg-ring { fill: none; stroke: var(--border); stroke-width: 8; }
+  .score-circle .fg-ring { fill: none; stroke-width: 8; stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease; }
+  .score-circle .score-text {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-circle .score-val { font-size: 1.6rem; font-weight: 800; }
+  .score-circle .score-label { font-size: .65rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .05em; }
+  .score-circle-wrap .score-title { font-size: .8rem; font-weight: 600; margin-top: 6px; }
+
+  /* ─── TABLES ─── */
+  .section-title {
+    font-size: 1rem; font-weight: 700; margin-bottom: 12px; display: flex;
+    align-items: center; gap: 8px;
+  }
+  .section-title .icon { font-size: 1.1rem; }
+  .data-table {
+    width: 100%; border-collapse: collapse; margin-bottom: 24px;
+    background: var(--card); border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .data-table th {
+    background: var(--bg3); padding: 12px 14px; text-align: left;
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--fg-muted); font-weight: 700; border-bottom: 2px solid var(--border);
+  }
+  .data-table td {
+    padding: 11px 14px; font-size: .85rem; border-bottom: 1px solid var(--border);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--card-hover); }
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+  /* ─── TOP PICK ─── */
+  .top-pick {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 640px) { .top-pick { grid-template-columns: 1fr; } }
+  .top-pick-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); text-align: center;
+  }
+  .top-pick-card.feasibility-pick { border-color: var(--accent); }
+  .top-pick-card.habitability-pick { border-color: var(--green); }
+  .top-pick-card .pick-label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; margin-bottom: 8px;
+  }
+  .top-pick-card.feasibility-pick .pick-label { color: var(--accent); }
+  .top-pick-card.habitability-pick .pick-label { color: var(--green); }
+  .top-pick-card .pick-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+  .top-pick-card .pick-reason { font-size: .82rem; color: var(--fg-muted); }
+
+  /* ─── RISK BREAKDOWN ─── */
+  .risk-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+  }
+  .risk-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px;
+  }
+  .risk-card h4 { font-size: .85rem; font-weight: 700; margin-bottom: 8px; }
+  .risk-card p { font-size: .8rem; color: var(--fg-muted); line-height: 1.5; }
+  .risk-level {
+    display: inline-block; font-size: .65rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .risk-critical { background: rgba(239,68,68,.15); color: var(--red); }
+  .risk-high { background: rgba(249,115,22,.15); color: var(--orange); }
+  .risk-medium { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .risk-low { background: rgba(16,185,129,.15); color: var(--green); }
+
+  /* ─── POSITIVE SIGNALS ─── */
+  .signals-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .signal-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; display: flex; gap: 10px; align-items: flex-start;
+  }
+  .signal-icon {
+    width: 32px; height: 32px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+    background: rgba(16,185,129,.1);
+  }
+  .signal-item h4 { font-size: .82rem; font-weight: 700; margin-bottom: 2px; }
+  .signal-item p { font-size: .75rem; color: var(--fg-muted); }
+
+  /* ─── SURPRISE FINDING ─── */
+  .surprise-box {
+    background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(6,182,212,.08));
+    border: 1px solid rgba(139,92,246,.3); border-radius: var(--radius);
+    padding: 20px 24px; margin-bottom: 24px;
+  }
+  .surprise-box .surprise-label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--accent2); font-weight: 700; margin-bottom: 6px;
+  }
+  .surprise-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .surprise-box p { font-size: .85rem; color: var(--fg-muted); line-height: 1.6; }
+
+  /* ─── FINAL NOTE ─── */
+  .final-note {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 24px; margin-bottom: 24px; box-shadow: var(--shadow);
+  }
+  .final-note h3 { font-size: .95rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  .final-note p { font-size: .85rem; color: var(--fg-muted); line-height: 1.7; }
+
+  /* ─── RAW JSON ─── */
+  .raw-json {
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; font-family: 'Fira Code', monospace; font-size: .75rem;
+    overflow-x: auto; white-space: pre-wrap; color: var(--fg-muted);
+    max-height: 300px; overflow-y: auto;
+  }
+
+  /* ─── ERROR ─── */
+  .error-msg {
+    background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+    border-radius: var(--radius); padding: 16px; color: var(--red); margin-bottom: 20px;
+  }
+
+  /* ═══════════════════════ FOOTER ═══════════════════════ */
+  .footer {
+    text-align: center; padding: 24px 0; color: var(--fg-muted);
+    font-size: .75rem; border-top: 1px solid var(--border); margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- STARFIELD -->
+<div class="starfield" id="starfield"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Exoplanet Mission Priority Ranker</h1>
+      <p>Day 15 &middot; #60DayClaudeChallenge &middot; AI-Powered Analysis</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙 Dark</button>
+  </div>
+
+  <!-- API CONFIGURATION -->
+  <div class="api-config">
+    <h2>&#9881; API Configuration</h2>
+    <div class="api-row">
+      <div>
+        <label for="apiProvider">Provider</label>
+        <select id="apiProvider">
+          <option value="claude">Claude (Anthropic)</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="openai">OpenAI</option>
+          <option value="groq">Groq</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <label for="apiKey">API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-... / sk-... / gsk_...">
+      </div>
+      <div style="flex:2;min-width:280px;">
+        <label for="modelName">Model</label>
+        <input type="text" id="modelName" value="claude-sonnet-4-20250514" placeholder="Model identifier">
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANET CARDS -->
+  <h2 class="section-title" style="margin-bottom:14px;"><span class="icon">&#127759;</span> Select Planets to Analyze</h2>
+  <div class="planets-grid" id="planetsGrid">
+
+    <div class="planet-card selected" data-planet="kepler-452b" onclick="toggleCard(this)">
+      <div class="planet-name">Kepler-452b</div>
+      <div class="planet-detail">Distance: <span>1,400 ly</span></div>
+      <div class="planet-detail">Radius: <span>1.63 R⊕</span></div>
+      <div class="planet-detail">Orbital Period: <span>385 days</span></div>
+      <div class="planet-detail">Star Type: <span>G2 (Sun-like)</span></div>
+      <div class="planet-detail">Habitability Est: <span>65/100</span></div>
+      <span class="planet-tag tag-rocky">Rocky Super-Earth</span>
+    </div>
+
+    <div class="planet-card selected" data-planet="proxima-b" onclick="toggleCard(this)">
+      <div class="planet-name">Proxima Centauri b</div>
+      <div class="planet-detail">Distance: <span>4.24 ly</span></div>
+      <div class="planet-detail">Radius: <span>1.07 R⊕</span></div>
+      <div class="planet-detail">Orbital Period: <span>11.2 days</span></div>
+      <div class="planet-detail">Star Type: <span>M5.5 (Red Dwarf)</span></div>
+      <div class="planet-detail">Habitability Est: <span>35/100</span></div>
+      <span class="planet-tag tag-habitable">Habitable Zone</span>
+    </div>
+
+    <div class="planet-card selected" data-planet="trappist-1e" onclick="toggleCard(this)">
+      <div class="planet-name">TRAPPIST-1e</div>
+      <div class="planet-detail">Distance: <span>40.7 ly</span></div>
+      <div class="planet-detail">Radius: <span>0.92 R⊕</span></div>
+      <div class="planet-detail">Orbital Period: <span>6.1 days</span></div>
+      <div class="planet-detail">Star Type: <span>M8 (Ultra-cool Dwarf)</span></div>
+      <div class="planet-detail">Habitability Est: <span>48/100</span></div>
+      <span class="planet-tag tag-rocky">Rocky</span>
+    </div>
+
+    <div class="planet-card selected" data-planet="k2-18b" onclick="toggleCard(this)">
+      <div class="planet-name">K2-18b</div>
+      <div class="planet-detail">Distance: <span>120 ly</span></div>
+      <div class="planet-detail">Radius: <span>2.61 R⊕</span></div>
+      <div class="planet-detail">Orbital Period: <span>33 days</span></div>
+      <div class="planet-detail">Star Type: <span>M2.5 (Red Dwarf)</span></div>
+      <div class="planet-detail">Habitability Est: <span>72/100</span></div>
+      <span class="planet-tag tag-hycean">Hycean World</span>
+    </div>
+
+  </div>
+
+  <!-- SYSTEM PROMPT -->
+  <div class="system-prompt-section">
+    <h2>&#128221; System Prompt</h2>
+    <textarea id="systemPrompt">You are an expert exoplanet mission analyst. Analyze the selected exoplanets and return a JSON object with the following structure. IMPORTANT: Cross-reference ALL parameters between planets — do NOT summarize each planet individually. Compare distances, habitability scores, star types, and technological readiness against each other to produce comparative rankings.
+
+Return JSON with these keys:
+{
+  "feasibility_ranking": [{"rank":1,"name":"...","distance_ly":...,"reason":"..."}],
+  "habitability_ranking": [{"rank":1,"name":"...","score":...,"reason":"..."}],
+  "core_tension": "A one-sentence insight about the feasibility-habitability paradox",
+  "scores": [{"name":"...","feasibility_score":0-100,"habitability_score":0-100}],
+  "habitability_table": [{"name":"...","score":0-100,"atmosphere":"...","water":"...","radiation":"...","star_stability":"..."}],
+  "feasibility_table": [{"name":"...","distance_ly":...,"travel_time":"...","propulsion_tech":"...","risk_level":"Low/Medium/High/Critical","signal_delay":"..."}],
+  "top_pick": {"feasibility":{"name":"...","reason":"..."},"habitability":{"name":"...","reason":"..."}},
+  "risk_breakdown": [{"category":"...","level":"Low/Medium/High/Critical","assessment":"..."}],
+  "positive_signals": [{"title":"...","detail":"..."}],
+  "surprise_finding": {"title":"...","detail":"..."},
+  "final_note": "..."
+}</textarea>
+  </div>
+
+  <!-- ANALYZE BUTTON -->
+  <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+    <span class="spinner" id="spinner"></span>
+    <span id="btnText">&#128640; Analyze &amp; Rank</span>
+  </button>
+
+  <!-- OUTPUT SECTION -->
+  <div class="output" id="outputSection">
+
+    <!-- DUAL RANKINGS -->
+    <div class="dual-rankings" id="dualRankings"></div>
+
+    <!-- CORE TENSION -->
+    <div class="core-tension" id="coreTension"></div>
+
+    <!-- SCORE CIRCLES -->
+    <div class="score-circles" id="scoreCircles"></div>
+
+    <!-- HABITABILITY TABLE -->
+    <h2 class="section-title"><span class="icon">&#127793;</span> Habitability Scores</h2>
+    <table class="data-table" id="habitabilityTable"></table>
+
+    <!-- FEASIBILITY TABLE -->
+    <h2 class="section-title"><span class="icon">&#128640;</span> Mission Feasibility</h2>
+    <table class="data-table" id="feasibilityTable"></table>
+
+    <!-- TOP PICK -->
+    <h2 class="section-title"><span class="icon">&#127942;</span> Top Picks</h2>
+    <div class="top-pick" id="topPick"></div>
+
+    <!-- RISK BREAKDOWN -->
+    <h2 class="section-title"><span class="icon">&#9888;</span> Risk Breakdown</h2>
+    <div class="risk-grid" id="riskBreakdown"></div>
+
+    <!-- POSITIVE SIGNALS -->
+    <h2 class="section-title"><span class="icon">&#128161;</span> Positive Signals</h2>
+    <div class="signals-list" id="positiveSignals"></div>
+
+    <!-- SURPRISE FINDING -->
+    <div class="surprise-box" id="surpriseFinding"></div>
+
+    <!-- FINAL NOTE -->
+    <div class="final-note" id="finalNote"></div>
+
+    <!-- RAW JSON -->
+    <h2 class="section-title" style="cursor:pointer" onclick="document.getElementById('rawJson').style.display=document.getElementById('rawJson').style.display==='none'?'block':'none'">
+      <span class="icon">&#128196;</span> Raw JSON <span style="font-size:.7rem;color:var(--fg-muted)">(click to toggle)</span>
+    </h2>
+    <div class="raw-json" id="rawJson" style="display:none"></div>
+
+  </div>
+
+  <div class="footer">
+    Built with AI &middot; #60DayClaudeChallenge &middot; Day 15 &middot; Data Sources: NASA Exoplanet Archive, JWST, ESO
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════ STARFIELD ═══════════════════════
+(function createStars() {
+  const sf = document.getElementById('starfield');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;animation-delay:${Math.random()*3}s;`;
+    sf.appendChild(s);
+  }
+})();
+
+// ═══════════════════════ THEME TOGGLE ═══════════════════════
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+
+function setTheme(theme) {
+  html.setAttribute('data-theme', theme);
+  themeToggle.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('day15-theme', theme);
+}
+setTheme(localStorage.getItem('day15-theme') || 'dark');
+
+themeToggle.addEventListener('click', () => {
+  const current = html.getAttribute('data-theme');
+  setTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// ═══════════════════════ PROVIDER-MODEL MAPPING ═══════════════════════
+const providerModels = {
+  claude: 'claude-sonnet-4-20250514',
+  openrouter: 'anthropic/claude-sonnet-4-20250514',
+  openai: 'gpt-4o',
+  groq: 'llama-3.3-70b-versatile'
+};
+document.getElementById('apiProvider').addEventListener('change', function() {
+  document.getElementById('modelName').value = providerModels[this.value] || '';
+});
+
+// ═══════════════════════ CARD TOGGLE ═══════════════════════
+function toggleCard(card) {
+  card.classList.toggle('selected');
+}
+
+// ═══════════════════════ PLANET DATA ═══════════════════════
+const planetData = {
+  'kepler-452b': {
+    name: 'Kepler-452b', distance_ly: 1400, radius: '1.63 R⊕',
+    period: '385 days', star: 'G2 (Sun-like)', habitability: 65
+  },
+  'proxima-b': {
+    name: 'Proxima Centauri b', distance_ly: 4.24, radius: '1.07 R⊕',
+    period: '11.2 days', star: 'M5.5 (Red Dwarf)', habitability: 35
+  },
+  'trappist-1e': {
+    name: 'TRAPPIST-1e', distance_ly: 40.7, radius: '0.92 R⊕',
+    period: '6.1 days', star: 'M8 (Ultra-cool Dwarf)', habitability: 48
+  },
+  'k2-18b': {
+    name: 'K2-18b', distance_ly: 120, radius: '2.61 R⊕',
+    period: '33 days', star: 'M2.5 (Red Dwarf)', habitability: 72
+  }
+};
+
+// ═══════════════════════ API CALL ═══════════════════════
+async function callAPI(systemPrompt, userMessage) {
+  const provider = document.getElementById('apiProvider').value;
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelName').value.trim();
+
+  if (!apiKey) throw new Error('Please enter an API key.');
+
+  const endpoints = {
+    claude: 'https://api.anthropic.com/v1/messages',
+    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    openai: 'https://api.openai.com/v1/chat/completions',
+    groq: 'https://api.groq.com/openai/v1/chat/completions'
+  };
+
+  if (provider === 'claude') {
+    const res = await fetch(endpoints.claude, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model, max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.content[0].text;
+  }
+
+  // OpenAI-compatible endpoints
+  const res = await fetch(endpoints[provider], {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      ...(provider === 'openrouter' ? { 'HTTP-Referer': location.href } : {})
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 4096,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices[0].message.content;
+}
+
+// ═══════════════════════ RENDER FUNCTIONS ═══════════════════════
+function renderDualRankings(data) {
+  const el = document.getElementById('dualRankings');
+  const feasItems = data.feasibility_ranking.map(r => `
+    <div class="rank-item">
+      <div class="rank-num">${r.rank}</div>
+      <div class="rank-name">${r.name}</div>
+      <div class="rank-value">${r.distance_ly} ly</div>
+    </div>`).join('');
+
+  const habItems = data.habitability_ranking.map(r => `
+    <div class="rank-item">
+      <div class="rank-num">${r.rank}</div>
+      <div class="rank-name">${r.name}</div>
+      <div class="rank-value">${r.score}/100</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="rank-panel feasibility">
+      <h3>&#128640; By Mission Feasibility (Distance)</h3>
+      ${feasItems}
+    </div>
+    <div class="rank-panel habitability">
+      <h3>&#127793; By Habitability Score</h3>
+      ${habItems}
+    </div>`;
+}
+
+function renderCoreTension(tension) {
+  document.getElementById('coreTension').innerHTML = `
+    <div class="label">&#9888; Core Tension</div>
+    <div class="message">${tension}</div>`;
+}
+
+function renderScoreCircles(scores) {
+  const el = document.getElementById('scoreCircles');
+  const circumference = 2 * Math.PI * 50;
+  const colors = {
+    feasibility: 'var(--accent)',
+    habitability: 'var(--green)'
+  };
+
+  el.innerHTML = scores.map(s => {
+    const fOffset = circumference - (s.feasibility_score / 100) * circumference;
+    const hOffset = circumference - (s.habitability_score / 100) * circumference;
+    return `
+    <div class="score-circle-wrap">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:8px;">${s.name}</div>
+      <div style="display:flex;gap:16px;justify-content:center;">
+        <div class="score-circle">
+          <svg viewBox="0 0 120 120" width="120" height="120">
+            <circle class="bg-ring" cx="60" cy="60" r="50"/>
+            <circle class="fg-ring" cx="60" cy="60" r="50"
+              stroke="${colors.feasibility}"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${fOffset}"/>
+          </svg>
+          <div class="score-text">
+            <div class="score-val" style="color:${colors.feasibility}">${s.feasibility_score}</div>
+            <div class="score-label">Feasibility</div>
+          </div>
+        </div>
+        <div class="score-circle">
+          <svg viewBox="0 0 120 120" width="120" height="120">
+            <circle class="bg-ring" cx="60" cy="60" r="50"/>
+            <circle class="fg-ring" cx="60" cy="60" r="50"
+              stroke="${colors.habitability}"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${hOffset}"/>
+          </svg>
+          <div class="score-text">
+            <div class="score-val" style="color:${colors.habitability}">${s.habitability_score}</div>
+            <div class="score-label">Habitability</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHabitabilityTable(rows) {
+  const el = document.getElementById('habitabilityTable');
+  const maxScore = Math.max(...rows.map(r => r.score));
+  el.innerHTML = `
+    <thead><tr>
+      <th>Planet</th><th>Score</th><th>Atmosphere</th><th>Water</th><th>Radiation</th><th>Star Stability</th>
+    </tr></thead>
+    <tbody>${rows.map(r => {
+      const pct = (r.score / 100) * 100;
+      const color = r.score >= 65 ? 'var(--green)' : r.score >= 45 ? 'var(--yellow)' : 'var(--red)';
+      return `<tr>
+        <td style="font-weight:600">${r.name}</td>
+        <td><div class="bar-cell"><span style="font-weight:700;min-width:36px;color:${color}">${r.score}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div></td>
+        <td>${r.atmosphere}</td><td>${r.water}</td><td>${r.radiation}</td><td>${r.star_stability}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+function renderFeasibilityTable(rows) {
+  const el = document.getElementById('feasibilityTable');
+  const levelColors = { Low: 'risk-low', Medium: 'risk-medium', High: 'risk-high', Critical: 'risk-critical' };
+  el.innerHTML = `
+    <thead><tr>
+      <th>Planet</th><th>Distance</th><th>Travel Time</th><th>Propulsion</th><th>Risk</th><th>Signal Delay</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td style="font-weight:600">${r.name}</td>
+      <td>${r.distance_ly} ly</td>
+      <td>${r.travel_time}</td>
+      <td>${r.propulsion_tech}</td>
+      <td><span class="risk-level ${levelColors[r.risk_level] || 'risk-medium'}">${r.risk_level}</span></td>
+      <td>${r.signal_delay}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function renderTopPick(pick) {
+  const el = document.getElementById('topPick');
+  el.innerHTML = `
+    <div class="top-pick-card feasibility-pick">
+      <div class="pick-label">&#128640; Feasibility Winner</div>
+      <div class="pick-name">${pick.feasibility.name}</div>
+      <div class="pick-reason">${pick.feasibility.reason}</div>
+    </div>
+    <div class="top-pick-card habitability-pick">
+      <div class="pick-label">&#127793; Habitability Winner</div>
+      <div class="pick-name">${pick.habitability.name}</div>
+      <div class="pick-reason">${pick.habitability.reason}</div>
+    </div>`;
+}
+
+function renderRiskBreakdown(risks) {
+  const el = document.getElementById('riskBreakdown');
+  const levelColors = { Low: 'risk-low', Medium: 'risk-medium', High: 'risk-high', Critical: 'risk-critical' };
+  el.innerHTML = risks.map(r => `
+    <div class="risk-card">
+      <span class="risk-level ${levelColors[r.level] || 'risk-medium'}">${r.level}</span>
+      <h4>${r.category}</h4>
+      <p>${r.assessment}</p>
+    </div>`).join('');
+}
+
+function renderPositiveSignals(signals) {
+  const el = document.getElementById('positiveSignals');
+  const icons = ['&#127759;', '&#128167;', '&#9728;&#65039;', '&#128300;'];
+  el.innerHTML = signals.map((s, i) => `
+    <div class="signal-item">
+      <div class="signal-icon">${icons[i % icons.length]}</div>
+      <div><h4>${s.title}</h4><p>${s.detail}</p></div>
+    </div>`).join('');
+}
+
+function renderSurpriseFinding(finding) {
+  const el = document.getElementById('surpriseFinding');
+  el.innerHTML = `
+    <div class="surprise-label">&#10024; Surprise Finding</div>
+    <h3>${finding.title}</h3>
+    <p>${finding.detail}</p>`;
+}
+
+function renderFinalNote(note) {
+  const el = document.getElementById('finalNote');
+  el.innerHTML = `<h3>&#128220; Final Mission Brief</h3><p>${note}</p>`;
+}
+
+// ═══════════════════════ MAIN ANALYSIS ═══════════════════════
+async function runAnalysis() {
+  const btn = document.getElementById('analyzeBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  const output = document.getElementById('outputSection');
+
+  // Gather selected planets
+  const selected = [...document.querySelectorAll('.planet-card.selected')].map(c => c.dataset.planet);
+  if (selected.length === 0) { alert('Select at least one planet!'); return; }
+
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Please enter an API key.'); return; }
+
+  // Build user message
+  const planetsInfo = selected.map(id => {
+    const p = planetData[id];
+    return `${p.name}: Distance ${p.distance_ly} ly, Radius ${p.radius}, Orbital Period ${p.period}, Star Type ${p.star}, Estimated Habitability ${p.habitability}/100`;
+  }).join('\n');
+
+  const userMsg = `Analyze these exoplanets for mission priority:\n\n${planetsInfo}\n\nProvide the complete comparative analysis as specified JSON.`;
+
+  // UI state
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Analyzing...';
+
+  try {
+    const systemPrompt = document.getElementById('systemPrompt').value;
+    const raw = await callAPI(systemPrompt, userMsg);
+
+    // Parse JSON from response
+    let jsonStr = raw;
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) jsonStr = jsonMatch[0];
+    const data = JSON.parse(jsonStr);
+
+    // Render all sections
+    output.classList.add('visible');
+    renderDualRankings(data);
+    renderCoreTension(data.core_tension);
+    renderScoreCircles(data.scores);
+    renderHabitabilityTable(data.habitability_table);
+    renderFeasibilityTable(data.feasibility_table);
+    renderTopPick(data.top_pick);
+    renderRiskBreakdown(data.risk_breakdown);
+    renderPositiveSignals(data.positive_signals);
+    renderSurpriseFinding(data.surprise_finding);
+    renderFinalNote(data.final_note);
+    document.getElementById('rawJson').textContent = JSON.stringify(data, null, 2);
+
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    alert('Error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '🚀 Analyze & Rank';
+  }
+}
+</script>
+</body>
+</html>

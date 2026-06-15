@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 15 — Exoplanet Mission Priority Report</title>
+<style>
+  /* ═══════════════════════ CSS VARIABLES ═══════════════════════ */
+  :root {
+    --bg: #0a0e17;
+    --bg2: #111827;
+    --bg3: #1e293b;
+    --fg: #e2e8f0;
+    --fg-muted: #94a3b8;
+    --accent: #06b6d4;
+    --accent2: #8b5cf6;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --orange: #f97316;
+    --card: #111827;
+    --card-hover: #1e293b;
+    --border: #1e293b;
+    --input-bg: #0f172a;
+    --shadow: 0 4px 24px rgba(0,0,0,.4);
+    --radius: 12px;
+    --transition: .3s ease;
+  }
+  [data-theme="light"] {
+    --bg: #f1f5f9;
+    --bg2: #ffffff;
+    --bg3: #e2e8f0;
+    --fg: #0f172a;
+    --fg-muted: #475569;
+    --accent: #0891b2;
+    --accent2: #7c3aed;
+    --card: #ffffff;
+    --card-hover: #f8fafc;
+    --border: #cbd5e1;
+    --input-bg: #f8fafc;
+    --shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
+
+  /* ═══════════════════════ RESET & BASE ═══════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ═══════════════════════ STARFIELD ═══════════════════════ */
+  .starfield {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { 0%{opacity:.15} 100%{opacity:.85} }
+
+  /* ═══════════════════════ LAYOUT ═══════════════════════ */
+  .container {
+    max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px;
+    position: relative; z-index: 1;
+  }
+
+  /* ═══════════════════════ HEADER ═══════════════════════ */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; flex-wrap: wrap; gap: 12px;
+  }
+  .header-left h1 {
+    font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-left p { color: var(--fg-muted); font-size: .85rem; margin-top: 2px; }
+  .theme-toggle {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--fg);
+    padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: .85rem;
+    transition: all var(--transition);
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* ═══════════════════════ REPORT BADGE ═══════════════════════ */
+  .report-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 16px; margin-bottom: 24px;
+    font-size: .75rem; color: var(--fg-muted);
+  }
+  .report-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ═══════════════════════ DUAL RANKINGS ═══════════════════════ */
+  .dual-rankings {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  }
+  @media (max-width: 640px) { .dual-rankings { grid-template-columns: 1fr; } }
+  .rank-panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .rank-panel h3 {
+    font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 14px;
+  }
+  .rank-panel.feasibility h3 { color: var(--accent); }
+  .rank-panel.habitability h3 { color: var(--green); }
+  .rank-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+    background: var(--input-bg); transition: background var(--transition);
+  }
+  .rank-item:hover { background: var(--card-hover); }
+  .rank-num {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 800;
+    font-size: .8rem; flex-shrink: 0;
+  }
+  .feasibility .rank-num { background: rgba(6,182,212,.15); color: var(--accent); }
+  .habitability .rank-num { background: rgba(16,185,129,.15); color: var(--green); }
+  .rank-name { font-weight: 600; font-size: .9rem; flex: 1; }
+  .rank-value { font-size: .8rem; color: var(--fg-muted); font-weight: 600; }
+  .rank-item.top-rank { border: 1px solid rgba(6,182,212,.2); }
+  .habitability .rank-item.top-rank { border-color: rgba(16,185,129,.2); }
+
+  /* ═══════════════════════ CORE TENSION BANNER ═══════════════════════ */
+  .core-tension {
+    background: linear-gradient(135deg, rgba(239,68,68,.08), rgba(245,158,11,.08));
+    border: 1px solid rgba(239,68,68,.3); border-radius: var(--radius);
+    padding: 22px 28px; margin-bottom: 28px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .core-tension::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(249,115,22,.03), transparent);
+    animation: shimmer 4s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+  .core-tension .label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--red); font-weight: 700; margin-bottom: 6px; position: relative;
+  }
+  .core-tension .message {
+    font-size: 1.15rem; font-weight: 700; color: var(--fg); position: relative;
+    line-height: 1.5;
+  }
+  .core-tension .message em { font-style: normal; color: var(--orange); }
+
+  /* ═══════════════════════ SCORE CIRCLES ═══════════════════════ */
+  .score-circles-section {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 28px; box-shadow: var(--shadow);
+  }
+  .score-circles-section .section-header {
+    font-size: 1rem; font-weight: 700; margin-bottom: 20px; text-align: center;
+  }
+  .score-circles {
+    display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+  }
+  .score-circle-wrap { text-align: center; }
+  .score-circle { width: 130px; height: 130px; position: relative; }
+  .score-circle svg { transform: rotate(-90deg); }
+  .score-circle .bg-ring { fill: none; stroke: var(--border); stroke-width: 8; }
+  .score-circle .fg-ring { fill: none; stroke-width: 8; stroke-linecap: round; }
+  .score-circle .score-text {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-circle .score-val { font-size: 1.8rem; font-weight: 800; }
+  .score-circle .score-label { font-size: .6rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+  .score-circle-wrap .score-title { font-size: .85rem; font-weight: 700; margin-top: 10px; }
+  .score-circle-wrap .score-subtitle { font-size: .7rem; color: var(--fg-muted); }
+
+  /* ═══════════════════════ SECTION TITLES ═══════════════════════ */
+  .section-title {
+    font-size: 1rem; font-weight: 700; margin-bottom: 12px; display: flex;
+    align-items: center; gap: 8px;
+  }
+  .section-title .icon { font-size: 1.1rem; }
+
+  /* ═══════════════════════ DATA TABLES ═══════════════════════ */
+  .data-table {
+    width: 100%; border-collapse: collapse; margin-bottom: 28px;
+    background: var(--card); border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .data-table th {
+    background: var(--bg3); padding: 12px 14px; text-align: left;
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--fg-muted); font-weight: 700; border-bottom: 2px solid var(--border);
+  }
+  .data-table td {
+    padding: 11px 14px; font-size: .85rem; border-bottom: 1px solid var(--border);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--card-hover); }
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; }
+
+  /* ═══════════════════════ TOP PICK ═══════════════════════ */
+  .top-pick {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px;
+  }
+  @media (max-width: 640px) { .top-pick { grid-template-columns: 1fr; } }
+  .top-pick-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .top-pick-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .top-pick-card.feasibility-pick { border-color: rgba(6,182,212,.3); }
+  .top-pick-card.feasibility-pick::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .top-pick-card.habitability-pick { border-color: rgba(16,185,129,.3); }
+  .top-pick-card.habitability-pick::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .top-pick-card .pick-label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; margin-bottom: 10px;
+  }
+  .top-pick-card.feasibility-pick .pick-label { color: var(--accent); }
+  .top-pick-card.habitability-pick .pick-label { color: var(--green); }
+  .top-pick-card .pick-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+  .top-pick-card .pick-reason { font-size: .85rem; color: var(--fg-muted); line-height: 1.5; }
+
+  /* ═══════════════════════ RISK BREAKDOWN ═══════════════════════ */
+  .risk-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+  .risk-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow);
+  }
+  .risk-card h4 { font-size: .88rem; font-weight: 700; margin-bottom: 8px; }
+  .risk-card p { font-size: .8rem; color: var(--fg-muted); line-height: 1.55; }
+  .risk-level {
+    display: inline-block; font-size: .65rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .risk-critical { background: rgba(239,68,68,.15); color: var(--red); }
+  .risk-high { background: rgba(249,115,22,.15); color: var(--orange); }
+  .risk-medium { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .risk-low { background: rgba(16,185,129,.15); color: var(--green); }
+
+  /* ═══════════════════════ POSITIVE SIGNALS ═══════════════════════ */
+  .signals-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px; margin-bottom: 28px;
+  }
+  .signal-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; display: flex; gap: 10px; align-items: flex-start;
+  }
+  .signal-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    background: rgba(16,185,129,.1);
+  }
+  .signal-item h4 { font-size: .84rem; font-weight: 700; margin-bottom: 2px; }
+  .signal-item p { font-size: .76rem; color: var(--fg-muted); line-height: 1.5; }
+
+  /* ═══════════════════════ SURPRISE FINDING ═══════════════════════ */
+  .surprise-box {
+    background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(6,182,212,.08));
+    border: 1px solid rgba(139,92,246,.3); border-radius: var(--radius);
+    padding: 22px 26px; margin-bottom: 28px;
+  }
+  .surprise-box .surprise-label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--accent2); font-weight: 700; margin-bottom: 8px;
+  }
+  .surprise-box h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .surprise-box p { font-size: .85rem; color: var(--fg-muted); line-height: 1.65; }
+  .surprise-box .finding-card {
+    background: var(--input-bg); border-radius: 8px; padding: 14px; margin-top: 10px;
+  }
+  .surprise-box .finding-card h4 { font-size: .82rem; font-weight: 700; margin-bottom: 4px; }
+  .surprise-box .finding-card p { font-size: .78rem; }
+
+  /* ═══════════════════════ FINAL NOTE ═══════════════════════ */
+  .final-note {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px; margin-bottom: 28px; box-shadow: var(--shadow);
+  }
+  .final-note h3 { font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .final-note p { font-size: .88rem; color: var(--fg-muted); line-height: 1.75; }
+
+  /* ═══════════════════════ FOOTER ═══════════════════════ */
+  .footer {
+    text-align: center; padding: 28px 0; color: var(--fg-muted);
+    font-size: .75rem; border-top: 1px solid var(--border); margin-top: 40px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<!-- STARFIELD -->
+<div class="starfield" id="starfield"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Exoplanet Mission Priority Report</h1>
+      <p>Day 15 &middot; #60DayClaudeChallenge &middot; AI-Powered Analysis</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙 Dark</button>
+  </div>
+
+  <div class="report-badge">
+    <span class="dot"></span>
+    Analysis Complete &middot; 4 Planets Evaluated &middot; Dual-Criteria Ranking
+  </div>
+
+  <!-- ════════════════════ DUAL RANKINGS ════════════════════ -->
+  <div class="dual-rankings">
+    <div class="rank-panel feasibility">
+      <h3>&#128640; By Mission Feasibility (Distance)</h3>
+      <div class="rank-item top-rank">
+        <div class="rank-num">1</div>
+        <div class="rank-name">Proxima Centauri b</div>
+        <div class="rank-value">4.24 ly</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">2</div>
+        <div class="rank-name">TRAPPIST-1e</div>
+        <div class="rank-value">40.7 ly</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">3</div>
+        <div class="rank-name">K2-18b</div>
+        <div class="rank-value">120 ly</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">4</div>
+        <div class="rank-name">Kepler-452b</div>
+        <div class="rank-value">1,400 ly</div>
+      </div>
+    </div>
+    <div class="rank-panel habitability">
+      <h3>&#127793; By Habitability Score</h3>
+      <div class="rank-item top-rank">
+        <div class="rank-num">1</div>
+        <div class="rank-name">K2-18b</div>
+        <div class="rank-value">72/100</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">2</div>
+        <div class="rank-name">Kepler-452b</div>
+        <div class="rank-value">65/100</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">3</div>
+        <div class="rank-name">TRAPPIST-1e</div>
+        <div class="rank-value">48/100</div>
+      </div>
+      <div class="rank-item">
+        <div class="rank-num">4</div>
+        <div class="rank-name">Proxima Centauri b</div>
+        <div class="rank-value">35/100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ CORE TENSION ════════════════════ -->
+  <div class="core-tension">
+    <div class="label">&#9888; Core Tension</div>
+    <div class="message">The closest planet is the least habitable. <em>The most habitable is unreachable.</em></div>
+  </div>
+
+  <!-- ════════════════════ SCORE CIRCLES ════════════════════ -->
+  <div class="score-circles-section">
+    <div class="section-header">Comparative Feasibility vs. Habitability Scores</div>
+    <div class="score-circles">
+
+      <!-- Proxima b -->
+      <div class="score-circle-wrap">
+        <div style="display:flex;gap:14px;justify-content:center;">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#06b6d4"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="204.2"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--accent)">35</div>
+              <div class="score-label">Feasibility</div>
+            </div>
+          </div>
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#ef4444"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="204.2"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--red)">35</div>
+              <div class="score-label">Habitability</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-title">Proxima Centauri b</div>
+        <div class="score-subtitle">Closest, but least habitable</div>
+      </div>
+
+      <!-- TRAPPIST-1e -->
+      <div class="score-circle-wrap">
+        <div style="display:flex;gap:14px;justify-content:center;">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#06b6d4"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="158.9"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--accent)">58</div>
+              <div class="score-label">Feasibility</div>
+            </div>
+          </div>
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#f59e0b"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="163.36"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--yellow)">48</div>
+              <div class="score-label">Habitability</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-title">TRAPPIST-1e</div>
+        <div class="score-subtitle">Balanced middle ground</div>
+      </div>
+
+      <!-- K2-18b -->
+      <div class="score-circle-wrap">
+        <div style="display:flex;gap:14px;justify-content:center;">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#06b6d4"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="188.5"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--accent)">40</div>
+              <div class="score-label">Feasibility</div>
+            </div>
+          </div>
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#10b981"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="88.18"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--green)">72</div>
+              <div class="score-label">Habitability</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-title">K2-18b</div>
+        <div class="score-subtitle">Most habitable, moderate distance</div>
+      </div>
+
+      <!-- Kepler-452b -->
+      <div class="score-circle-wrap">
+        <div style="display:flex;gap:14px;justify-content:center;">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#ef4444"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="267.03"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--red)">15</div>
+              <div class="score-label">Feasibility</div>
+            </div>
+          </div>
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle class="bg-ring" cx="60" cy="60" r="50"/>
+              <circle class="fg-ring" cx="60" cy="60" r="50"
+                stroke="#f59e0b"
+                stroke-dasharray="314.16"
+                stroke-dashoffset="109.96"/>
+            </svg>
+            <div class="score-text">
+              <div class="score-val" style="color:var(--yellow)">65</div>
+              <div class="score-label">Habitability</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-title">Kepler-452b</div>
+        <div class="score-subtitle">Sun-like star, unreachable distance</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ HABITABILITY TABLE ════════════════════ -->
+  <h2 class="section-title"><span class="icon">&#127793;</span> Habitability Scores</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Planet</th><th>Score</th><th>Atmosphere</th><th>Water Evidence</th><th>Radiation Risk</th><th>Star Stability</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:700;color:var(--green)">K2-18b</td>
+        <td>
+          <div class="bar-cell">
+            <span style="font-weight:700;min-width:36px;color:var(--green)">72</span>
+            <div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--green)"></div></div>
+          </div>
+        </td>
+        <td>H₂ + CH₄ detected (JWST)</td>
+        <td>Strong — dimethyl sulfide hint</td>
+        <td>Moderate — M-dwarf flares</td>
+        <td>Variable — active flaring</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:var(--yellow)">Kepler-452b</td>
+        <td>
+          <div class="bar-cell">
+            <span style="font-weight:700;min-width:36px;color:var(--yellow)">65</span>
+            <div class="bar-track"><div class="bar-fill" style="width:65%;background:var(--yellow)"></div></div>
+          </div>
+        </td>
+        <td>Possibly thick (super-Earth)</td>
+        <td>Plausible — habitable zone orbit</td>
+        <td>Low — G2 star, stable output</td>
+        <td>Excellent — Sun-like stability</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:var(--yellow)">TRAPPIST-1e</td>
+        <td>
+          <div class="bar-cell">
+            <span style="font-weight:700;min-width:36px;color:var(--yellow)">48</span>
+            <div class="bar-track"><div class="bar-fill" style="width:48%;background:var(--yellow)"></div></div>
+          </div>
+        </td>
+        <td>Uncertain — may be stripped</td>
+        <td>Possible — density suggests rock</td>
+        <td>High — tidal locking + flares</td>
+        <td>Poor — ultra-cool dwarf, active</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:var(--red)">Proxima Centauri b</td>
+        <td>
+          <div class="bar-cell">
+            <span style="font-weight:700;min-width:36px;color:var(--red)">35</span>
+            <div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--red)"></div></div>
+          </div>
+        </td>
+        <td>Likely stripped by flares</td>
+        <td>Unlikely — atmospheric erosion</td>
+        <td>Critical — 2017 flare event</td>
+        <td>Poor — frequent superflares</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════════════ FEASIBILITY TABLE ════════════════════ -->
+  <h2 class="section-title"><span class="icon">&#128640;</span> Mission Feasibility</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Planet</th><th>Distance</th><th>Travel Time</th><th>Propulsion Tech</th><th>Risk</th><th>Signal Delay</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:700">Proxima Centauri b</td>
+        <td>4.24 ly</td>
+        <td>~73 yrs (Breakthrough Starshot)</td>
+        <td>Laser-propelled lightsail</td>
+        <td><span class="risk-level risk-medium">Medium</span></td>
+        <td>4.24 years</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700">TRAPPIST-1e</td>
+        <td>40.7 ly</td>
+        <td>~700 yrs (theoretical fusion)</td>
+        <td>Fusion ramjet / generation ship</td>
+        <td><span class="risk-level risk-high">High</span></td>
+        <td>40.7 years</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700">K2-18b</td>
+        <td>120 ly</td>
+        <td>~2,000 yrs (fusion conceptual)</td>
+        <td>Fusion / antimatter (speculative)</td>
+        <td><span class="risk-level risk-high">High</span></td>
+        <td>120 years</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700">Kepler-452b</td>
+        <td>1,400 ly</td>
+        <td>~25,000 yrs (no known tech)</td>
+        <td>Warp drive (fictional)</td>
+        <td><span class="risk-level risk-critical">Critical</span></td>
+        <td>1,400 years</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════════════ TOP PICKS ════════════════════ -->
+  <h2 class="section-title"><span class="icon">&#127942;</span> Top Picks</h2>
+  <div class="top-pick">
+    <div class="top-pick-card feasibility-pick">
+      <div class="pick-label">&#128640; Feasibility Winner</div>
+      <div class="pick-name">Proxima Centauri b</div>
+      <div class="pick-reason">At 4.24 light-years, it is the only exoplanet reachable with near-future technology (Breakthrough Starshot laser-propelled lightsail). While its habitability is the lowest of the four, its proximity makes it the only planet where a reconnaissance mission is conceivably launchable within the next century.</div>
+    </div>
+    <div class="top-pick-card habitability-pick">
+      <div class="pick-label">&#127793; Habitability Winner</div>
+      <div class="pick-name">K2-18b</div>
+      <div class="pick-reason">JWST detections of methane, carbon dioxide, and a possible dimethyl sulfide signal make K2-18b the strongest habitability candidate. Its Hycean classification (ocean-covered world with hydrogen-rich atmosphere) represents a fundamentally new category of potentially habitable world — one we didn't know to look for.</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ RISK BREAKDOWN ════════════════════ -->
+  <h2 class="section-title"><span class="icon">&#9888;</span> Risk Breakdown</h2>
+  <div class="risk-grid">
+    <div class="risk-card">
+      <span class="risk-level risk-critical">Critical</span>
+      <h4>Stellar Flaring</h4>
+      <p>Proxima Centauri's 2017 superflare increased brightness 1,000× in 10 seconds. This likely stripped Proxima b's atmosphere. TRAPPIST-1's ultracool dwarf shows similar behavior. M-dwarf flaring is the single greatest threat to surface habitability across 3 of 4 candidates.</p>
+    </div>
+    <div class="risk-card">
+      <span class="risk-level risk-high">High</span>
+      <h4>Propulsion Feasibility</h4>
+      <p>Only Proxima b is reachable with proposed technology (lightsail at 0.2c). All other targets require fusion or antimatter drives that don't exist. TRAPPIST-1e at 40.7 ly would take ~700 years with theoretical fusion drives — a multi-generational commitment.</p>
+    </div>
+    <div class="risk-card">
+      <span class="risk-level risk-high">High</span>
+      <h4>Atmospheric Integrity</h4>
+      <p>Tidal locking in M-dwarf systems (Proxima b, TRAPPIST-1e, K2-18b) may cause atmospheric collapse on the dark side. Only Kepler-452b, with its Sun-like G2 star and likely 385-day orbit, avoids this — but at 1,400 ly, it's unreachable.</p>
+    </div>
+    <div class="risk-card">
+      <span class="risk-level risk-medium">Medium</span>
+      <h4>Biosignature False Positives</h4>
+      <p>K2-18b's dimethyl sulfide signal is tantalizing but unconfirmed. Abiotic processes can produce CH₄ and CO₂. JWST needs more transit observations to reach 5σ confidence. The 2024 follow-up is ongoing.</p>
+    </div>
+    <div class="risk-card">
+      <span class="risk-level risk-medium">Medium</span>
+      <h4>Communication & Signal Delay</h4>
+      <p>Even Proxima b has a 4.24-year one-way signal delay. Real-time mission control is impossible. Autonomous AI systems would be mandatory. For K2-18b (120 yrs) and Kepler-452b (1,400 yrs), the data returned would arrive for civilizations fundamentally different from the one that sent the probe.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════ POSITIVE SIGNALS ════════════════════ -->
+  <h2 class="section-title"><span class="icon">&#128161;</span> Positive Signals</h2>
+  <div class="signals-list">
+    <div class="signal-item">
+      <div class="signal-icon">&#127759;</div>
+      <div>
+        <h4>JWST Spectral Breakthroughs</h4>
+        <p>K2-18b's atmosphere shows carbon-bearing molecules — the first detection of organics in a habitable-zone exoplanet. This proves our instruments work.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-icon">&#128167;</div>
+      <div>
+        <h4>Hycean World Confirmation</h4>
+        <p>The Hycean model (sub-Neptune with liquid water ocean) expands habitable candidates dramatically. K2-18b may be the first confirmed Hycean world.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-icon">&#9728;&#65039;</div>
+      <div>
+        <h4>Sun-Like Star Match</h4>
+        <p>Kepler-452b orbits a G2 star — the same spectral class as our Sun — at nearly the same orbital period (385 days). It's the most "Earth-like" system found.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-icon">&#128300;</div>
+      <div>
+        <h4>Breakthrough Starshot Viability</h4>
+        <p>Laser-propelled lightsail technology could reach Proxima b in ~73 years. The $100M initiative is funded and prototyping. This is the closest we've come to interstellar mission capability.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ SURPRISE FINDING ════════════════════ -->
+  <div class="surprise-box">
+    <div class="surprise-label">&#10024; Surprise Findings</div>
+
+    <div class="finding-card">
+      <h4 style="color:var(--accent2)">Kepler-452b's Age Paradox</h4>
+      <p>Kepler-452 is approximately 6 billion years old — 1.5 billion years older than our Sun. If Kepler-452b developed life, it would have had 1.5 billion more years of evolution than Earth. Any biosphere would be radically more mature, potentially billions of years ahead. Yet the planet sits at 1,400 light-years, making it the least reachable — the most intriguing world is the most inaccessible.</p>
+    </div>
+
+    <div class="finding-card" style="margin-top:12px;">
+      <h4 style="color:var(--accent)">K2-18b's Hycean Viability</h4>
+      <p>K2-18b was dismissed as a mini-Neptune until 2023 JWST data revealed potential ocean surface conditions beneath its hydrogen envelope. It's the first exoplanet where we may have detected dimethyl sulfide — on Earth, this molecule is only produced by life. If confirmed, K2-18b would become the strongest evidence for extraterrestrial life, despite being classified as "unlikely habitable" just five years ago. The Hycean model has rewritten the habitability playbook.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════ FINAL NOTE ════════════════════ -->
+  <div class="final-note">
+    <h3>&#128220; Final Mission Brief</h3>
+    <p>
+      The exoplanet mission priority landscape reveals a fundamental paradox that defines interstellar exploration: <strong style="color:var(--fg)">feasibility and habitability are inversely correlated</strong>. Proxima Centauri b — our nearest neighbor at 4.24 light-years — sits at the bottom of the habitability scale, battered by its host star's violent flaring. Meanwhile, K2-18b — the most promising candidate for surface liquid water and potential biosignatures — requires propulsion technology that may not exist for centuries.
+    </p>
+    <p style="margin-top:12px;">
+      The strategic recommendation is a <strong style="color:var(--accent)">dual-track approach</strong>: invest in Breakthrough Starshot technology to reach Proxima b within a human lifetime (proving interstellar capability), while simultaneously deploying next-generation telescopes (Habitable Worlds Observatory, LUVOIR) to resolve K2-18b's biosignature question from Earth orbit. We don't need to go there to discover life — we need better eyes where we are.
+    </p>
+    <p style="margin-top:12px;color:var(--accent);font-weight:600;">
+      The closest planet is the least habitable. The most habitable is unreachable. The path forward is both.
+    </p>
+  </div>
+
+  <!-- ════════════════════ FOOTER ════════════════════ -->
+  <div class="footer">
+    Built with AI &middot; #60DayClaudeChallenge &middot; Day 15<br>
+    Data Sources: NASA Exoplanet Archive, JWST, ESO
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════ STARFIELD ═══════════════════════
+(function createStars() {
+  const sf = document.getElementById('starfield');
+  for (let i = 0; i < 150; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;animation-delay:${Math.random()*3}s;`;
+    sf.appendChild(s);
+  }
+})();
+
+// ═══════════════════════ THEME TOGGLE ═══════════════════════
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+
+function setTheme(theme) {
+  html.setAttribute('data-theme', theme);
+  themeToggle.textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('day15-theme', theme);
+}
+setTheme(localStorage.getItem('day15-theme') || 'dark');
+
+themeToggle.addEventListener('click', () => {
+  const current = html.getAttribute('data-theme');
+  setTheme(current === 'dark' ? 'light' : 'dark');
+});
+</script>
+</body>
+</html>
