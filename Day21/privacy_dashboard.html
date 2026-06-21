@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Privacy Intelligence Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #050710;
+    --bg-sidebar: #070912;
+    --bg-card: rgba(10,15,28,0.85);
+    --bg-card-2: rgba(15,22,40,0.6);
+    --border: rgba(0,200,255,0.12);
+    --border-bright: rgba(0,200,255,0.3);
+    --text: #d8e8ff;
+    --text-2: #6a88aa;
+    --text-3: #3a5070;
+    --accent: #00c8ff;
+    --accent-glow: rgba(0,200,255,0.4);
+    --red: #ff3366;
+    --orange: #ff8800;
+    --amber: #ffcc00;
+    --green: #00ff88;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    display: flex;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* Sci-fi background grid */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .bg-glow {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 70% 50%, rgba(0,100,200,0.06), transparent 60%);
+  }
+  .scanline {
+    position: fixed; left: 0; right: 0; height: 2px; z-index: 1;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.15; pointer-events: none;
+    animation: scan 5s linear infinite;
+  }
+  @keyframes scan { 0% { top: 0; } 100% { top: 100vh; } }
+
+  /* ============ SIDEBAR (ends at Final Verdict, no extra space) ============ */
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-bright);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+    box-shadow: 1px 0 20px rgba(0,200,255,0.05);
+  }
+  .sidebar-header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+  .sidebar-header .sub { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+  .sidebar-header .scores-mini { display: flex; gap: 16px; margin-top: 14px; }
+  .sidebar-header .mini-score { display: flex; align-items: center; gap: 6px; }
+  .sidebar-header .mini-ring { width: 36px; height: 36px; position: relative; }
+  .sidebar-header .mini-ring svg { transform: rotate(-90deg); }
+  .sidebar-header .mini-ring .mn { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; font-weight: 800; }
+  .sidebar-header .mini-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .nav-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    position: relative;
+  }
+  .nav-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  .nav-inner {
+    padding: 8px 0;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 28px;
+    cursor: pointer; transition: all 0.2s;
+    border-left: 3px solid transparent;
+    font-size: 13px; color: var(--text-2);
+  }
+  .nav-item:hover { background: var(--bg-card); color: var(--text); }
+  .nav-item.active {
+    background: rgba(0,200,255,0.08); color: var(--accent);
+    border-left-color: var(--accent); font-weight: 600;
+    text-shadow: 0 0 8px var(--accent-glow);
+  }
+  .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    font-size: 10px; color: var(--text-3); line-height: 1.5;
+    flex-shrink: 0;
+  }
+
+  /* ============ MAIN CONTENT ============ */
+  .main-wrap {
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .main {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 32px 40px 32px 40px;
+    scroll-behavior: smooth;
+  }
+  .main::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  .section {
+    margin-bottom: 24px;
+    scroll-margin-top: 32px;
+  }
+  .section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--accent); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+    text-shadow: 0 0 8px var(--accent-glow);
+  }
+  .section-label .si { font-size: 18px; filter: drop-shadow(0 0 4px var(--accent-glow)); }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px 24px; backdrop-filter: blur(6px); position: relative; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: linear-gradient(180deg, var(--accent), transparent); opacity: 0.4; }
+  .badge { font-size: 10px; font-weight: 600; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-fact { background: rgba(0,200,255,0.1); color: var(--accent); border: 1px solid var(--border-bright); }
+  .badge-est { background: rgba(255,204,0,0.08); color: var(--amber); border: 1px solid rgba(255,204,0,0.2); }
+
+  .score-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .score-card { display: flex; align-items: center; gap: 20px; }
+  .score-ring { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+  .score-ring svg { transform: rotate(-90deg); filter: drop-shadow(0 0 8px var(--accent-glow)); }
+  .score-ring .num { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 32px; font-weight: 800; text-shadow: 0 0 10px currentColor; }
+  .score-info .name { font-size: 16px; font-weight: 700; }
+  .score-info .desc { font-size: 12px; color: var(--text-2); margin-top: 4px; line-height: 1.5; }
+  .score-info .range { font-size: 11px; margin-top: 6px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .stat-box { background: var(--bg-card-2); border: 1px solid var(--border); padding: 16px; }
+  .stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); }
+  .stat-box .val { font-size: 28px; font-weight: 800; margin-top: 4px; }
+  .stat-box .note { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+  .heatmap { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+  .heat-cell { padding: 14px 10px; text-align: center; }
+  .heat-cell .hl { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .heat-cell .hv { font-size: 24px; font-weight: 800; margin-top: 4px; }
+  .h-crit { background: rgba(239,68,68,0.2); } .h-crit .hl,.h-crit .hv { color: #f87171; }
+  .h-high { background: rgba(249,115,22,0.15); } .h-high .hl,.h-high .hv { color: var(--orange); }
+  .h-med { background: rgba(251,191,36,0.12); } .h-med .hl,.h-med .hv { color: var(--amber); }
+  .h-low { background: rgba(34,197,94,0.12); } .h-low .hl,.h-low .hv { color: var(--green); }
+  .legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+  .legend-sq { width: 10px; height: 10px; }
+
+  .company-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .company-row:last-child { border-bottom: none; }
+  .company-icon { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .company-icon svg { width: 28px; height: 28px; }
+  .company-info { flex: 1; }
+  .company-info .cn { font-size: 13px; font-weight: 600; }
+  .company-info .ca { font-size: 11px; color: var(--text-2); }
+  .company-bar-wrap { width: 100px; flex-shrink: 0; }
+  .company-bar { height: 5px; background: var(--bg-card-2); overflow: hidden; }
+  .company-bar-fill { height: 100%; box-shadow: 0 0 6px currentColor; }
+  .company-score { font-size: 14px; font-weight: 800; min-width: 30px; text-align: right; }
+
+  .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .matrix-table th { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); padding: 8px 4px; text-align: center; font-weight: 600; border-bottom: 1px solid var(--border); }
+  .matrix-table th:first-child { text-align: left; }
+  .matrix-table td { padding: 7px 4px; text-align: center; border-bottom: 1px solid var(--border); }
+  .matrix-table td:first-child { text-align: left; }
+  .matrix-table tr:last-child td { border-bottom: none; }
+  .matrix-app-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+  .matrix-app-name svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .dot-h { width: 18px; height: 18px; background: rgba(239,68,68,0.25); display: inline-block; }
+  .dot-m { width: 18px; height: 18px; background: rgba(251,191,36,0.2); display: inline-block; }
+  .dot-l { width: 18px; height: 18px; background: rgba(34,197,94,0.15); display: inline-block; }
+  .dot-n { width: 18px; height: 18px; background: var(--bg-card-2); display: inline-block; }
+  .usage-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; white-space: nowrap; }
+  .usage-high { background: rgba(239,68,68,0.15); color: #f87171; }
+  .usage-norm { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .usage-low { background: rgba(34,197,94,0.12); color: var(--green); }
+  .usage-vlow { background: var(--bg-card-2); color: var(--text-3); }
+
+  .risk-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .risk-row:last-child { border-bottom: none; }
+  .risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+  .risk-label { font-size: 13px; flex: 1; }
+  .risk-level { font-size: 10px; font-weight: 700; padding: 3px 10px; text-transform: uppercase; }
+  .rl-crit { background: rgba(239,68,68,0.2); color: #f87171; }
+  .rl-high { background: rgba(249,115,22,0.15); color: var(--orange); }
+  .rl-med { background: rgba(251,191,36,0.12); color: var(--amber); }
+  .rl-low { background: rgba(34,197,94,0.12); color: var(--green); }
+
+  .twin-row { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .twin-row:last-child { border-bottom: none; }
+  .twin-icon { width: 28px; height: 28px; background: var(--bg-card-2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .twin-label { font-size: 11px; color: var(--text-2); }
+  .twin-val { font-size: 13px; font-weight: 600; }
+
+  .wow-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+  .wow-item:last-child { border-bottom: none; }
+  .wow-icon { color: var(--accent); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .wow-text { font-size: 13px; line-height: 1.6; }
+
+  .asset-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .asset-item:last-child { border-bottom: none; }
+  .asset-rank { font-size: 11px; color: var(--text-3); min-width: 20px; font-weight: 600; }
+  .asset-name { font-size: 13px; flex: 1; }
+  .asset-desc { font-size: 11px; color: var(--text-2); }
+  .asset-val { font-size: 10px; font-weight: 700; padding: 3px 10px; text-transform: uppercase; }
+  .av-crit { background: rgba(239,68,68,0.2); color: #f87171; }
+  .av-high { background: rgba(249,115,22,0.15); color: var(--orange); }
+  .av-med { background: rgba(251,191,36,0.12); color: var(--amber); }
+
+  .plan-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .plan-item:last-child { border-bottom: none; }
+  .plan-num { font-size: 12px; font-weight: 700; color: var(--accent); min-width: 24px; text-shadow: 0 0 6px var(--accent-glow); }
+  .plan-title { font-size: 13px; font-weight: 600; }
+  .plan-desc { font-size: 12px; color: var(--text-2); margin-top: 3px; line-height: 1.5; }
+  .plan-impact { font-size: 10px; font-weight: 700; color: var(--green); margin-top: 4px; }
+
+  .verdict-box { background: var(--bg-card-2); border-left: 3px solid var(--accent); padding: 20px 24px; box-shadow: 0 0 20px rgba(0,200,255,0.08); }
+  .verdict-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--accent); text-shadow: 0 0 8px var(--accent-glow); }
+  .verdict-text { font-size: 13px; color: var(--text-2); line-height: 1.7; }
+  .disclaimer { font-size: 11px; color: var(--text-3); padding: 12px 16px; background: var(--bg-card-2); margin-top: 16px; line-height: 1.6; }
+  .two-col-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 1024px) { .sidebar { width: 240px; } .main { padding: 24px 20px 80px 20px; } .score-row, .stats-grid, .two-col-inner { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="scanline"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h1>🔐 Privacy Dashboard</h1>
+    <div class="sub">15 services · 12 companies</div>
+    <div class="scores-mini">
+      <div class="mini-score">
+        <div class="mini-ring"><svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#1a1d27" stroke-width="3"/><circle cx="18" cy="18" r="15" fill="none" stroke="#00c8ff" stroke-width="3" stroke-dasharray="94.2" stroke-dashoffset="26.4" stroke-linecap="round"/></svg><div class="mn" style="color:#00c8ff;">72</div></div>
+        <div><div class="mini-label">Footprint</div><div style="font-size:11px;color:#00c8ff;font-weight:600;">Significant</div></div>
+      </div>
+      <div class="mini-score">
+        <div class="mini-ring"><svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#1a1d27" stroke-width="3"/><circle cx="18" cy="18" r="15" fill="none" stroke="#ffcc00" stroke-width="3" stroke-dasharray="94.2" stroke-dashoffset="51.8" stroke-linecap="round"/></svg><div class="mn" style="color:#ffcc00;">45</div></div>
+        <div><div class="mini-label">Privacy</div><div style="font-size:11px;color:#ffcc00;font-weight:600;">Fair</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-scroll" id="navScroll">
+    <div class="nav-inner" id="navInner">
+      <div class="nav-item active" data-target="scores"><span class="nav-icon">📊</span> Risk Scores</div>
+      <div class="nav-item" data-target="topology"><span class="nav-icon">🌐</span> Footprint Topology</div>
+      <div class="nav-item" data-target="heatmap"><span class="nav-icon">🔥</span> Exposure Heatmap</div>
+      <div class="nav-item" data-target="companies"><span class="nav-icon">🏢</span> Company Ranking</div>
+      <div class="nav-item" data-target="matrix"><span class="nav-icon">📋</span> Data Collection Matrix</div>
+      <div class="nav-item" data-target="risk"><span class="nav-icon">⚠️</span> Risk Radar</div>
+      <div class="nav-item" data-target="twin"><span class="nav-icon">👤</span> Digital Twin</div>
+      <div class="nav-item" data-target="assets"><span class="nav-icon">💎</span> Valuable Data Assets</div>
+      <div class="nav-item" data-target="wow"><span class="nav-icon">⚡</span> WOW Insights</div>
+      <div class="nav-item" data-target="plan"><span class="nav-icon">🛡️</span> Improvement Plan</div>
+      <div class="nav-item" data-target="verdict"><span class="nav-icon">📜</span> Final Verdict</div>
+    </div>
+  </div>
+  <div class="sidebar-footer">All scores are estimates.<br>No access to private databases.<br>Generated June 2026.</div>
+</div>
+
+<!-- ============ MAIN CONTENT ============ -->
+<div class="main-wrap" id="mainWrap">
+  <div class="main" id="main">
+
+    <div class="section" id="scores">
+      <div class="section-label"><span class="si">📊</span> Composite Risk Scores</div>
+      <div class="card">
+        <div class="score-row">
+          <div class="score-card">
+            <div class="score-ring"><svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#1a1d27" stroke-width="7"/><circle cx="50" cy="50" r="42" fill="none" stroke="#00c8ff" stroke-width="7" stroke-dasharray="263.9" stroke-dashoffset="74" stroke-linecap="round"/></svg><div class="num" style="color:#00c8ff;">72</div></div>
+            <div class="score-info"><div class="name">Digital Footprint</div><div class="desc">Spans 12 parent companies with substantial data trails across AI, social, commerce, and work.</div><div class="range"><span class="badge badge-est">🟠 61–80 · Significant</span></div></div>
+          </div>
+          <div class="score-card">
+            <div class="score-ring"><svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#1a1d27" stroke-width="7"/><circle cx="50" cy="50" r="42" fill="none" stroke="#ffcc00" stroke-width="7" stroke-dasharray="263.9" stroke-dashoffset="145" stroke-linecap="round"/></svg><div class="num" style="color:#ffcc00;">45</div></div>
+            <div class="score-info"><div class="name">Privacy Score</div><div class="desc">Multiple high-tracking platforms with default settings. AI conversation histories are an emerging risk surface.</div><div class="range"><span class="badge badge-est">🟠 31–60 · Fair</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="topology">
+      <div class="section-label"><span class="si">🌐</span> Footprint Topology</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="lbl">Total Services</div><div class="val">15</div><div class="note"><span class="badge badge-fact" style="font-size:9px;">Fact</span></div></div>
+        <div class="stat-box"><div class="lbl">Parent Companies</div><div class="val">12</div><div class="note"><span class="badge badge-fact" style="font-size:9px;">Fact</span></div></div>
+        <div class="stat-box"><div class="lbl">Ecosystem Concentration</div><div class="val" style="color:var(--orange);">High</div><div class="note"><span class="badge badge-est" style="font-size:9px;">Estimate</span> Google: 3 services</div></div>
+        <div class="stat-box"><div class="lbl">Est. Tracking Surface</div><div class="val" style="color:var(--red);">~10</div><div class="note"><span class="badge badge-est" style="font-size:9px;">Estimate</span> of 15 services</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="heatmap">
+      <div class="section-label"><span class="si">🔥</span> Exposure Heatmap</div>
+      <div class="card">
+        <div class="heatmap">
+          <div class="heat-cell h-crit"><div class="hl">Identity</div><div class="hv">95</div></div>
+          <div class="heat-cell h-crit"><div class="hl">Behaviour</div><div class="hv">92</div></div>
+          <div class="heat-cell h-high"><div class="hl">Location</div><div class="hv">68</div></div>
+          <div class="heat-cell h-med"><div class="hl">Financial</div><div class="hv">55</div></div>
+          <div class="heat-cell h-crit"><div class="hl">Social Graph</div><div class="hv">85</div></div>
+          <div class="heat-cell h-high"><div class="hl">AI Convos</div><div class="hv">78</div></div>
+          <div class="heat-cell h-crit"><div class="hl">Device</div><div class="hv">88</div></div>
+          <div class="heat-cell h-low"><div class="hl">Biometric</div><div class="hv">25</div></div>
+          <div class="heat-cell h-high"><div class="hl">Shopping</div><div class="hv">62</div></div>
+          <div class="heat-cell h-med"><div class="hl">Comms</div><div class="hv">50</div></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-sq" style="background:rgba(239,68,68,0.3);"></div>Critical (80–100)</div>
+          <div class="legend-item"><div class="legend-sq" style="background:rgba(249,115,22,0.25);"></div>High (60–79)</div>
+          <div class="legend-item"><div class="legend-sq" style="background:rgba(251,191,36,0.2);"></div>Medium (40–59)</div>
+          <div class="legend-item"><div class="legend-sq" style="background:rgba(34,197,94,0.15);"></div>Low (0–39)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="companies">
+      <div class="section-label"><span class="si">🏢</span> Company Exposure Ranking</div>
+      <div class="card">
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg></div><div class="company-info"><div class="cn">Google</div><div class="ca">YouTube · Search · Google Pay</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:95%;background:var(--red);"></div></div></div><div class="company-score" style="color:var(--red);">95</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0866FF"/><path fill="#fff" d="M12 6c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 2c.7 0 1.3.2 1.8.5-.5.3-1.1.5-1.8.5s-1.3-.2-1.8-.5c.5-.3 1.1-.5 1.8-.5zm-3.5 4c0-.5.1-1 .3-1.4.8.6 1.9 1 3.2 1s2.4-.4 3.2-1c.2.4.3.9.3 1.4 0 1.9-1.6 3.5-3.5 3.5S8.5 13.9 8.5 12z"/></svg></div><div class="company-info"><div class="cn">Meta</div><div class="ca">Instagram · WhatsApp</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:82%;background:var(--red);"></div></div></div><div class="company-score" style="color:var(--red);">82</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#10A37F"/><path fill="#fff" d="M12 7c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 2c1.7 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.3-3 3-3z"/></svg></div><div class="company-info"><div class="cn">OpenAI</div><div class="ca">ChatGPT</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:68%;background:var(--orange);"></div></div></div><div class="company-score" style="color:var(--orange);">68</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#D97757"/><path fill="#fff" d="M7 18l3.5-12h3L17 18h-2.5l-.7-2.5h-3.6L9.5 18H7zm4.2-4.5h2.6L12.5 9l-1.3 4.5z"/></svg></div><div class="company-info"><div class="cn">Anthropic</div><div class="ca">Claude</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:65%;background:var(--orange);"></div></div></div><div class="company-score" style="color:var(--orange);">65</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" fill="#F25022"/><rect x="13" y="2" width="9" height="9" fill="#7FBA00"/><rect x="2" y="13" width="9" height="9" fill="#00A4EF"/><rect x="13" y="13" width="9" height="9" fill="#FFB900"/></svg></div><div class="company-info"><div class="cn">Microsoft</div><div class="ca">Microsoft Teams</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:60%;background:var(--orange);"></div></div></div><div class="company-score" style="color:var(--orange);">60</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><path fill="#FF9900" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 5h2l3 10h-2l-.5-2h-3L9 17H7l4-10z"/></svg></div><div class="company-info"><div class="cn">Amazon</div><div class="ca">Amazon Shopping</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:55%;background:var(--amber);"></div></div></div><div class="company-score" style="color:var(--amber);">55</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#4D6BFE"/><path fill="#fff" d="M12 6c-1.5 3-3.5 5-6.5 6 3 1 5 3 6.5 6 1.5-3 3.5-5 6.5-6-3-1-5-3-6.5-6z"/></svg></div><div class="company-info"><div class="cn">DeepSeek</div><div class="ca">DeepSeek Chat</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:50%;background:var(--amber);"></div></div></div><div class="company-score" style="color:var(--amber);">50</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#0a0b0f"/><path fill="#d97757" d="M6 6h12v3l-7 9h7v3H6v-3l7-9H6V6z"/></svg></div><div class="company-info"><div class="cn">Z.ai</div><div class="ca">chat.z.ai</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:48%;background:var(--amber);"></div></div></div><div class="company-score" style="color:var(--amber);">48</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><path fill="#FFFC00" d="M12 2c2.5 0 4.5 2 4.5 4.5 0 1 0 2-.2 3 1 .5 2 .3 2.5.2.7-.2.8.5.4.8-.5.4-1.7.7-2.5.7-.3 0 .5 1.8 2.4 2.7.5.3.3.7 0 .9-.5.3-1.5.5-1.7.7-.1.2 0 .6-.3.7-.4.1-1 0-1.7 0-.7 0-1.3.4-1.9.7-.7.4-1.4.7-2 .7s-1.3-.3-2-.7c-.6-.3-1.2-.7-1.9-.7-.7 0-1.3.1-1.7 0-.3-.1-.2-.5-.3-.7-.2-.2-1.2-.4-1.7-.7-.3-.2-.5-.6 0-.9 1.9-.9 2.7-2.7 2.4-2.7-.8 0-2-.3-2.5-.7-.4-.3-.3-1 .4-.8.5.1 1.5.3 2.5-.2-.2-1-.2-2-.2-3C7.5 4 9.5 2 12 2z" stroke="#000" stroke-width="0.5"/></svg></div><div class="company-info"><div class="cn">Snap Inc.</div><div class="ca">Snapchat (dormant)</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:30%;background:var(--green);"></div></div></div><div class="company-score" style="color:var(--green);">30</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#F43397"/><path fill="#fff" d="M8 8h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z"/></svg></div><div class="company-info"><div class="cn">Meesho</div><div class="ca">Meesho Shopping</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:25%;background:var(--green);"></div></div></div><div class="company-score" style="color:var(--green);">25</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e"/><path fill="#e94560" d="M12 4L6 20l6-4 6 4L12 4z"/></svg></div><div class="company-info"><div class="cn">Nekki</div><div class="ca">Shadow Fight 3</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:20%;background:var(--green);"></div></div></div><div class="company-score" style="color:var(--green);">20</div></div>
+        <div class="company-row"><div class="company-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#8B5CF6"/><path fill="#fff" d="M8 10c0-2 2-4 4-4s4 2 4 4v1H8v-1zm-1 3h10v7H7v-7z"/></svg></div><div class="company-info"><div class="cn">Cookingdom Dev</div><div class="ca">Cookingdom</div></div><div class="company-bar-wrap"><div class="company-bar"><div class="company-bar-fill" style="width:18%;background:var(--green);"></div></div></div><div class="company-score" style="color:var(--green);">18</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="matrix">
+      <div class="section-label"><span class="si">📋</span> Data Collection Matrix</div>
+      <div class="card">
+        <table class="matrix-table">
+          <thead><tr><th>App</th><th>Identity</th><th>Location</th><th>Behavior</th><th>Financial</th><th>Comms</th><th>Device</th><th>Daily Use</th></tr></thead>
+          <tbody>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" fill="#F25022"/><rect x="13" y="2" width="9" height="9" fill="#7FBA00"/><rect x="2" y="13" width="9" height="9" fill="#00A4EF"/><rect x="13" y="13" width="9" height="9" fill="#FFB900"/></svg> MS Teams</div></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="usage-pill usage-high">6h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#FF0000" d="M21.6 7.2c-.2-.9-.9-1.6-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4c-.9.2-1.6.9-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg> YouTube</div></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="usage-pill usage-high">3h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg> Google Search</div></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="usage-pill usage-high">50+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#D97757"/><path fill="#fff" d="M7 18l3.5-12h3L17 18h-2.5l-.7-2.5h-3.6L9.5 18H7zm4.2-4.5h2.6L12.5 9l-1.3 4.5z"/></svg> Claude</div></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-high">2h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#10A37F"/><path fill="#fff" d="M12 7c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5zm0 2c1.7 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.3-3 3-3z"/></svg> ChatGPT</div></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-high">1h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#4D6BFE"/><path fill="#fff" d="M12 6c-1.5 3-3.5 5-6.5 6 3 1 5 3 6.5 6 1.5-3 3.5-5 6.5-6-3-1-5-3-6.5-6z"/></svg> DeepSeek</div></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-high">1h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#0a0b0f"/><path fill="#d97757" d="M6 6h12v3l-7 9h7v3H6v-3l7-9H6V6z"/></svg> chat.z.ai</div></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-high">1h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#833AB4"/><stop offset="50%" stop-color="#FD1D1D"/><stop offset="100%" stop-color="#FCB045"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5" fill="url(#ig)"/><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17" cy="7" r="1.5" fill="#fff"/></svg> Instagram</div></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="dot-h"></span></td><td><span class="usage-pill usage-high">1h+ / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#25D366" d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2z"/><path fill="#fff" d="M17.5 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.2-.7-2.7-1.1-4.4-3.8-4.5-4-.1-.2-1.1-1.4-1.1-2.7 0-1.3.7-1.9.9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6c-.1.2-.3.3-.1.6.1.3.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4.1.5-.1l.6-.7c.2-.2.4-.2.6-.1l1.9.9c.3.1.5.2.5.4.1.2.1.7-.1 1.3z"/></svg> WhatsApp</div></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-norm">30m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#FF9900" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 5h2l3 10h-2l-.5-2h-3L9 17H7l4-10z"/></svg> Amazon</div></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="dot-h"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-norm">15m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#F43397"/><path fill="#fff" d="M8 8h8v2H8V8zm0 3h6v2H8v-2zm0 3h8v2H8v-2z"/></svg> Meesho</div></td><td><span class="dot-m"></span></td><td><span class="dot-l"></span></td><td><span class="dot-m"></span></td><td><span class="dot-m"></span></td><td><span class="dot-n"></span></td><td><span class="dot-l"></span></td><td><span class="usage-pill usage-low">5m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg> Google Pay</div></td><td><span class="dot-h"></span></td><td><span class="dot-m"></span></td><td><span class="dot-m"></span></td><td><span class="dot-h"></span></td><td><span class="dot-n"></span></td><td><span class="dot-l"></span></td><td><span class="usage-pill usage-low">2m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#8B5CF6"/><path fill="#fff" d="M8 10c0-2 2-4 4-4s4 2 4 4v1H8v-1zm-1 3h10v7H7v-7z"/></svg> Cookingdom</div></td><td><span class="dot-l"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="dot-l"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-low">10m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1a1a2e"/><path fill="#e94560" d="M12 4L6 20l6-4 6 4L12 4z"/></svg> Shadow Fight 3</div></td><td><span class="dot-l"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="dot-l"></span></td><td><span class="dot-n"></span></td><td><span class="dot-m"></span></td><td><span class="usage-pill usage-low">10m / day</span></td></tr>
+            <tr><td><div class="matrix-app-name"><svg viewBox="0 0 24 24"><path fill="#FFFC00" d="M12 2c2.5 0 4.5 2 4.5 4.5 0 1 0 2-.2 3 1 .5 2 .3 2.5.2.7-.2.8.5.4.8-.5.4-1.7.7-2.5.7-.3 0 .5 1.8 2.4 2.7.5.3.3.7 0 .9-.5.3-1.5.5-1.7.7-.1.2 0 .6-.3.7-.4.1-1 0-1.7 0-.7 0-1.3.4-1.9.7-.7.4-1.4.7-2 .7s-1.3-.3-2-.7c-.6-.3-1.2-.7-1.9-.7-.7 0-1.3.1-1.7 0-.3-.1-.2-.5-.3-.7-.2-.2-1.2-.4-1.7-.7-.3-.2-.5-.6 0-.9 1.9-.9 2.7-2.7 2.4-2.7-.8 0-2-.3-2.5-.7-.4-.3-.3-1 .4-.8.5.1 1.5.3 2.5-.2-.2-1-.2-2-.2-3C7.5 4 9.5 2 12 2z" stroke="#000" stroke-width="0.5"/></svg> Snapchat</div></td><td><span class="dot-m"></span></td><td><span class="dot-m"></span></td><td><span class="dot-l"></span></td><td><span class="dot-n"></span></td><td><span class="dot-l"></span></td><td><span class="dot-l"></span></td><td><span class="usage-pill usage-vlow">Once / 6mo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="risk">
+      <div class="two-col-inner">
+        <div class="card">
+          <div class="section-label"><span class="si">⚠️</span> Risk Radar</div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--red);"></div><div class="risk-label">AI conversation history (4 platforms)</div><div class="risk-level rl-crit">Critical</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--orange);"></div><div class="risk-label">Google ecosystem correlation</div><div class="risk-level rl-high">High</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--orange);"></div><div class="risk-label">Meta social graph linking</div><div class="risk-level rl-high">High</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--orange);"></div><div class="risk-label">Cross-platform behavioral profiling</div><div class="risk-level rl-high">High</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--orange);"></div><div class="risk-label">Device fingerprinting (15 apps)</div><div class="risk-level rl-high">High</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--amber);"></div><div class="risk-label">Shopping + payment correlation</div><div class="risk-level rl-med">Medium</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--amber);"></div><div class="risk-label">Background data (Snapchat dormant)</div><div class="risk-level rl-med">Medium</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--amber);"></div><div class="risk-label">Work data exposure (Teams)</div><div class="risk-level rl-med">Medium</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--amber);"></div><div class="risk-label">Gaming behavior profiling</div><div class="risk-level rl-med">Medium</div></div>
+          <div class="risk-row"><div class="risk-dot" style="background:var(--green);"></div><div class="risk-label">Biometric data exposure</div><div class="risk-level rl-low">Low</div></div>
+        </div>
+        <div class="card" id="twin">
+          <div class="section-label"><span class="si">👤</span> Digital Twin <span class="badge badge-est">Estimates</span></div>
+          <div class="twin-row"><div class="twin-icon">💻</div><div><div class="twin-label">Primary device</div><div class="twin-val">Desktop + mobile (work-first)</div></div></div>
+          <div class="twin-row"><div class="twin-icon">🧠</div><div><div class="twin-label">Cognitive style</div><div class="twin-val">Analytical, AI-augmented researcher</div></div></div>
+          <div class="twin-row"><div class="twin-icon">💼</div><div><div class="twin-label">Professional identity</div><div class="twin-val">Knowledge worker, tech-adjacent</div></div></div>
+          <div class="twin-row"><div class="twin-icon">🔍</div><div><div class="twin-label">Information seeking</div><div class="twin-val">Heavy searcher, compares AI sources</div></div></div>
+          <div class="twin-row"><div class="twin-icon">🛒</div><div><div class="twin-label">Shopping behavior</div><div class="twin-val">Price-conscious, value-seeking</div></div></div>
+          <div class="twin-row"><div class="twin-icon">🎮</div><div><div class="twin-label">Entertainment</div><div class="twin-val">Casual gamer, short sessions</div></div></div>
+          <div class="twin-row"><div class="twin-icon">📱</div><div><div class="twin-label">Social presence</div><div class="twin-val">Instagram-active, Snapchat-dormant</div></div></div>
+          <div class="twin-row"><div class="twin-icon">💳</div><div><div class="twin-label">Financial profile</div><div class="twin-val">Digital payments, low frequency</div></div></div>
+          <div class="twin-row"><div class="twin-icon">🌍</div><div><div class="twin-label">Likely region</div><div class="twin-val">India (Meesho + Google Pay)</div></div></div>
+          <div class="twin-row"><div class="twin-icon">⏰</div><div><div class="twin-label">Activity pattern</div><div class="twin-val">10+ hours/day digital</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="assets">
+      <div class="section-label"><span class="si">💎</span> Most Valuable Data Assets</div>
+      <div class="card">
+        <div class="asset-item"><div class="asset-rank">01</div><div style="flex:1"><div class="asset-name">AI conversation history (4 assistants)</div><div class="asset-desc">Reasoning patterns, prompt engineering — cognitive profile</div></div><div class="asset-val av-crit">Critical</div></div>
+        <div class="asset-item"><div class="asset-rank">02</div><div style="flex:1"><div class="asset-name">Search + payment correlation</div><div class="asset-desc">Google Search intent vs Google Pay action</div></div><div class="asset-val av-crit">Critical</div></div>
+        <div class="asset-item"><div class="asset-rank">03</div><div style="flex:1"><div class="asset-name">Work behavior (Teams)</div><div class="asset-desc">Meeting patterns, colleague network, calendar</div></div><div class="asset-val av-high">High</div></div>
+        <div class="asset-item"><div class="asset-rank">04</div><div style="flex:1"><div class="asset-name">Social graph (Instagram + WhatsApp)</div><div class="asset-desc">Connections, interaction patterns, content prefs</div></div><div class="asset-val av-high">High</div></div>
+        <div class="asset-item"><div class="asset-rank">05</div><div style="flex:1"><div class="asset-name">Video engagement (YouTube)</div><div class="asset-desc">Watch time, preferences, attention patterns</div></div><div class="asset-val av-high">High</div></div>
+        <div class="asset-item"><div class="asset-rank">06</div><div style="flex:1"><div class="asset-name">Shopping behavior (Amazon + Meesho)</div><div class="asset-desc">Purchase history, price sensitivity</div></div><div class="asset-val av-med">Medium</div></div>
+        <div class="asset-item"><div class="asset-rank">07</div><div style="flex:1"><div class="asset-name">Device fingerprint (all 15 apps)</div><div class="asset-desc">Hardware specs, OS, network — cross-app tracking</div></div><div class="asset-val av-med">Medium</div></div>
+        <div class="asset-item"><div class="asset-rank">08</div><div style="flex:1"><div class="asset-name">Gaming behavior (2 games)</div><div class="asset-desc">Session patterns, in-app purchases</div></div><div class="asset-val av-med">Medium</div></div>
+        <div class="asset-item"><div class="asset-rank">09</div><div style="flex:1"><div class="asset-name">Communication patterns (WhatsApp)</div><div class="asset-desc">Contact frequency, group affiliations</div></div><div class="asset-val av-med">Medium</div></div>
+        <div class="asset-item"><div class="asset-rank">10</div><div style="flex:1"><div class="asset-name">Background data (Snapchat dormant)</div><div class="asset-desc">Location history, contact sync, cached metadata</div></div><div class="asset-val av-high">High</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="wow">
+      <div class="section-label"><span class="si">⚡</span> WOW Insights</div>
+      <div class="card">
+        <div class="wow-item"><div class="wow-icon">⚡</div><div class="wow-text"><strong>4 AI assistants = 4 separate conversation histories.</strong> Claude, DeepSeek, ChatGPT, and chat.z.ai each store prompts, reasoning patterns, and problem-solving approaches — more intimate than social media data.</div></div>
+        <div class="wow-item"><div class="wow-icon">🔗</div><div class="wow-text"><strong>Google Search + Google Pay = spending-to-intent correlation.</strong> Search reveals what you're thinking about buying. Pay reveals what you actually bought. Together: a marketer's dream.</div></div>
+        <div class="wow-item"><div class="wow-icon">👻</div><div class="wow-text"><strong>Snapchat is dormant but still collecting.</strong> At once-in-6-months usage, it still has background location, contacts sync, and device info if installed. Dormant ≠ invisible.</div></div>
+        <div class="wow-item"><div class="wow-icon">📈</div><div class="wow-text"><strong>Google ecosystem = 20% of your footprint.</strong> 3 of 15 apps cover search, video, AND payments — three distinct data categories.</div></div>
+        <div class="wow-item"><div class="wow-icon">👥</div><div class="wow-text"><strong>Meta links Instagram + WhatsApp.</strong> Different purposes but Meta likely correlates contacts, activity times, and interaction patterns.</div></div>
+        <div class="wow-item"><div class="wow-icon">🎮</div><div class="wow-text"><strong>Gaming apps punch above their weight.</strong> Low usage but they collect device specs, in-app purchase data, and session patterns — valuable for fingerprinting.</div></div>
+        <div class="wow-item"><div class="wow-icon">💼</div><div class="wow-text"><strong>Teams is your work-data goldmine.</strong> At 6+ hours/day, it captures schedule, meeting patterns, file access, colleague network — richest single-source work profile.</div></div>
+        <div class="wow-item"><div class="wow-icon">🧩</div><div class="wow-text"><strong>Your AI usage is unusual.</strong> Most users have 0-1 AI assistants. Having 4 creates a unique risk surface: reasoning traces across 4 separate platforms.</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="plan">
+      <div class="section-label"><span class="si">🛡️</span> Privacy Improvement Plan</div>
+      <div class="card">
+        <div class="plan-item"><div class="plan-num">01</div><div><div class="plan-title">Audit Google account permissions</div><div class="plan-desc">Turn off Search history, Location history, YouTube history at myaccount.google.com</div><div class="plan-impact">↑ Privacy Score +8 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">02</div><div><div class="plan-title">Enable AI conversation auto-delete</div><div class="plan-desc">Enable 30-day auto-delete on ChatGPT and Claude, or consolidate to 1-2 platforms</div><div class="plan-impact">↑ Privacy Score +6 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">03</div><div><div class="plan-title">Limit Meta cross-app data sharing</div><div class="plan-desc">Disable cross-app sharing, turn off personalised ads in Instagram + WhatsApp</div><div class="plan-impact">↑ Privacy Score +5 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">04</div><div><div class="plan-title">Separate payment and browsing identities</div><div class="plan-desc">Use a separate browser profile for sensitive searches to break Google correlation</div><div class="plan-impact">↑ Privacy Score +4 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">05</div><div><div class="plan-title">Uninstall Snapchat</div><div class="plan-desc">Dormant app still collects background data. Uninstalling eliminates passive collection</div><div class="plan-impact">↑ Privacy Score +3 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">06</div><div><div class="plan-title">Review Teams privacy settings</div><div class="plan-desc">Limit external access, review recordings policy, clear chat history periodically</div><div class="plan-impact">↑ Privacy Score +3 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">07</div><div><div class="plan-title">Audit app permissions on device</div><div class="plan-desc">Revoke location, contacts, microphone, camera permissions not actively needed</div><div class="plan-impact">↑ Privacy Score +2 pts</div></div></div>
+        <div class="plan-item"><div class="plan-num">08</div><div><div class="plan-title">Use privacy-focused search alternatives</div><div class="plan-desc">DuckDuckGo or Brave Search for sensitive queries breaks search-to-payment correlation</div><div class="plan-impact">↑ Privacy Score +4 pts</div></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="verdict">
+      <div class="section-label"><span class="si">📜</span> Final Verdict</div>
+      <div class="card">
+        <div class="verdict-box">
+          <div class="verdict-title">Significant footprint, fair privacy posture — AI-augmented user profile</div>
+          <div class="verdict-text">
+            Your digital presence spans 15 services across 12 companies — characterized by unusually high AI tool usage (4 assistants) and Google ecosystem concentration (3 services). Google Search + Google Pay creates a unique intent-to-action correlation. The Meta pair feeds a shared social graph. Your 4 AI assistants collectively form a cognitive profile more intimate than social media data — reasoning patterns and prompt engineering strategies stored across 4 separate platforms. Targeted actions across 3–4 platforms could raise your Privacy Score from 45 to ~70–75 with minimal disruption.
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="badge badge-fact">15 Services (Fact)</span>
+            <span class="badge badge-fact">12 Companies (Fact)</span>
+            <span class="badge badge-est">All scores estimated</span>
+          </div>
+        </div>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> This report is generated from user-reported app usage only. All scores, risk levels, data inferences, digital twin traits, and company exposure estimates are derived from publicly known industry practices. No access to private databases, advertising systems, or any company's internal data is claimed. This is not legal or security advice.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============ SCROLL SPY (simple scroll-based) ============
+const main = document.getElementById('main');
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.section');
+const navScroll = document.getElementById('navScroll');
+
+// Click to scroll
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const target = document.getElementById(item.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Scroll-based spy — picks the section closest to top
+function updateActive() {
+  const scrollTop = main.scrollTop;
+  const triggerPoint = 120; // px from top
+  let activeId = sections[0]?.id;
+
+  for (let i = sections.length - 1; i >= 0; i--) {
+    if (sections[i].offsetTop - triggerPoint <= scrollTop) {
+      activeId = sections[i].id;
+      break;
+    }
+  }
+
+  // Special case: if scrolled to the very bottom, always highlight last section
+  if (scrollTop + main.clientHeight >= main.scrollHeight - 50) {
+    activeId = sections[sections.length - 1].id;
+  }
+
+  navItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.target === activeId);
+  });
+
+  // Scroll active nav item into view
+  const activeItem = document.querySelector('.nav-item.active');
+  if (activeItem) {
+    activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+main.addEventListener('scroll', updateActive);
+updateActive(); // initial
+</script>
+
+</body>
+</html>
