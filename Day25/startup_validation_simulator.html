@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Startup Validation Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#060810; --surface:#0c1018; --panel:#111520; --card:#161b28; --card2:#1c2235;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11); --border3:rgba(255,255,255,0.18);
+  --accent:#5b8def; --accent2:#3d6dd4; --accent-glow:rgba(91,141,239,0.15);
+  --green:#22c55e; --green-bg:rgba(34,197,94,0.08);
+  --amber:#f59e0b; --amber-bg:rgba(245,158,11,0.08);
+  --red:#ef4444; --red-bg:rgba(239,68,68,0.08);
+  --purple:#a78bfa; --teal:#2dd4bf;
+  --text:#e8eaf0; --muted:#8892a4; --muted2:#4a5568;
+  --r:10px; --r-sm:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;min-height:100vh;}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 60px;}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.col3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.header-inner{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.3px;}
+.logo span{color:var(--accent);}
+.header-badge{font-size:9px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;background:var(--accent-glow);color:var(--accent);border:1px solid rgba(91,141,239,0.2);text-transform:uppercase;letter-spacing:0.08em;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.phase-label{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.btn{padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--border2);background:var(--card);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.btn:hover{border-color:var(--accent);background:var(--card2);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-sm{padding:6px 12px;font-size:11px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-danger{border-color:rgba(239,68,68,0.3);color:var(--red);}
+.btn-danger:hover{background:var(--red-bg);border-color:var(--red);}
+
+.progress-bar{display:flex;align-items:center;gap:0;padding:16px 20px;max-width:1080px;margin:0 auto;position:relative;}
+.progress-line{position:absolute;top:50%;left:20px;right:20px;height:2px;background:var(--border);z-index:0;transform:translateY(-50%);}
+.progress-line-fill{position:absolute;top:50%;left:20px;height:2px;background:var(--accent);z-index:0;transform:translateY(-50%);transition:width 0.4s ease;}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;position:relative;z-index:1;}
+.step-circle{width:32px;height:32px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted);transition:all 0.3s;}
+.step-item.active .step-circle{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--accent-glow);}
+.step-item.done .step-circle{background:var(--green);border-color:var(--green);color:#fff;}
+.step-label{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;}
+.step-item.active .step-label{color:var(--accent);}
+.step-item.done .step-label{color:var(--green);}
+
+.section{display:none;padding:20px;animation:fadeIn 0.4s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
+input[type="text"],input[type="password"],textarea,select{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color 0.2s;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;min-height:80px;line-height:1.5;}
+select{cursor:pointer;}
+.field{margin-bottom:14px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+.api-settings{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border2);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.api-settings-title{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.api-settings-desc{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.provider-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.provider-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r-sm);padding:12px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.provider-card:hover{border-color:var(--border3);}
+.provider-card.selected{border-color:var(--accent);background:var(--accent-glow);}
+.provider-icon{font-size:24px;margin-bottom:6px;}
+.provider-name{font-size:11px;font-weight:600;}
+.provider-free{font-size:9px;color:var(--green);margin-top:2px;}
+.api-key-row{display:flex;gap:10px;align-items:flex-end;}
+.api-key-row .field{flex:1;margin-bottom:0;}
+.status-badge{font-size:10px;padding:4px 10px;border-radius:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+.status-connected{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
+.status-disconnected{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,0.2);}
+.status-testing{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(91,141,239,0.2);}
+
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-glow);}
+.upload-zone p{color:var(--muted);font-size:12px;margin-top:8px;}
+.file-list{margin-top:12px;}
+.file-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:6px 12px;font-size:11px;margin:4px 6px 4px 0;}
+.file-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;}
+.file-chip button:hover{color:var(--red);}
+#file-input{display:none;}
+
+.rev-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;transition:all 0.3s;}
+.rev-card.speaking{border-color:var(--border3);box-shadow:0 0 20px rgba(91,141,239,0.08);}
+.rev-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.rev-ava{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.rev-name{font-size:14px;font-weight:600;}
+.rev-role{font-size:11px;}
+.rev-msg{font-size:12px;line-height:1.6;color:var(--text);margin-top:8px;min-height:20px;}
+.thinking{display:flex;gap:4px;padding:8px 0;}
+.thinking-dot{width:6px;height:6px;border-radius:50%;animation:think 1.4s infinite ease-in-out;}
+.thinking-dot:nth-child(2){animation-delay:0.2s;}
+.thinking-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes think{0%,60%,100%{opacity:0.3;transform:scale(0.8);}30%{opacity:1;transform:scale(1);}}
+
+.qa-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden;}
+.qa-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);}
+.qa-body{padding:16px;max-height:500px;overflow-y:auto;}
+.chat-msg{margin-bottom:12px;}
+.reviewer-msg .msg-sender{font-size:10px;font-weight:600;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em;}
+.reviewer-msg .bubble{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm) var(--r-sm) var(--r-sm) 0;padding:10px 14px;font-size:12px;line-height:1.6;display:inline-block;max-width:85%;}
+.user-msg{text-align:right;}
+.user-msg .msg-sender{font-size:10px;font-weight:600;margin-bottom:3px;color:var(--muted);}
+.user-msg .bubble{background:var(--accent);color:#fff;border-radius:var(--r-sm) var(--r-sm) 0 var(--r-sm);padding:10px 14px;font-size:12px;line-height:1.6;display:inline-block;max-width:85%;text-align:left;}
+.system-msg{text-align:center;}
+.system-msg .bubble{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,0.2);padding:6px 12px;font-size:11px;border-radius:20px;display:inline-block;}
+.followup-badge{display:inline-block;font-size:9px;color:var(--amber);background:var(--amber-bg);padding:2px 6px;border-radius:3px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+.answer-row{display:flex;gap:8px;margin-top:8px;}
+.answer-row input{flex:1;}
+.progress-wrap{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-bar-inner{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s ease;}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+.tag-blue{background:var(--accent-glow);color:var(--accent);}
+.tag-green{background:var(--green-bg);color:var(--green);}
+.tag-amber{background:var(--amber-bg);color:var(--amber);}
+.tag-red{background:var(--red-bg);color:var(--red);}
+.tag-purple{background:rgba(167,139,250,0.08);color:var(--purple);}
+.tag-teal{background:rgba(45,212,191,0.08);color:var(--teal);}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+.score-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;}
+.score-num{font-size:36px;font-weight:700;line-height:1;}
+.score-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;}
+.score-reason{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;text-align:left;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-label{width:140px;font-size:11px;font-weight:500;}
+.bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+.bar-val{width:40px;text-align:right;font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.info-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;font-size:12px;line-height:1.6;color:var(--muted);}
+.contradiction{background:var(--red-bg);border:1px solid rgba(239,68,68,0.2);border-radius:var(--r-sm);padding:10px;margin-bottom:8px;}
+.contradiction-label{font-size:10px;color:var(--red);font-weight:600;text-transform:uppercase;margin-bottom:4px;}
+
+.verdict-card{text-align:center;padding:32px 20px;border-radius:var(--r);border:2px solid;}
+.verdict-build{background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2);}
+.verdict-validate{background:rgba(245,158,11,0.05);border-color:rgba(245,158,11,0.2);}
+.verdict-pivot{background:rgba(249,115,22,0.05);border-color:rgba(249,115,22,0.2);}
+.verdict-reject{background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2);}
+.verdict-emoji{font-size:48px;margin-bottom:8px;}
+.verdict-title{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+.verdict-reasoning{font-size:12px;color:var(--muted);line-height:1.7;max-width:600px;margin:16px auto 0;text-align:left;}
+.impact-box{text-align:center;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);}
+.impact-val{font-size:20px;font-weight:700;}
+.impact-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+.sw-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sw-item{display:flex;gap:8px;font-size:12px;line-height:1.5;padding:6px 0;}
+.step-rec{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.step-rec:last-child{border-bottom:none;}
+.step-n{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-size:14px;font-weight:700;color:var(--muted);font-family:'JetBrains Mono',monospace;width:30px;}
+.lb-name{font-size:13px;font-weight:500;flex:1;}
+.lb-date{font-size:10px;color:var(--muted2);}
+.lb-score{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+
+.text-muted{color:var(--muted);}
+.text-center{text-align:center;}
+.mb-0{margin-bottom:0;}
+.mb-8{margin-bottom:8px;}
+.mb-16{margin-bottom:16px;}
+.mt-16{margin-top:16px;}
+.flex{display:flex;}
+.gap-8{gap:8px;}
+.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:var(--r);max-width:560px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:between;justify-content:space-between;}
+.modal-title{font-size:14px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;}
+.modal-body{padding:20px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo">Startup <span>Validator</span></div>
+      <span class="header-badge" id="ai-status">No AI Connected</span>
+    </div>
+    <div class="header-right">
+      <span class="phase-label" id="phase-label">Phase: Input</span>
+      <button class="btn btn-sm" onclick="openApiModal()">⚙ AI Settings</button>
+      <button class="btn btn-sm btn-danger" onclick="resetAll()">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-line"></div>
+  <div class="progress-line-fill" id="progress-fill" style="width:0%"></div>
+  <div class="step-item active" data-step="0"><div class="step-circle">1</div><div class="step-label">Input</div></div>
+  <div class="step-item" data-step="1"><div class="step-circle">2</div><div class="step-label">Knowledge</div></div>
+  <div class="step-item" data-step="2"><div class="step-circle">3</div><div class="step-label">Panel</div></div>
+  <div class="step-item" data-step="3"><div class="step-circle">4</div><div class="step-label">Q&A</div></div>
+  <div class="step-item" data-step="4"><div class="step-circle">5</div><div class="step-label">Scores</div></div>
+  <div class="step-item" data-step="5"><div class="step-circle">6</div><div class="step-label">Verdict</div></div>
+</div>
+
+<div class="wrap">
+
+<div class="section active" id="sec-0">
+  <div class="card">
+    <div class="card-title">📋 Startup Information</div>
+    <div class="field">
+      <label>Startup Name</label>
+      <input type="text" id="f_name" value="PrepPal AI" placeholder="Your startup name">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Current Stage</label>
+        <select id="f_stage">
+          <option value="Idea">Idea</option>
+          <option value="Validation" selected>Validation</option>
+          <option value="MVP Built">MVP Built</option>
+          <option value="Early Users">Early Users</option>
+          <option value="Growth">Growth</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Sustainability Model</label>
+        <select id="f_model">
+          <option value="Community-supported (donations + CSR + optional premium)" selected>Community-supported (donations + CSR + optional premium)</option>
+          <option value="Open-source + grants">Open-source + grants</option>
+          <option value="BYOK / BYOS architecture">BYOK / BYOS architecture</option>
+          <option value="Non-profit + impact funds">Non-profit + impact funds</option>
+          <option value="Freemium">Freemium</option>
+          <option value="B2B licensing + free consumer">B2B licensing + free consumer</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Problem Statement</label>
+      <textarea id="f_problem" placeholder="What problem are you solving?">Many Indian students struggle with placement preparation and interview confidence. 75% of tier-2/3 students fail interviews due to poor communication, not lack of knowledge. No India-native, free AI interview coach exists.</textarea>
+    </div>
+    <div class="field">
+      <label>Your Solution</label>
+      <textarea id="f_solution" placeholder="How does your startup solve this?">AI-powered mock interview and placement coaching platform with India-specific company question banks (TCS, Infosys, Wipro), real-time feedback on content and communication quality, progress tracking, and personalized improvement plans. Privacy-first: auto-delete after 30 days.</textarea>
+    </div>
+    <div class="field">
+      <label>Target Audience</label>
+      <input type="text" id="f_audience" value="Tier-2 and Tier-3 Indian college students aged 20-23 entering campus placement season" placeholder="Who is this for?">
+    </div>
+    <div class="field">
+      <label>Biggest Assumption To Validate</label>
+      <textarea id="f_assumption" placeholder="What's the riskiest assumption?">Students will consistently return and improve through repeated mock interviews, and word-of-mouth in college WhatsApp groups will drive organic growth at near-zero CAC.</textarea>
+    </div>
+    <div class="field">
+      <label>Founder Background (Optional)</label>
+      <textarea id="f_founder" placeholder="Tell reviewers about yourself">Online university student at Amrita Online. Built a privacy intelligence dashboard. Uses 4 AI tools daily. Lives the problem firsthand.</textarea>
+    </div>
+  </div>
+  <div class="flex gap-8">
+    <button class="btn btn-primary" onclick="goToKnowledge()">Continue → Upload Documents</button>
+  </div>
+  <div id="leaderboard-home" class="card mt-16">
+    <div class="card-title">🏆 Leaderboard</div>
+    <p class="text-muted" style="font-size:12px">No evaluations yet. Complete your first validation.</p>
+  </div>
+</div>
+
+<div class="section" id="sec-1">
+  <div class="card">
+    <div class="card-title">📎 Startup Knowledge Base</div>
+    <p class="text-muted mb-16" style="font-size:12px">Upload product vision documents, previous challenge reports, roadmaps, user feedback, or sustainability plans. The AI reviewers will reference these when asking questions.</p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+      <div style="font-size:32px">📎</div>
+      <p><strong>Drop files here or click to upload</strong></p>
+      <p>Supports .txt, .md, .pdf — Max 500KB each</p>
+    </div>
+    <input type="file" id="file-input" multiple accept=".txt,.md,.pdf" onchange="handleFiles(event)">
+    <div class="file-list" id="file-list"></div>
+    <div id="kb-preview" style="display:none;margin-top:12px;">
+      <label>Extracted Text Preview</label>
+      <div class="info-box" id="kb-text" style="max-height:200px;overflow-y:auto;font-size:11px;"></div>
+    </div>
+  </div>
+  <div class="flex gap-8">
+    <button class="btn" onclick="goSection(0)">← Back</button>
+    <button class="btn" onclick="goSection(1);document.getElementById('upload-zone').style.display='none'">Skip Upload</button>
+    <button class="btn btn-primary" onclick="startPanel()">▶ Start AI Review Panel →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-2">
+  <div class="card">
+    <div class="card-title">👥 AI Review Panel</div>
+    <div id="panel-summary" class="info-box mb-16"></div>
+    <div id="panel-grid"></div>
+  </div>
+  <div class="flex gap-8">
+    <button class="btn" onclick="goSection(1)">← Back</button>
+    <button class="btn btn-primary" id="btn-start-qa" onclick="startQA()" disabled>▶ Start Q&A Round →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-3">
+  <div class="card">
+    <div class="card-title">💬 Q&A Round</div>
+    <p class="text-muted mb-16" style="font-size:12px">Each reviewer will ask 3 questions based on your startup. Answer each question honestly - this helps them evaluate your startup.</p>
+    <div id="qa-container"></div>
+  </div>
+  <div class="flex gap-8" id="qa-actions" style="display:none">
+    <button class="btn btn-primary" onclick="generateScores()">Generate Final Scores →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-4">
+  <div class="card">
+    <div class="card-title">📊 Scorecard</div>
+    <div class="col3 mb-16" id="scores-display"></div>
+    <div id="bar-chart"></div>
+    <div id="consistency-section" class="mt-16"></div>
+  </div>
+  <div class="flex gap-8">
+    <button class="btn" onclick="goSection(3)">← Back</button>
+    <button class="btn btn-primary" onclick="showVerdict()">▶ Final Verdict →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-5">
+  <div class="card">
+    <div class="card-title">🎯 Final Verdict</div>
+    <div id="verdict-main"></div>
+    <div class="card-title mt-16">🌍 Community Impact Estimate</div>
+    <div class="col2" id="impact-section" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
+    <div class="card-title mt-16">✓ Strengths & ✗ Weaknesses</div>
+    <div id="sw-section"></div>
+    <div class="card-title mt-16">📋 Recommended Next Actions</div>
+    <div id="next-actions"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="exportReport()">⬇ Download Report</button>
+      <button class="btn" onclick="shareResult()">↗ Share Results</button>
+      <button class="btn btn-primary" onclick="resetAll()">Start New Validation</button>
+    </div>
+  </div>
+  <div class="card mt-16">
+    <div class="card-title">🏆 Leaderboard</div>
+    <div id="leaderboard-final"></div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙ AI Provider Settings</div>
+      <button class="modal-close" onclick="closeApiModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted mb-16" style="font-size:12px;line-height:1.6">Connect your own AI provider to enable real AI-powered questions, follow-ups, and scoring. Your API key is stored locally in your browser only — never sent to any server except the provider you choose.</p>
+      
+      <label>Select Provider</label>
+      <div class="provider-grid" id="provider-grid">
+        <div class="provider-card" data-provider="openai" onclick="selectProvider('openai')">
+          <div class="provider-icon">🟢</div>
+          <div class="provider-name">OpenAI</div>
+          <div class="provider-free">GPT-4o-mini</div>
+        </div>
+        <div class="provider-card" data-provider="openrouter" onclick="selectProvider('openrouter')">
+          <div class="provider-icon">🔀</div>
+          <div class="provider-name">OpenRouter</div>
+          <div class="provider-free">Free Models</div>
+        </div>
+        <div class="provider-card" data-provider="groq" onclick="selectProvider('groq')">
+          <div class="provider-icon">⚡</div>
+          <div class="provider-name">Groq</div>
+          <div class="provider-free">Llama Free</div>
+        </div>
+        <div class="provider-card" data-provider="zai" onclick="selectProvider('zai')">
+          <div class="provider-icon">🤖</div>
+          <div class="provider-name">Z.ai</div>
+          <div class="provider-free">GLM Flash</div>
+        </div>
+      </div>
+
+      <div id="provider-config" style="display:none">
+        <div class="field">
+          <label id="key-label">API Key</label>
+          <input type="password" id="api-key-input" placeholder="Paste your API key here...">
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <select id="model-select"></select>
+        </div>
+        <div class="flex gap-8 mb-16">
+          <button class="btn btn-primary btn-sm" onclick="testConnection()">Test Connection</button>
+          <button class="btn btn-sm" onclick="saveApiConfig()">Save & Connect</button>
+        </div>
+        <div id="connection-status"></div>
+        <div id="provider-help" class="info-box mt-16" style="font-size:11px"></div>
+      </div>
+      
+      <div class="info-box mt-16" style="font-size:11px;line-height:1.6">
+        <strong>🔒 Privacy Note:</strong> Your API key is stored only in your browser's localStorage. It is never sent to any server except the AI provider you select. If you don't connect an AI provider, the simulator will use a built-in local reasoning engine (less sophisticated but works offline).
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let S = {
+  form:{}, kbText:'', kbFiles:[],
+  reviewerIntros:{}, reviewerQuestions:{},
+  qaConversations:{}, allAnswers:[],
+  scores:{}, overallScore:0, verdict:'',
+  reasoning:{}, contradictions:[], nextActions:[],
+  panelReady:0
+};
+
+const REVIEWERS = [
+  {id:'impact',   name:'Dr. Priya Nair',  role:'🌍 Impact Reviewer',    ava:'🌍', bg:'#0a1e2e', ac:'#2dd4bf'},
+  {id:'operator', name:'Arjun Mehta',     role:'🛠 Startup Operator',   ava:'🛠', bg:'#1a1028', ac:'#a78bfa'},
+  {id:'user',     name:'Sneha Reddy',     role:'🎓 User Representative',ava:'🎓', bg:'#0a2018', ac:'#22c55e'},
+  {id:'sustain',  name:'Vikram Iyer',     role:'♻ Sustainability Analyst',ava:'♻',bg:'#1e1800', ac:'#f59e0b'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// API PROVIDER CONFIGURATION
+// ══════════════════════════════════════════════════════════════════
+const PROVIDERS = {
+  openai: {
+    name: 'OpenAI',
+    url: 'https://api.openai.com/v1/chat/completions',
+    models: [
+      {id:'gpt-4o-mini', name:'GPT-4o-mini (cheapest, uses free credits)'},
+    ],
+    keyLabel: 'OpenAI API Key',
+    help: 'Get your free API key at platform.openai.com. New accounts get $5 in free credits. GPT-4o-mini is the cheapest model and works great for this use case.',
+    getKey: () => document.getElementById('api-key-input').value.trim(),
+    headers: (key) => ({'Content-Type':'application/json','Authorization':`Bearer ${key}`}),
+    body: (messages, system, model, maxTokens) => ({
+      model, max_tokens:maxTokens,
+      messages: system ? [{role:'system',content:system}, ...messages] : messages
+    }),
+    extractResponse: (d) => d.choices?.[0]?.message?.content || ''
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    models: [
+      {id:'meta-llama/llama-3.1-8b-instruct:free', name:'Llama 3.1 8B (Free)'},
+      {id:'meta-llama/llama-3.3-70b-instruct:free', name:'Llama 3.3 70B (Free)'},
+      {id:'google/gemini-flash-1.5:free', name:'Gemini Flash 1.5 (Free)'},
+      {id:'qwen/qwen-2.5-7b-instruct:free', name:'Qwen 2.5 7B (Free)'},
+      {id:'mistralai/mistral-7b-instruct:free', name:'Mistral 7B (Free)'},
+      {id:'deepseek/deepseek-r1:free', name:'DeepSeek R1 (Free)'},
+    ],
+    keyLabel: 'OpenRouter API Key',
+    help: 'Get your free API key at openrouter.ai/keys. OpenRouter offers several models with ":free" suffix that cost $0. Rate limits apply (20 req/min for free models).',
+    getKey: () => document.getElementById('api-key-input').value.trim(),
+    headers: (key) => ({'Content-Type':'application/json','Authorization':`Bearer ${key}`,'HTTP-Referer':'http://localhost','X-Title':'Startup Validator'}),
+    body: (messages, system, model, maxTokens) => ({
+      model, max_tokens:maxTokens,
+      messages: system ? [{role:'system',content:system}, ...messages] : messages
+    }),
+    extractResponse: (d) => d.choices?.[0]?.message?.content || ''
+  },
+  groq: {
+    name: 'Groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    models: [
+      {id:'llama-3.1-8b-instant', name:'Llama 3.1 8B Instant (Free)'},
+      {id:'llama-3.3-70b-versatile', name:'Llama 3.3 70B Versatile (Free)'},
+      {id:'llama-3.1-70b-versatile', name:'Llama 3.1 70B Versatile (Free)'},
+    ],
+    keyLabel: 'Groq API Key',
+    help: 'Get your free API key at console.groq.com. Groq offers free access to Llama models with very fast inference. Rate limits: 30 req/min, 14,400 req/day.',
+    getKey: () => document.getElementById('api-key-input').value.trim(),
+    headers: (key) => ({'Content-Type':'application/json','Authorization':`Bearer ${key}`}),
+    body: (messages, system, model, maxTokens) => ({
+      model, max_tokens:maxTokens,
+      messages: system ? [{role:'system',content:system}, ...messages] : messages
+    }),
+    extractResponse: (d) => d.choices?.[0]?.message?.content || ''
+  },
+  zai: {
+    name: 'Z.ai',
+    url: 'https://api.z.ai/api/paas/v4/chat/completions',
+    models: [
+      {id:'glm-4.5-flash', name:'GLM-4.5 Flash (Free)'},
+      {id:'glm-4.7-flash', name:'GLM-4.7 Flash (Free)'},
+    ],
+    keyLabel: 'Z.ai API Key',
+    help: 'Get your free API key at z.ai. GLM Flash models are free-tier models with fast inference. Requires resource package activation on your account.',
+    getKey: () => document.getElementById('api-key-input').value.trim(),
+    headers: (key) => ({'Content-Type':'application/json','Authorization':`Bearer ${key}`}),
+    body: (messages, system, model, maxTokens) => ({
+      model, max_tokens:maxTokens,
+      messages: system ? [{role:'system',content:system}, ...messages] : messages
+    }),
+    extractResponse: (d) => d.choices?.[0]?.message?.content || ''
+  }
+};
+
+let currentProvider = null;
+let aiConfig = JSON.parse(localStorage.getItem('svs_ai_config') || 'null');
+
+// ══════════════════════════════════════════════════════════════════
+// API SETTINGS MODAL
+// ══════════════════════════════════════════════════════════════════
+function openApiModal(){
+  document.getElementById('api-modal').classList.add('active');
+  if(aiConfig){
+    selectProvider(aiConfig.provider);
+    document.getElementById('api-key-input').value = aiConfig.apiKey;
+    document.getElementById('model-select').value = aiConfig.model;
+  }
+}
+function closeApiModal(){
+  document.getElementById('api-modal').classList.remove('active');
+}
+
+function selectProvider(providerId){
+  currentProvider = providerId;
+  document.querySelectorAll('.provider-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.provider === providerId);
+  });
+  
+  const p = PROVIDERS[providerId];
+  document.getElementById('provider-config').style.display = 'block';
+  document.getElementById('key-label').textContent = p.keyLabel;
+  
+  const modelSelect = document.getElementById('model-select');
+  modelSelect.innerHTML = p.models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  
+  document.getElementById('provider-help').innerHTML = `<strong>ℹ ${p.name}:</strong> ${p.help}`;
+}
+
+async function testConnection(){
+  if(!currentProvider){ alert('Select a provider first'); return; }
+  const p = PROVIDERS[currentProvider];
+  const key = document.getElementById('api-key-input').value.trim();
+  const model = document.getElementById('model-select').value;
+  
+  if(!key){ alert('Enter your API key first'); return; }
+  
+  const statusEl = document.getElementById('connection-status');
+  statusEl.innerHTML = '<span class="status-badge status-testing">⏳ Testing...</span>';
+  
+  try {
+    const body = p.body([{role:'user',content:'Say "connected" in one word.'}], null, model, 10);
+    const r = await fetch(p.url, {
+      method:'POST',
+      headers: p.headers(key),
+      body: JSON.stringify(body)
+    });
+    
+    if(!r.ok){
+      const e = await r.text();
+      throw new Error(`${r.status}: ${e.slice(0,200)}`);
+    }
+    
+    const d = await r.json();
+    const response = p.extractResponse(d);
+    statusEl.innerHTML = '<span class="status-badge status-connected">✓ Connected — AI is ready!</span>';
+  } catch(e) {
+    statusEl.innerHTML = `<span class="status-badge status-disconnected">✗ Failed: ${e.message.slice(0,100)}</span>`;
+  }
+}
+
+function saveApiConfig(){
+  if(!currentProvider){ alert('Select a provider first'); return; }
+  const key = document.getElementById('api-key-input').value.trim();
+  const model = document.getElementById('model-select').value;
+  
+  if(!key){ alert('Enter your API key'); return; }
+  
+  aiConfig = {provider:currentProvider, apiKey:key, model};
+  localStorage.setItem('svs_ai_config', JSON.stringify(aiConfig));
+  updateAiStatus();
+  closeApiModal();
+}
+
+function disconnectAi(){
+  aiConfig = null;
+  localStorage.removeItem('svs_ai_config');
+  updateAiStatus();
+}
+
+function updateAiStatus(){
+  const badge = document.getElementById('ai-status');
+  if(aiConfig){
+    const p = PROVIDERS[aiConfig.provider];
+    badge.textContent = `✓ ${p.name} Connected`;
+    badge.style.background = 'rgba(34,197,94,0.08)';
+    badge.style.color = 'var(--green)';
+    badge.style.borderColor = 'rgba(34,197,94,0.2)';
+  } else {
+    badge.textContent = 'No AI Connected';
+    badge.style.background = 'var(--amber-bg)';
+    badge.style.color = 'var(--amber)';
+    badge.style.borderColor = 'rgba(245,158,11,0.2)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CALL AI (with local fallback)
+// ══════════════════════════════════════════════════════════════════
+async function callAI(messages, system, maxTokens=1200){
+  if(aiConfig){
+    const p = PROVIDERS[aiConfig.provider];
+    try {
+      const body = p.body(messages, system, aiConfig.model, maxTokens);
+      const r = await fetch(p.url, {
+        method:'POST',
+        headers: p.headers(aiConfig.apiKey),
+        body: JSON.stringify(body)
+      });
+      if(!r.ok){
+        const e = await r.text();
+        throw new Error(`API error: ${r.status}`);
+      }
+      const d = await r.json();
+      return p.extractResponse(d);
+    } catch(e) {
+      console.warn(`AI call failed (${aiConfig.provider}), falling back to local:`, e.message);
+    }
+  }
+  throw new Error('No AI connected');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DYNAMIC QUESTION GENERATION (NO HARDCODING)
+// ══════════════════════════════════════════════════════════════════
+function generateDynamicQuestions(rid) {
+  const f = S.form;
+  const hasKB = S.kbText.length > 100;
+  const kbRef = hasKB ? (S.kbFiles[0]?.name || 'your document') : '';
+  const problemWords = f.problem.split(' ').slice(0, 8).join(' ');
+  const solWords = f.solution.split(' ').slice(0, 8).join(' ');
+  const audShort = f.audience.slice(0, 50);
+  const assumpShort = f.assumption.split(' ').slice(0, 8).join(' ');
+
+  // REVIEWER-SPECIFIC question pools
+  const pools = {
+    impact: [
+      `You say "${problemWords}..." — what evidence do you have that students actually experience this as a top-3 problem they'd pay to solve?`,
+      `Walk me through one student's journey from using ${f.name} to getting placed. What specifically changes for them?`,
+      hasKB ? `In your uploaded "${kbRef}", you describe the impact. How will you measure it without becoming a surveillance platform?` : `How will you measure student outcomes without tracking them in ways that violate your privacy-first promise?`,
+      `Your target is ${audShort}. What percentage of them have smartphones reliable enough for your platform? Have you checked?`,
+      `If ${f.name} disappears tomorrow, what happens to the students who depended on it? Is the impact permanent or does it create dependency?`,
+      `What's the one piece of feedback from a real student that would make you pivot immediately?`,
+      hasKB ? `Your document mentions impact metrics. Which single metric would convince a skeptic that ${f.name} is actually changing lives?` : `If you could only track ONE metric to prove impact, what would it be and why?`,
+      `How do you know ${audShort} actually want this solution versus just needing the problem solved by any means?`
+    ],
+    operator: [
+      `You're at ${f.stage} stage with ${f.model}. What's the #1 thing that will kill this startup in the next 6 months — and what are you doing about it?`,
+      `Look at your solution: "${solWords}..." — what's the hardest technical piece, and can you build it solo in 8 weeks?`,
+      `You mentioned "${assumpShort}..." — what's the cheapest way to validate this in 7 days without writing any code?`,
+      hasKB ? `Your ${kbRef} mentions execution details. What's your weekly cadence? How many hours can you realistically sustain?` : `How many hours per week can you dedicate, and what happens when you hit burnout in month 4?`,
+      `What's your Plan B if ${f.model} doesn't generate enough support? Do you shut down, pivot, or take a job?`,
+      `You're a solo founder. What happens if you get sick for 2 weeks? Who keeps ${f.name} alive?`,
+      `What's the one feature you're tempted to build first that you absolutely should NOT build first?`,
+      `If you could only ship ONE feature in the next 90 days, what would it be and why that one?`
+    ],
+    user: [
+      `I'm a ${audShort}. Why would I choose ${f.name} over just asking ChatGPT "interview me for TCS"? What's the 10x difference?`,
+      `"${assumpShort}..." — honestly, I watched YouTube videos once and never went back. What makes you think students will return to your platform?`,
+      `If I have to bring my own API key (BYOK), I won't. I don't know what an API key is. How do you handle this?`,
+      `How will I discover ${f.name}? I'm not on Product Hunt. I'm in my college WhatsApp group. Walk me through the exact moment I'd hear about it.`,
+      `What's the one feature that would make me tell my entire hostel about ${f.name}? Not 10 features — one.`,
+      `I've tried practice apps before and quit after 2 days. What makes ${f.name} different enough that I'd actually stick with it?`,
+      `If ${f.name} is free, how do I know it's not going to sell my data? What's your privacy promise in one sentence?`,
+      `Be honest — if I use ${f.name} for 10 mock interviews, will I actually be better prepared? How will I know I'm improving?`
+    ],
+    sustain: [
+      `Your sustainability model is "${f.model}". Walk me through the monthly cost at 500 active users. Be specific — hosting, AI tokens, your time.`,
+      `Community-supported platforms depend on donations. What evidence do you have that Indian students donate to educational tools? Show me the data.`,
+      `What's your runway? How many months can you keep this alive with zero income?`,
+      `If you hit 5,000 users and your hosting bill is significant, where does that money come from? "Donations" isn't an answer — give me a plan.`,
+      `What happens to ${f.name} when you get a job? Does it die? Community platforms without paid teams usually do.`,
+      hasKB ? `Your ${kbRef} mentions sustainability. What's the first revenue experiment you'll run, and when?` : `What's the first revenue experiment you'll run — not in 6 months, but in the next 30 days?`,
+      `You're relying on CSR and sponsorships. Have you spoken to even ONE CSR department? What did they say?`,
+      `If donations cover only 20% of costs in year one, do you shut down, find another model, or fund it yourself? What's the threshold?`
+    ]
+  };
+
+  const pool = pools[rid] || pools.impact;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INTROS, QUESTIONS, FOLLOWUPS
+// ══════════════════════════════════════════════════════════════════
+async function getIntro(r){
+  const ctx = buildStartupContext();
+  const personas = {
+    impact: 'You are Dr. Priya Nair, an impact researcher. You are direct, evidence-driven, and skeptical of hype. You care deeply about measurable student outcomes. Give a 2-3 sentence initial reaction. Be direct and specific.',
+    operator: 'You are Arjun Mehta, a startup operator who has built and failed twice. You are blunt, execution-obsessed, and suspicious of untested community-supported models. Give a 2-3 sentence initial reaction.',
+    user: 'You are Sneha Reddy, speaking as a proxy for the target user. You were a tier-2 engineering student who struggled with placement prep. Give a 2-3 sentence initial reaction.',
+    sustain: 'You are Vikram Iyer, a sustainability analyst who has studied 40+ community platforms. You are conservative and honest about long-term risks. Give a 2-3 sentence initial reaction.'
+  };
+  try {
+    return await callAI(
+      [{role:'user', content: ctx + '\n\nGive a 2-3 sentence initial reaction to this startup from your perspective. Be direct and specific to what you read. Reference the actual content, not generic platitudes.'}],
+      personas[r.id], 300
+    );
+  } catch(e) {
+    return generateIntro(r.id);
+  }
+}
+
+async function getQuestions(r){
+  const ctx = buildStartupContext();
+  const personas = {
+    impact: 'You are Dr. Priya Nair, an impact researcher. You focus on real student outcomes, social impact, and whether the problem is real.',
+    operator: 'You are Arjun Mehta, a startup operator. You are blunt and execution-focused.',
+    user: 'You are Sneha Reddy, a user representative who was a tier-2 student.',
+    sustain: 'You are Vikram Iyer, a sustainability analyst. You are conservative and honest about donation-based model risks.'
+  };
+  const qPrompt = ctx + `\n\nGenerate exactly 3 specific, natural questions to ask this founder.
+Questions must:
+- Be conversational and flow naturally
+- Be specific to THIS startup's actual content
+- Reference specific details from the startup description or uploaded documents
+- Probe assumptions, risks, and blind spots specific to this startup
+- NOT be yes/no questions
+- Cover different aspects: problem, solution, audience, sustainability, execution
+
+Return ONLY a JSON array of exactly 3 question strings. No explanation, no markdown fences.`;
+  try {
+    const raw = await callAI([{role:'user',content:qPrompt}], personas[r.id], 600);
+    const match = raw.match(/\[[\s\S]*\]/);
+    const questions = JSON.parse(match ? match[0] : raw);
+    if(Array.isArray(questions) && questions.length === 3) return questions;
+    throw new Error('No questions in response');
+  } catch(e) {
+    console.warn('AI question generation failed, using dynamic fallback');
+    return generateDynamicQuestions(r.id);
+  }
+}
+
+async function getFollowup(r, question, answer){
+  const ctx = buildStartupContext();
+  const personas = {
+    impact: 'You are Dr. Priya Nair. React to the answer in 1-2 sentences, then ask ONE sharp follow-up question. Be direct. Under 80 words.',
+    operator: 'You are Arjun Mehta. React in 1-2 sentences, then ask ONE sharp follow-up. Be blunt. Under 80 words.',
+    user: 'You are Sneha Reddy. React in 1-2 sentences, then ask ONE sharp follow-up from the user perspective. Be candid. Under 80 words.',
+    sustain: 'You are Vikram Iyer. React in 1-2 sentences, then ask ONE sharp follow-up about viability. Be conservative. Under 80 words.'
+  };
+  const prompt = ctx + `\n\nConversation so far:\nQ: ${question}\nA: ${answer}\n\nGive a 1-2 sentence reaction to this answer. Be direct. Then ask ONE sharp follow-up question that probes the weakest part of their answer. Keep total response under 80 words.`;
+  try {
+    return await callAI([{role:'user',content:prompt}], personas[r.id], 200);
+  } catch(e) {
+    return generateFollowup(r.id, question, answer);
+  }
+}
+
+async function getClosingStatement(r){
+  const ctx = buildStartupContext();
+  const answers = S.allAnswers.filter(a => a.reviewer === r.name);
+  const transcript = answers.map(a => `Q: ${a.q}\nA: ${a.ans}`).join('\n\n');
+
+  const personas = {
+    impact: `You are Dr. Priya Nair, an impact reviewer. You just finished asking this founder 3 questions. Now give YOUR final assessment in 2-3 sentences. Speak in FIRST PERSON ("I think", "I'm concerned", "I want to see"). NEVER use third person ("the founder", "their answers", "they demonstrated"). Talk directly TO the founder.`,
+    operator: `You are Arjun Mehta, a startup operator. You just finished asking this founder 3 questions. Now give YOUR final assessment in 2-3 sentences. Speak in FIRST PERSON ("I think", "I'm not convinced", "I need to see"). NEVER use third person. Talk directly TO the founder.`,
+    user: `You are Sneha Reddy, a user representative. You just finished asking this founder 3 questions. Now give YOUR final assessment in 2-3 sentences. Speak in FIRST PERSON ("I might try this", "I'm not sure", "I would use this if"). NEVER use third person. Talk directly TO the founder.`,
+    sustain: `You are Vikram Iyer, a sustainability analyst. You just finished asking this founder 3 questions. Now give YOUR final assessment in 2-3 sentences. Speak in FIRST PERSON ("I'm worried", "I think", "I need to see"). NEVER use third person. Talk directly TO the founder.`
+  };
+
+  const prompt = ctx + `\n\nYOUR Q&A WITH THIS FOUNDER:\n${transcript}\n\nNow give YOUR closing assessment. CRITICAL RULES:
+- Speak in FIRST PERSON: "I think", "I'm concerned", "I want to see", "I'm not convinced"
+- NEVER use third person: no "the founder", no "their answers", no "they demonstrated", no "their explanation"
+- Talk directly TO the founder: "You impressed me with..." or "I'm worried about..."
+- 2-3 sentences. Be honest. Reference specific things they said.`;
+
+  try {
+    return await callAI([{role:'user',content:prompt}], personas[r.id], 200);
+  } catch(e) {
+    return generateClosingStatement(r.id);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LOCAL FALLBACK GENERATORS
+// ══════════════════════════════════════════════════════════════════
+function generateIntro(rid){
+  const f=S.form;
+  const intros = {
+    impact: `Looking at ${f.name}, I see you're targeting ${f.audience.slice(0,60)}. The problem you describe is real. But I need to understand: is this a problem students actively feel, or one you've assumed they have? Let's dig in.`,
+    operator: `${f.name} at ${f.stage} stage. The question in my mind: can a solo founder actually execute this? You mention ${f.model}. I've seen community-supported models fail when the founder burns out. Let's find out if yours is different.`,
+    user: `Speaking as someone who was a tier-2 student — ${f.audience.slice(0,60)}. When I was preparing for placements, I didn't use any structured tool. So your problem is real to me. But I need to know: would I actually use THIS?`,
+    sustain: `${f.model} — that's your sustainability model. I've studied 40+ community platforms. Most fail within 18 months. The ones that survive have clear cost structures and founder discipline. Let's see if you've thought this through.`
+  };
+  return intros[rid] || 'Let me review your startup.';
+}
+
+function generateFollowup(rid, q, ans){
+  if(ans.length < 30) {
+    return ['That was quite brief. Can you expand on that with more specifics?', 'I need more detail. What does that actually look like in practice?', 'Help me understand that better - give me a concrete example.'][Math.floor(Math.random() * 3)];
+  }
+  
+  const followups = {
+    impact: `That's helpful. But how do you know this scales beyond your first 50 students? What changes at 500?`,
+    operator: `Fair. But what if that takes 2x longer than you think? What breaks first — your timeline or your motivation?`,
+    user: `I'll give you that. But would you actually use this if it required a subscription? What's the max you'd pay?`,
+    sustain: `Reasonable. But what if donations cover only 30% of costs in year one? Do you shut down or find another model?`
+  };
+  return followups[rid] || 'Tell me more about that.';
+}
+
+function generateClosingStatement(rid){
+  const f = S.form;
+  const answers = S.allAnswers.filter(a => a.reviewer === REVIEWERS.find(rv => rv.id === rid)?.name);
+  const avgLen = answers.length > 0 ? answers.reduce((s,a) => s + a.ans.length, 0) / answers.length : 0;
+  const hasDetail = avgLen > 200;
+
+  const closings = {
+    impact: hasDetail
+      ? `Based on your answers, you clearly understand the student pain point firsthand. The impact potential is real — but I need to see actual placement data before I'm convinced this changes outcomes at scale. Validate with 20 students first.`
+      : `Your heart is in the right place, but your answers lacked concrete evidence. I need numbers — how many students, what improvement, what placement rate. Impact is measured, not assumed.`,
+    operator: hasDetail
+      ? `You've thought about retention, which is more than most founders do. But "I think students will return" isn't a plan — it's a hope. Run the Wizard of Oz test this week. If 5 students come back voluntarily, I'll believe it.`
+      : `Your answers were too vague for me to assess execution readiness. I need specifics: what are you building, in what timeframe, and what happens when you burn out? Show me a plan, not passion.`,
+    user: hasDetail
+      ? `Honestly, I might try this — if it's free and works without me needing an API key. But you need to prove it's better than YouTube, not just say it. Let me try it and decide for myself.`
+      : `I'm not convinced yet. You're telling me what you think I want to hear, not what would actually make me switch from YouTube. Build it, let me try it, then we'll talk.`,
+    sustain: hasDetail
+      ? `You're honest about not having donation proof, which I respect. The BYOK architecture helps with costs. But runway isn't just about money — it's about founder endurance. What's your plan for month 6 when enthusiasm fades?`
+      : `Your sustainability answers concerned me. "Community-supported" isn't a plan — it's a hope. I need to see cost structures, revenue experiments, and a timeline. Build a financial model before you build a product.`
+  };
+
+  return closings[rid] || 'Thank you for your answers. I\'ll factor these into my final assessment.';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LOCAL REASONING ENGINE
+// ══════════════════════════════════════════════════════════════════
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function extractKeywords(text, max=8){
+  if(!text) return [];
+  const stop=new Set(['the','a','an','and','or','but','for','with','to','of','in','on','at','by','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','can','this','that','these','those','i','you','he','she','it','we','they','what','which','who','when','where','why','how','all','each','every','both','few','more','most','other','some','such','no','nor','not','only','own','same','so','than','too','very','just','also','as','from','about','into','through','during','before','after','above','below','up','down','out','off','over','under','again','further','then','once','here','there','students','student','platform','will','their','them','they','your','our','my','me','us','its']);
+  const words=text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>3&&!stop.has(w));
+  const freq={};
+  words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,max).map(e=>e[0]);
+}
+
+function hasEvidence(text){
+  if(!text) return 0;
+  const ev=['data','evidence','measured','tested','validated','survey','interview','research','study','statistics','percent','%','users','customers','feedback','result','outcome','metric','tracking','analytics'];
+  let c=0;const l=text.toLowerCase();
+  ev.forEach(w=>{if(l.includes(w))c++;});
+  return c;
+}
+
+function hasSpecificity(text){
+  if(!text) return 0;
+  let s=0;
+  if(/\d+/.test(text)) s+=2;
+  if(/[a-z]\s+[A-Z][a-z]+/.test(text)) s+=1;
+  const tools=['tcs','infosys','wipro','amazon','claude','gpt','openai','anthropic','vercel','razorpay','whatsapp','linkedin','github','discord','stripe','firebase','supabase','byok','byos','api','mvp','pwa','android','ios','python','javascript','react','next'];
+  const l=text.toLowerCase();
+  tools.forEach(t=>{if(l.includes(t))s+=1;});
+  if(/\b(week|month|day|year|hour)\b/i.test(text)) s+=1;
+  return s;
+}
+
+function answerQuality(text){
+  if(!text||text.length<10) return {length:0,specificity:0,evidence:0,clarity:0,overall:20};
+  const length=Math.min(text.length/500,1)*100;
+  const spec=Math.min(hasSpecificity(text)/5,1)*100;
+  const evi=Math.min(hasEvidence(text)/3,1)*100;
+  const clarity=Math.min((text.split('.').filter(s=>s.trim().length>10).length)/5,1)*100;
+  const overall=Math.round(length*0.2+spec*0.3+evi*0.3+clarity*0.2);
+  return {length:Math.round(length),specificity:Math.round(spec),evidence:Math.round(evi),clarity:Math.round(clarity),overall};
+}
+
+function generateFinalScores(){
+  const f=S.form;const answers=S.allAnswers;
+  const allText=answers.map(a=>a.ans).join(' ');
+  const avgQ=answers.length>0?answers.reduce((s,a)=>s+answerQuality(a.ans).overall,0)/answers.length:40;
+  const contradictions=[];
+  const lwr=allText.toLowerCase();
+  if(lwr.includes('free')&&lwr.includes('paid')) contradictions.push('Platform described as "free" but paid features mentioned — clarify what\'s actually free.');
+  if(lwr.includes('solo')&&lwr.includes('team')) contradictions.push('Mentioned both solo founder and team — clarify your actual structure.');
+  if(lwr.includes('privacy')&&lwr.includes('tracking')) contradictions.push('Privacy-first promise mentioned alongside tracking — how do you reconcile this?');
+  const cScore=contradictions.length===0?85:contradictions.length<=2?65:45;
+  const pk=extractKeywords(f.problem);const pEv=hasEvidence(f.problem);
+  const pScore=Math.min(55+pEv*8+pk.length*2,95);
+  const sk=extractKeywords(f.solution);const sSpec=hasSpecificity(f.solution);
+  const sScore=Math.min(50+sSpec*5+sk.length*2,92);
+  const dScore=Math.min(45+avgQ*0.4+(f.assumption.length>50?10:0),88);
+  const fSpec=hasSpecificity(f.founder||'');
+  const eScore=Math.min(40+fSpec*4+avgQ*0.3,85);
+  const slwr=f.model.toLowerCase();
+  const sBonus=slwr.includes('byok')||slwr.includes('byos')?12:0;
+  const susScore=Math.min(35+sBonus+avgQ*0.3+(f.model.includes('community')?8:0),82);
+  const iScore=Math.min(50+pScore*0.2+avgQ*0.2+(f.audience.includes('tier')?10:0),90);
+  const overall=Math.round((pScore+sScore+dScore+eScore+susScore+iScore)/6);
+  let verdict='VALIDATE';
+  if(overall>=78&&cScore>=75) verdict='BUILD';
+  else if(overall>=65) verdict='VALIDATE';
+  else if(overall>=50) verdict='PIVOT';
+  else verdict='REJECT';
+  const strengths=[];const weaknesses=[];
+  if(pScore>=75) strengths.push(`Problem is well-articulated with clear severity (${Math.round(pScore)}/100)`); else weaknesses.push(`Problem statement needs stronger evidence (${Math.round(pScore)}/100)`);
+  if(sScore>=70) strengths.push(`Solution is specific and actionable (${Math.round(sScore)}/100)`); else weaknesses.push(`Solution lacks technical specificity (${Math.round(sScore)}/100)`);
+  if(susScore>=65) strengths.push(`Sustainability model is viable (${Math.round(susScore)}/100)`); else weaknesses.push(`Sustainability assumptions remain unvalidated (${Math.round(susScore)}/100)`);
+  if(avgQ>=60) strengths.push(`Founder demonstrates clear understanding across all reviewer sessions`); else weaknesses.push(`Answers were vague — founder needs to think deeper`);
+  if(cScore>=75) strengths.push(`Answers were internally consistent`); else weaknesses.push(`Contradictions detected — refine the narrative`);
+  if(eScore<55) weaknesses.push(`Execution feasibility is the weakest dimension — solo founder risk`);
+  const risks=[eScore<60?'Solo founder execution bottleneck':'Founder capacity may become limiting at scale',susScore<65?'Donation volatility':'Seasonal usage pattern','ChatGPT DIY competition',dScore<60?'Retention post-placement':'BYOK onboarding friction'].slice(0,4);
+  const next=[`Run a Wizard of Oz test: manually deliver the ${f.name} experience to 5 students over 2 weeks.`,`Interview 20 target users — observe how they currently prepare. Don't mention ${f.name}.`,eScore<60?`Find a technical co-founder via YC Co-Founder Matching within 30 days.`:`Document your weekly execution cadence — hours, milestones.`,`Build a landing page with email capture. Post in 10 college WhatsApp groups. Goal: 50 signups in 7 days.`,susScore<65?`Map your exact monthly costs at 100, 500, and 1,000 users.`:`Apply for API startup credits immediately.`];
+  return {scores:{problem_importance:{score:Math.round(pScore),reasoning:`The problem targets ${f.audience.slice(0,50)}. ${pEv>0?'Evidence markers detected.':'Lacks quantitative evidence.'} ${pScore>=75?'Real, urgent pain point.':'Needs stronger validation.'}`},solution_strength:{score:Math.round(sScore),reasoning:`Solution mentions ${sk.slice(0,3).join(', ')}. ${sSpec>=3?'Good technical specificity.':'Needs more detail.'} ${sScore>=70?'Approach is sound.':'Clarity needed.'}`},user_demand:{score:Math.round(dScore),reasoning:`Q&A quality avg ${Math.round(avgQ)}/100. ${dScore>=65?'Founder understands user behavior.':'Answers need more user insight.'} ${dScore>=70?'Demand signals promising.':'Demand remains an assumption.'}`},execution_feasibility:{score:Math.round(eScore),reasoning:`${f.founder&&f.founder.length>30?'Founder shows relevant experience.':'Founder background is thin.'} ${eScore>=65?'Feasible for solo founder.':'Solo founder risk is significant.'}`},sustainability:{score:Math.round(susScore),reasoning:`Model: ${f.model}. ${sBonus>0?'BYOK/BYOS reduces cost scaling risk.':'Costs will scale with users.'} ${susScore>=65?'Viable with community support.':'Assumptions need validation.'}`},community_impact:{score:Math.round(iScore),reasoning:`Target: ${f.audience.slice(0,50)}. ${f.audience.includes('tier')?'Tier-2/3 focus maximizes impact.':'Audience is broad.'} ${iScore>=75?'Strong impact potential.':'Depends on execution.'}`}},consistency_score:cScore,consistency_analysis:contradictions.length===0?`Answers were internally consistent. No major contradictions.`:`${contradictions.length} contradiction(s) detected.`,contradictions:contradictions,verdict:verdict,verdict_reasoning:`${f.name} scored ${overall}/100. ${verdict==='BUILD'?'Strong validation signals across all dimensions.':verdict==='VALIDATE'?'Promising but key assumptions remain unproven. Validate demand, retention, and sustainability first.':verdict==='PIVOT'?'Significant gaps exist. Rethink the solution or model.':'Weak problem-solution fit.'}`,strengths:strengths,weaknesses:weaknesses,risks:risks,next_actions:next,impact:{students_helped:f.audience.includes('tier')?'50,000 – 500,000':'10,000 – 100,000',community_size:f.audience.includes('tier')?'2,000 – 20,000':'500 – 5,000',adoption_difficulty:'Medium',sustainability_outlook:`${susScore>=65?'Cautiously positive':'Uncertain'} — seasonal usage will cause demand volatility.`}};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+function goSection(n){
+  document.querySelectorAll('.section').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.step-item').forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i===n)s.classList.add('active');
+    else if(i<n)s.classList.add('done');
+  });
+  const pct=(n/5)*100;
+  document.getElementById('progress-fill').style.width=pct+'%';
+  const labels=['Phase: Input','Phase: Knowledge Base','Phase: Review Panel','Phase: Q&A Round','Phase: Scoring','Phase: Verdict'];
+  document.getElementById('phase-label').textContent=labels[n]||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goToKnowledge(){
+  S.form = {
+    name: v('f_name'), problem: v('f_problem'), solution: v('f_solution'),
+    model: v('f_model'), audience: v('f_audience'), stage: v('f_stage'),
+    assumption: v('f_assumption'), founder: v('f_founder'),
+  };
+  goSection(1);
+}
+
+function v(id){return document.getElementById(id)?.value||'';}
+
+// ══════════════════════════════════════════════════════════════════
+// FILE UPLOAD
+// ══════════════════════════════════════════════════════════════════
+function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag');}
+function dragLeave(e){document.getElementById('upload-zone').classList.remove('drag');}
+function dropFile(e){e.preventDefault();dragLeave(e);handleFileList(e.dataTransfer.files);}
+function handleFiles(e){handleFileList(e.target.files);}
+
+async function handleFileList(files){
+  for(const f of files){
+    if(f.size>600000){alert(`${f.name} is too large (max 500KB)`);continue;}
+    const text = await readFile(f);
+    S.kbFiles.push({name:f.name,text});
+    S.kbText += `\n\n=== FILE: ${f.name} ===\n${text}`;
+  }
+  renderFileList();
+  if(S.kbText.trim()){
+    document.getElementById('kb-preview').style.display='block';
+    document.getElementById('kb-text').textContent = S.kbText.slice(0,3000)+(S.kbText.length>3000?'\n...(truncated for preview)':'');
+  }
+}
+
+function readFile(f){
+  return new Promise(res=>{
+    const r=new FileReader();
+    if(f.name.endsWith('.pdf')){
+      r.onload=e=>{
+        const bytes=new Uint8Array(e.target.result);
+        let text='';
+        for(let i=0;i<Math.min(bytes.length,50000);i++){
+          const c=bytes[i];
+          if(c>=32&&c<127) text+=String.fromCharCode(c);
+          else if(c===10||c===13) text+='\n';
+        }
+        res(text);
+      };
+      r.readAsArrayBuffer(f);
+    } else {
+      r.onload=e=>res(e.target.result);
+      r.readAsText(f);
+    }
+  });
+}
+
+function renderFileList(){
+  const el=document.getElementById('file-list');
+  el.innerHTML=S.kbFiles.map((f,i)=>`<span class="file-chip">📄 ${f.name} <button onclick="removeFile(${i})">×</button></span>`).join('');
+}
+
+function removeFile(i){
+  S.kbFiles.splice(i,1);
+  S.kbText=S.kbFiles.map(f=>`=== FILE: ${f.name} ===\n${f.text}`).join('\n\n');
+  renderFileList();
+  if(!S.kbFiles.length){document.getElementById('kb-preview').style.display='none';}
+}
+
+function buildStartupContext(){
+  const f=S.form;
+  return `STARTUP BEING EVALUATED:
+Name: ${f.name}
+Stage: ${f.stage}
+Problem: ${f.problem}
+Solution: ${f.solution}
+Sustainability Model: ${f.model}
+Target Audience: ${f.audience}
+Biggest Assumption: ${f.assumption}
+Founder Background: ${f.founder}${S.kbText?`\n\nUPLOADED DOCUMENTS:\n${S.kbText.slice(0,8000)}`:''}`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// REVIEW PANEL
+// ══════════════════════════════════════════════════════════════════
+async function startPanel(){
+  goSection(2);
+  S.panelReady=0;
+  document.getElementById('btn-start-qa').disabled=true;
+  document.getElementById('panel-summary').innerHTML=`
+    <strong>${S.form.name}</strong> · ${S.form.stage} stage · ${S.form.model}
+    <div style="margin-top:4px;font-size:12px;color:var(--muted)">${S.form.problem.slice(0,120)}...</div>`;
+
+  const grid=document.getElementById('panel-grid');
+  grid.innerHTML='';
+  REVIEWERS.forEach(r=>{
+    const d=document.createElement('div');
+    d.className='rev-card';d.id='rev_'+r.id;
+    d.innerHTML=`
+      <div class="rev-header">
+        <div class="rev-ava" style="background:${r.bg};font-size:20px">${r.ava}</div>
+        <div><div class="rev-name">${r.name}</div><div class="rev-role" style="color:${r.ac}">${r.role}</div></div>
+      </div>
+      <div class="thinking" id="think_${r.id}">${[1,2,3].map(()=>`<div class="thinking-dot" style="background:${r.ac}"></div>`).join('')}</div>
+      <div class="rev-msg" id="intro_${r.id}" style="display:none"></div>`;
+    grid.appendChild(d);
+  });
+  
+  for(const r of REVIEWERS){
+    await loadReviewerIntro(r);
+  }
+}
+
+async function loadReviewerIntro(r){
+  const thinkEl=document.getElementById(`think_${r.id}`);
+  const introEl=document.getElementById(`intro_${r.id}`);
+  const cardEl=document.getElementById('rev_'+r.id);
+  
+  if(!thinkEl||!introEl){
+    console.error('DOM elements not found for',r.id);
+    return;
+  }
+  
+  try{
+    await delay(aiConfig?800:400);
+    const intro=await getIntro(r);
+    thinkEl.style.display='none';
+    introEl.style.display='block';
+    if(intro&&intro.length>10){
+      await streamText(introEl, intro);
+    }else{
+      introEl.textContent='Ready to ask questions.';
+    }
+    if(cardEl) cardEl.classList.add('speaking');
+    S.reviewerIntros[r.id]=intro;
+  }catch(e){
+    console.warn('Intro error for',r.id,e.message);
+    thinkEl.style.display='none';
+    introEl.style.display='block';
+    introEl.textContent='Ready to begin the review.';
+    if(cardEl) cardEl.classList.add('speaking');
+    S.reviewerIntros[r.id]='Ready to begin the review.';
+  }finally{
+    S.panelReady++;
+    if(S.panelReady>=REVIEWERS.length){
+      const btn=document.getElementById('btn-start-qa');
+      if(btn) btn.disabled=false;
+    }
+  }
+}
+
+async function streamText(el, text, delayMs=8){
+  el.textContent='';
+  el.classList.add('streaming');
+  for(let i=0;i<text.length;i++){
+    el.textContent+=text[i];
+    if(i%4===0) await new Promise(r=>setTimeout(r,delayMs));
+  }
+  el.classList.remove('streaming');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Q&A ROUND - EXACTLY 3 QUESTIONS PER REVIEWER
+// ══════════════════════════════════════════════════════════════════
+async function startQA(){
+  goSection(3);
+  const container=document.getElementById('qa-container');
+  container.innerHTML='';
+  S.qaConversations={};
+  S.allAnswers=[];
+  let completedReviewers=0;
+
+  for(const r of REVIEWERS){
+    S.qaConversations[r.id]=[];
+    const sec=document.createElement('div');
+    sec.className='qa-section';sec.id='qa_'+r.id;
+    sec.innerHTML=`
+      <div class="qa-header">
+        <div class="rev-ava" style="background:${r.bg};font-size:16px;width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center">${r.ava}</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">${r.name}</div>
+          <div style="font-size:11px;color:${r.ac}">${r.role}</div>
+        </div>
+        <div class="progress-wrap" style="flex:1;margin-left:12px"><div class="progress-bar-inner" id="prog_${r.id}" style="width:0%"></div></div>
+        <span class="tag tag-blue" id="status_${r.id}">Preparing...</span>
+      </div>
+      <div class="qa-body" id="chat_${r.id}"></div>`;
+    container.appendChild(sec);
+  }
+
+  for(const r of REVIEWERS){
+    await runReviewerQA(r);
+    completedReviewers++;
+    if(completedReviewers===REVIEWERS.length){
+      document.getElementById('qa-actions').style.display='flex';
+    }
+  }
+}
+
+async function runReviewerQA(r){
+  const chatEl=document.getElementById('chat_'+r.id);
+  const statusEl=document.getElementById('status_'+r.id);
+  const progEl=document.getElementById('prog_'+r.id);
+
+  statusEl.textContent='Preparing questions...';
+  statusEl.className='tag tag-amber';
+
+  try {
+    await delay(aiConfig ? 500 : 200);
+    let questions = await getQuestions(r);
+
+    if (!questions || questions.length < 3) {
+      questions = generateDynamicQuestions(r.id);
+    }
+
+    // Ensure exactly 3 questions
+    const selectedQuestions = questions.slice(0, 3);
+
+    statusEl.textContent='In conversation';
+    statusEl.className='tag tag-green';
+
+    // ── EXACTLY 3 QUESTIONS, NO FOLLOW-UPS ──
+    for (let qi = 0; qi < 3; qi++) {
+      const q = selectedQuestions[qi];
+      progEl.style.width = `${((qi + 1) / 3) * 100}%`;
+
+      // Show question
+      addChatMsg(chatEl, 'reviewer', q, r.name, r.ac, '');
+
+      // Wait for user answer
+      const ans = await getUserAnswer(chatEl, r, q, qi);
+      if (!ans) continue;
+
+      S.allAnswers.push({reviewer: r.name, role: r.role, q, ans});
+      await delay(aiConfig ? 300 : 150);
+      // NO follow-up question — go straight to next question
+    }
+
+    // ── 4th message: CLOSING FEEDBACK (NOT a question) ──
+    await delay(aiConfig ? 400 : 200);
+    const closing = await getClosingStatement(r);
+    if (closing && closing.length > 10) {
+      addChatMsg(chatEl, 'reviewer', closing, r.name, r.ac, '');
+    }
+
+    progEl.style.width = '100%';
+    statusEl.textContent = 'Complete ✓';
+    statusEl.className = 'tag tag-green';
+  } catch(e) {
+    console.warn('QA session error for', r.id, e.message);
+    statusEl.textContent = 'Session complete';
+    statusEl.className = 'tag tag-amber';
+    // Fallback: use dynamic questions
+    const fallbackQuestions = generateDynamicQuestions(r.id);
+    for (const q of fallbackQuestions.slice(0, 3)) {
+      addChatMsg(chatEl, 'reviewer', q, r.name, r.ac, '');
+      const ans = await getUserAnswer(chatEl, r, q, 0);
+      if (ans) {
+        S.allAnswers.push({reviewer: r.name, role: r.role, q, ans});
+      }
+    }
+    // Closing feedback even in fallback
+    await delay(200);
+    const closing = await getClosingStatement(r);
+    if (closing && closing.length > 10) {
+      addChatMsg(chatEl, 'reviewer', closing, r.name, r.ac, '');
+    }
+    progEl.style.width = '100%';
+    statusEl.textContent = 'Complete ✓';
+    statusEl.className = 'tag tag-green';
+  }
+}
+
+function addChatMsg(container, type, text, name, ac, badge=''){
+  const div=document.createElement('div');
+  div.className=`chat-msg ${type==='reviewer'?'reviewer-msg':type==='user'?'user-msg':'system-msg'}`;
+  if(type==='reviewer'){
+    div.innerHTML=`<div class="msg-sender" style="color:${ac}">${name}</div><div class="bubble">${text}</div>`;
+  } else if(type==='user'){
+    div.innerHTML=`<div class="msg-sender" style="color:var(--muted)">You</div><div class="bubble">${text}</div>`;
+  } else {
+    div.innerHTML=`<div class="bubble">${text}</div>`;
+  }
+  container.appendChild(div);
+  container.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function getUserAnswer(container, r, question, qi){
+  return new Promise(resolve=>{
+    const rowId=`ansrow_${r.id}_${qi}`;
+    const div=document.createElement('div');
+    div.id=rowId;
+    div.className='answer-row';
+    div.innerHTML=`<input type="text" id="ansinp_${r.id}_${qi}" placeholder="Type your answer and press Enter..." onkeydown="if(event.key==='Enter')submitAns('${r.id}',${qi})"><button class="btn btn-primary btn-sm" onclick="submitAns('${r.id}',${qi})">Send →</button>`;
+    container.appendChild(div);
+    container.scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById(`ansinp_${r.id}_${qi}`)?.focus();
+    window[`resolveAns_${r.id}_${qi}`]=function(val){
+      div.remove();
+      addChatMsg(container,'user',val,r.name,r.ac,'');
+      resolve(val);
+    };
+  });
+}
+
+function submitAns(rid,qi){
+  const inp=document.getElementById(`ansinp_${rid}_${qi}`);
+  const val=inp?.value?.trim();
+  if(!val||val.length<3)return;
+  if(window[`resolveAns_${rid}_${qi}`]) window[`resolveAns_${rid}_${qi}`](val);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCORES
+// ══════════════════════════════════════════════════════════════════
+async function generateScores(){
+  document.getElementById('qa-actions').style.display='none';
+  try{
+    await delay(aiConfig?1000:500);
+    const data=await getFinalScores();
+    S.scores=data.scores;
+    S.verdict=data.verdict||'VALIDATE';
+    S.reasoning=data;
+    S.contradictions=data.contradictions||[];
+    renderScores(data);
+    goSection(4);
+  }catch(e){
+    alert('Scoring error: '+e.message);
+  }
+}
+
+async function getFinalScores(){
+  const ctx = buildStartupContext();
+  const allQA = S.allAnswers.map(a=>`[${a.reviewer} - ${a.role}]\nQ: ${a.q}\nA: ${a.ans}`).join('\n\n');
+  const scorePrompt = ctx + `
+
+COMPLETE Q&A SESSION TRANSCRIPT:
+${allQA}
+
+You are a startup due diligence expert evaluating a community-supported, mission-driven platform.
+
+Analyze the entire conversation and generate scores. Base scores on REASONING about the quality, specificity, consistency and realism of answers.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "scores": {
+    "problem_importance": {"score": 0-100, "reasoning": "2-3 sentences"},
+    "solution_strength": {"score": 0-100, "reasoning": "2-3 sentences"},
+    "user_demand": {"score": 0-100, "reasoning": "2-3 sentences"},
+    "execution_feasibility": {"score": 0-100, "reasoning": "2-3 sentences"},
+    "sustainability": {"score": 0-100, "reasoning": "2-3 sentences"},
+    "community_impact": {"score": 0-100, "reasoning": "2-3 sentences"}
+  },
+  "consistency_score": 0-100,
+  "consistency_analysis": "2-3 sentences about consistency or contradictions found",
+  "contradictions": ["contradiction 1 if any"],
+  "verdict": "BUILD|VALIDATE|PIVOT|REJECT",
+  "verdict_reasoning": "3-4 sentences justifying the verdict",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
+  "risks": ["risk 1", "risk 2", "risk 3"],
+  "next_actions": ["specific action 1", "specific action 2", "specific action 3", "specific action 4", "specific action 5"],
+  "impact": {
+    "students_helped": "estimate string",
+    "community_size": "estimate string",
+    "adoption_difficulty": "Low|Medium|High",
+    "sustainability_outlook": "1-2 sentences"
+  }
+}`;
+  try {
+    const raw = await callAI([{role:'user',content:scorePrompt}],
+      'You are a rigorous startup evaluator. Return ONLY valid JSON with no markdown fences.', 2000);
+    const match = raw.match(/\{[\s\S]*\}/);
+    return JSON.parse(match ? match[0] : raw);
+  } catch(e) {
+    return generateFinalScores();
+  }
+}
+
+function renderScores(data){
+  const sc=data.scores;
+  const SCORE_DEFS=[
+    {key:'problem_importance',label:'Problem Importance',col:'#ef4444'},
+    {key:'solution_strength',label:'Solution Strength',col:'#5b8def'},
+    {key:'user_demand',label:'User Demand',col:'#22c55e'},
+    {key:'execution_feasibility',label:'Execution Feasibility',col:'#a78bfa'},
+    {key:'sustainability',label:'Sustainability',col:'#f59e0b'},
+    {key:'community_impact',label:'Community Impact',col:'#2dd4bf'},
+  ];
+
+  const grid=document.getElementById('scores-display');
+  grid.innerHTML=SCORE_DEFS.map(d=>{
+    const s=sc[d.key]||{score:50,reasoning:''};
+    return `<div class="score-box"><div class="score-num" style="color:${d.col}">${s.score}</div><div class="score-lbl">${d.label}</div><div class="score-reason">${s.reasoning||''}</div></div>`;
+  }).join('');
+
+  const bars=document.getElementById('bar-chart');
+  bars.innerHTML=SCORE_DEFS.map(d=>{
+    const s=sc[d.key]?.score||0;
+    return `<div class="bar-row"><div class="bar-label">${d.label}</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:${d.col}" data-w="${s}"></div></div><div class="bar-val" style="color:${d.col}">${s}</div></div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.w+'%';}),100);
+
+  const overall=Math.round(Object.values(sc).reduce((a,b)=>a+(b.score||0),0)/Object.keys(sc).length);
+  S.overallScore=overall;
+
+  const cons=document.getElementById('consistency-section');
+  cons.innerHTML=`
+    <div class="bar-row" style="margin-bottom:12px"><div class="bar-label">Consistency Score</div><div class="bar-track"><div class="bar-fill" style="width:${data.consistency_score||80}%;background:${data.consistency_score>70?'#22c55e':data.consistency_score>50?'#f59e0b':'#ef4444'}"></div></div><div class="bar-val" style="color:${data.consistency_score>70?'#22c55e':'#f59e0b'}">${data.consistency_score||80}</div></div>
+    <div class="info-box" style="margin-bottom:10px">${data.consistency_analysis||'No consistency issues detected.'}</div>
+    ${(data.contradictions||[]).map(c=>`<div class="contradiction"><div class="contradiction-label">⚠ Potential Contradiction</div><div style="font-size:12px;color:var(--text)">${c}</div></div>`).join('')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VERDICT
+// ══════════════════════════════════════════════════════════════════
+function showVerdict(){
+  const v=S.verdict||'VALIDATE';
+  const d=S.reasoning;
+  const vcfg={
+    BUILD:{cls:'verdict-build',emoji:'🟢',col:'#22c55e'},
+    VALIDATE:{cls:'verdict-validate',emoji:'🟡',col:'#f59e0b'},
+    PIVOT:{cls:'verdict-pivot',emoji:'🟠',col:'#f97316'},
+    REJECT:{cls:'verdict-reject',emoji:'🔴',col:'#ef4444'},
+  }[v]||{cls:'verdict-validate',emoji:'🟡',col:'#f59e0b'};
+
+  document.getElementById('verdict-main').innerHTML=`
+    <div class="verdict-card ${vcfg.cls}" style="margin-bottom:14px">
+      <div class="verdict-emoji">${vcfg.emoji}</div>
+      <div class="verdict-title" style="color:${vcfg.col}">${v}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap">
+        <span class="tag tag-blue mono">Overall: ${S.overallScore}/100</span>
+        <span class="tag ${v==='BUILD'?'tag-green':v==='VALIDATE'?'tag-amber':'tag-red'}">${S.form.name}</span>
+        <span class="tag tag-purple">${S.form.stage}</span>
+        <span class="tag tag-teal">Consistency: ${d.consistency_score||80}/100</span>
+      </div>
+      <div class="verdict-reasoning">${d.verdict_reasoning||''}</div>
+    </div>`;
+
+  const imp=d.impact||{};
+  document.getElementById('impact-section').innerHTML=`
+    <div class="impact-box"><div class="impact-val">${imp.students_helped||'—'}</div><div class="impact-lbl">Students helped</div></div>
+    <div class="impact-box"><div class="impact-val">${imp.community_size||'—'}</div><div class="impact-lbl">Community size</div></div>
+    <div class="impact-box"><div class="impact-val" style="color:${imp.adoption_difficulty==='Low'?'#22c55e':imp.adoption_difficulty==='Medium'?'#f59e0b':'#ef4444'}">${imp.adoption_difficulty||'Medium'}</div><div class="impact-lbl">Adoption difficulty</div></div>
+    <div class="impact-box" style="grid-column:1/-1"><div style="font-size:12.5px;line-height:1.6;color:var(--muted)">${imp.sustainability_outlook||''}</div><div class="impact-lbl">Sustainability outlook</div></div>`;
+
+  document.getElementById('sw-section').innerHTML=`
+    <div class="sw-list">
+      <div>${(d.strengths||[]).map(s=>`<div class="sw-item"><span style="color:var(--green)">✓</span><span>${s}</span></div>`).join('')}</div>
+      <div>${(d.weaknesses||[]).map(w=>`<div class="sw-item"><span style="color:var(--red)">✗</span><span>${w}</span></div>`).join('')}</div>
+    </div>`;
+
+  document.getElementById('next-actions').innerHTML=(d.next_actions||[]).map((a,i)=>`
+    <div class="step-rec"><div class="step-n">${i+1}</div><div style="font-size:12.5px;line-height:1.55">${a}</div></div>`).join('');
+
+  if(v==='BUILD'){
+    setTimeout(()=>confetti({particleCount:140,spread:80,origin:{y:.6},colors:['#5b8def','#22c55e','#a78bfa','#fff']}),300);
+  }
+  saveToLeaderboard();
+  goSection(5);
+  renderLeaderboard('leaderboard-final');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ══════════════════════════════════════════════════════════════════
+function saveToLeaderboard(){
+  const lb=JSON.parse(localStorage.getItem('svs_lb')||'[]');
+  lb.unshift({name:S.form.name,score:S.overallScore,verdict:S.verdict,date:new Date().toLocaleDateString('en-IN')});
+  lb.splice(10,0);
+  localStorage.setItem('svs_lb',JSON.stringify(lb));
+  renderLeaderboard('leaderboard-home');
+}
+
+function renderLeaderboard(elId){
+  const lb=JSON.parse(localStorage.getItem('svs_lb')||'[]');
+  const el=document.getElementById(elId);
+  if(!el)return;
+  if(!lb.length){el.innerHTML='<p class="text-muted" style="font-size:12px">No evaluations yet.</p>';return;}
+  const vt={BUILD:'tag-green',VALIDATE:'tag-amber',PIVOT:'tag-amber',REJECT:'tag-red'};
+  el.innerHTML=lb.map((e,i)=>`
+    <div class="lb-row">
+      <span class="lb-rank">${String(i+1).padStart(2,'0')}</span>
+      <div style="flex:1"><div class="lb-name">${e.name}</div><div class="lb-date">${e.date}</div></div>
+      <span class="tag ${vt[e.verdict]||'tag-blue'}" style="margin-right:10px">${e.verdict}</span>
+      <span class="lb-score">${e.score}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXPORT & SHARE
+// ══════════════════════════════════════════════════════════════════
+function exportReport(){
+  const d=S.reasoning;
+  const sc=S.scores||{};
+  const lines=[
+    `STARTUP VALIDATION REPORT`,`Generated: ${new Date().toLocaleString('en-IN')}`,
+    `${'═'.repeat(60)}`,
+    `STARTUP: ${S.form.name}`,`STAGE: ${S.form.stage}`,`MODEL: ${S.form.model}`,``,
+    `PROBLEM:`,S.form.problem,``,``,'SOLUTION:',S.form.solution,``,
+    `TARGET AUDIENCE:`,S.form.audience,``,``,'BIGGEST ASSUMPTION:',S.form.assumption,``,
+    `${'═'.repeat(60)}`,`SCORES`,
+    ...Object.entries(sc).map(([k,v])=>`${k.replace(/_/g,' ').toUpperCase()}: ${v.score}/100\n  ${v.reasoning||''}`),
+    ``,`OVERALL SCORE: ${S.overallScore}/100`,
+    `CONSISTENCY SCORE: ${d.consistency_score||80}/100`,``,
+    `VERDICT: ${S.verdict}`,``,``,'VERDICT REASONING:',d.verdict_reasoning||'',``,
+    `${'═'.repeat(60)}`,`Q&A TRANSCRIPT`,
+    ...S.allAnswers.map(a=>`[${a.reviewer}]\nQ: ${a.q}\nA: ${a.ans}`),``,
+    `${'═'.repeat(60)}`,`STRENGTHS`,
+    ...(d.strengths||[]).map(s=>`• ${s}`),``,
+    `WEAKNESSES`,...(d.weaknesses||[]).map(w=>`• ${w}`),``,
+    `RISKS`,...(d.risks||[]).map(r=>`• ${r}`),``,
+    `NEXT ACTIONS`,...(d.next_actions||[]).map((a,i)=>`${i+1}. ${a}`),``,
+    `${'═'.repeat(60)}`,
+    `AI Provider: ${aiConfig?PROVIDERS[aiConfig.provider].name+' ('+aiConfig.model+')':'Local reasoning engine (no AI connected)'}`,
+  ];
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${S.form.name.replace(/\s+/g,'_')}_Validation_${Date.now()}.txt`;
+  a.click();
+}
+
+function shareResult(){
+  const t=`I just validated ${S.form.name} with the AI Startup Validation Simulator!\n\nScore: ${S.overallScore}/100 · Verdict: ${S.verdict}\nAI: ${aiConfig?PROVIDERS[aiConfig.provider].name:'Local engine'}\n#BuildInPublic #StartupValidation`;
+  navigator.clipboard?.writeText(t).then(()=>alert('Copied to clipboard!')).catch(()=>alert(t));
+}
+
+function resetAll(){
+  S={form:{},kbText:'',kbFiles:[],reviewerIntros:{},reviewerQuestions:{},qaConversations:{},allAnswers:[],scores:{},overallScore:0,verdict:'',reasoning:{},contradictions:[],nextActions:[],panelReady:0};
+  document.getElementById('qa-actions').style.display='none';
+  goSection(0);
+  renderLeaderboard('leaderboard-home');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+updateAiStatus();
+renderLeaderboard('leaderboard-home');
+
+document.getElementById('api-modal').addEventListener('click', (e) => {
+  if(e.target.id === 'api-modal') closeApiModal();
+});
+</script>
+</body>
+</html> 
