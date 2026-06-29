@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Operation Lifeline: Supply Chain Crisis Lab</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --ink:#0a0f1a;
+  --ink2:#0f172a;
+  --ink3:#1a2540;
+  --surface:#131e33;
+  --surface2:#1c2b45;
+  --rim:#1e3052;
+  --rim2:#263d66;
+  --text:#dde6f5;
+  --text2:#7a99c0;
+  --text3:#3d5a82;
+  --blue:#3b7fff;
+  --blue2:#1a56db;
+  --emerald:#10b981;
+  --rose:#f43f5e;
+  --amber:#f59e0b;
+  --violet:#8b5cf6;
+  --sky:#38bdf8;
+  --orange:#fb923c;
+}
+
+body{font-family:'Space Grotesk',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--rim2);border-radius:99px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes scanline{0%{transform:translateY(-100%);}100%{transform:translateY(100vh);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}  }
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@keyframes barFill{from{width:0%;}to{width:var(--target);}}
+@keyframes countUp{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+
+.fade-up{animation:fadeUp .38s cubic-bezier(.22,1,.36,1) both;}
+.pulse-dot{animation:pulse 1.6s ease infinite;}
+
+/* ── WELCOME ── */
+.welcome{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(59,127,255,.14) 0%,transparent 70%),
+             radial-gradient(ellipse 60% 50% at 90% 90%,rgba(139,92,246,.09) 0%,transparent 60%),
+             var(--ink);
+}
+
+.welcome::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(59,127,255,.025) 40px),
+             repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(59,127,255,.025) 40px);
+  pointer-events:none;
+}
+
+.ticker-wrap{
+  position:absolute;bottom:0;left:0;right:0;background:rgba(59,127,255,.07);
+  border-top:1px solid rgba(59,127,255,.15);padding:.4rem 0;overflow:hidden;
+}
+.ticker-inner{display:flex;white-space:nowrap;animation:ticker 28s linear infinite;}
+.ticker-item{font-size:.68rem;font-family:'Space Mono',monospace;color:var(--blue);padding:0 2.5rem;opacity:.7;}
+
+.welcome-eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(59,127,255,.1);border:1px solid rgba(59,127,255,.25);
+  border-radius:6px;padding:.3rem .9rem;
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:2rem;
+}
+
+.welcome h1{
+  font-size:clamp(2.4rem,7vw,5rem);font-weight:700;line-height:1.05;
+  letter-spacing:-.04em;margin-bottom:1rem;
+}
+.welcome h1 em{font-style:normal;color:var(--blue);}
+
+.welcome-sub{font-size:1.05rem;color:var(--text2);max-width:500px;margin:0 auto 2.5rem;font-weight:400;}
+
+.feature-strip{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.65rem;max-width:720px;width:100%;margin-bottom:2.5rem;
+}
+.feature-tile{
+  background:var(--surface);border:1px solid var(--rim);border-radius:12px;
+  padding:1rem .9rem;text-align:left;transition:border-color .2s;
+}
+.feature-tile:hover{border-color:var(--rim2);}
+.ft-icon{font-size:1.3rem;margin-bottom:.4rem;}
+.ft-name{font-size:.75rem;font-weight:700;color:var(--text);margin-bottom:.15rem;}
+.ft-desc{font-size:.68rem;color:var(--text2);}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.8rem 1.8rem;border-radius:10px;font-size:.88rem;
+  font-weight:600;cursor:pointer;border:none;transition:all .18s;
+  font-family:'Space Grotesk',sans-serif;
+}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 0 24px rgba(59,127,255,.3);}
+.btn-primary:hover{background:#5591ff;transform:translateY(-1px);box-shadow:0 0 34px rgba(59,127,255,.45);}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--rim2);}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+.btn-emerald{background:var(--emerald);color:#fff;}
+.btn-large{padding:1rem 2.4rem;font-size:1rem;}
+
+/* ── LAYOUT ── */
+.page{max-width:920px;margin:0 auto;padding:2rem 1.5rem;}
+
+/* ── PHASE BADGE ── */
+.phase-tag{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:rgba(59,127,255,.09);border:1px solid rgba(59,127,255,.2);
+  border-radius:6px;padding:.22rem .7rem;
+  font-size:.67rem;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.7rem;
+}
+.phase-tag.alert{background:rgba(244,63,94,.09);border-color:rgba(244,63,94,.25);color:var(--rose);}
+.phase-tag.gold{background:rgba(245,158,11,.09);border-color:rgba(245,158,11,.25);color:var(--amber);}
+.phase-tag.violet{background:rgba(139,92,246,.09);border-color:rgba(139,92,246,.25);color:var(--violet);}
+.phase-tag.emerald{background:rgba(16,185,129,.09);border-color:rgba(16,185,129,.25);color:var(--emerald);}
+
+.page-h1{font-size:1.9rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.35rem;}
+.page-sub{font-size:.87rem;color:var(--text2);max-width:580px;}
+
+/* ── STEP TRAIL ── */
+.step-trail{display:flex;align-items:center;gap:0;margin-bottom:2rem;overflow-x:auto;padding:.5rem 0;}
+.st-node{display:flex;align-items:center;flex-shrink:0;}
+.st-dot{
+  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;transition:all .3s;flex-shrink:0;
+}
+.st-dot.done{background:var(--emerald);color:#fff;}
+.st-dot.active{background:var(--blue);color:#fff;box-shadow:0 0 14px rgba(59,127,255,.55);}
+.st-dot.todo{background:var(--ink3);color:var(--text3);border:1px solid var(--rim);}
+.st-label{font-size:.63rem;font-weight:600;margin-left:.38rem;white-space:nowrap;}
+.st-label.done{color:var(--emerald);}
+.st-label.active{color:var(--blue);}
+.st-label.todo{color:var(--text3);}
+.st-line{width:20px;height:2px;background:var(--rim);margin:0 .25rem;flex-shrink:0;}
+.st-line.done{background:var(--emerald);}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:1.35rem;}
+.card-sm{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:1rem;}
+.card-lbl{font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:.35rem;}
+.card-val{font-size:1rem;font-weight:600;color:var(--text);}
+
+/* ── COMPANY GRID ── */
+.co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:.65rem;margin-bottom:1.4rem;}
+.co-tile{background:var(--surface);border:1px solid var(--rim);border-radius:13px;padding:.95rem;transition:border-color .2s;}
+.co-tile:hover{border-color:var(--rim2);}
+
+/* ── CRISIS CARD ── */
+.crisis-wrap{
+  background:linear-gradient(135deg,rgba(244,63,94,.07) 0%,var(--surface) 55%);
+  border:1px solid rgba(244,63,94,.28);border-radius:18px;padding:1.75rem;margin-bottom:1.3rem;
+}
+.crisis-urg{
+  display:inline-flex;align-items:center;gap:.3rem;
+  background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.3);
+  border-radius:5px;padding:.18rem .55rem;
+  font-size:.67rem;font-weight:800;color:var(--rose);letter-spacing:.07em;text-transform:uppercase;
+  margin-bottom:.4rem;
+}
+.crisis-industry-note{
+  background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.18);
+  border-radius:10px;padding:.75rem 1rem;margin-top:1rem;font-size:.8rem;color:var(--sky);
+}
+
+/* ── KPI BAR ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:.65rem;margin-bottom:1.4rem;}
+.kpi-card{background:var(--surface);border:1px solid var(--rim);border-radius:13px;padding:.9rem;}
+.kpi-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.35rem;}
+.kpi-num{font-size:1.35rem;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:.45rem;transition:color .5s;}
+.progress-track{background:var(--ink3);border-radius:99px;height:5px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:99px;transition:width .9s cubic-bezier(.4,0,.2,1);}
+
+/* ── DELTA TAG ── */
+.delta{display:inline-flex;align-items:center;gap:.2rem;font-size:.67rem;font-weight:700;font-family:'Space Mono',monospace;padding:.12rem .4rem;border-radius:4px;margin-left:.3rem;}
+.delta-pos{background:rgba(16,185,129,.14);color:var(--emerald);}
+.delta-neg{background:rgba(244,63,94,.14);color:var(--rose);}
+.delta-zero{background:rgba(122,153,192,.1);color:var(--text3);}
+
+/* ── ACTION CARDS ── */
+.action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:.8rem;margin-bottom:1.3rem;}
+.action-tile{
+  background:var(--surface);border:1px solid var(--rim);border-radius:15px;
+  padding:1.2rem;cursor:pointer;transition:all .18s;position:relative;user-select:none;
+}
+.action-tile:hover:not(.locked){border-color:var(--rim2);transform:translateY(-1px);}
+.action-tile.chosen{border-color:var(--blue);background:rgba(59,127,255,.07);}
+.action-tile.locked{opacity:.38;cursor:not-allowed;}
+.action-tile.applied{pointer-events:none;}
+.action-emoji{font-size:1.5rem;margin-bottom:.4rem;}
+.action-title{font-size:.88rem;font-weight:700;margin-bottom:.25rem;}
+.action-desc{font-size:.75rem;color:var(--text2);margin-bottom:.4rem;line-height:1.55;}
+.action-why{font-size:.7rem;color:var(--sky);font-style:italic;margin-bottom:.55rem;line-height:1.5;}
+.effect-row{display:flex;flex-wrap:wrap;gap:.28rem;}
+.etag{font-size:.65rem;font-weight:700;padding:.12rem .42rem;border-radius:4px;font-family:'Space Mono',monospace;}
+.etag-pos{background:rgba(16,185,129,.14);color:var(--emerald);}
+.etag-neg{background:rgba(244,63,94,.14);color:var(--rose);}
+.check-badge{
+  position:absolute;top:.7rem;right:.7rem;width:20px;height:20px;
+  background:var(--blue);border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.65rem;color:#fff;
+}
+
+/* ── NEGOTIATION ── */
+.neg-meters{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.3rem;}
+.neg-meter-card{background:var(--surface);border:1px solid var(--rim);border-radius:12px;padding:.85rem;text-align:center;}
+.neg-meter-lbl{font-size:.64rem;text-transform:uppercase;font-weight:700;letter-spacing:.06em;color:var(--text3);}
+.neg-meter-val{font-size:1.5rem;font-weight:700;font-family:'Space Mono',monospace;margin:.15rem 0 .3rem;}
+
+.quote-card{
+  background:var(--surface2);border:1px solid var(--rim);border-left:3px solid var(--blue);
+  border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1.1rem;
+  font-size:.9rem;font-style:italic;color:var(--text);line-height:1.7;
+}
+.quote-attr{font-size:.72rem;font-style:normal;color:var(--text3);margin-top:.4rem;font-weight:600;}
+
+.choice-stack{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.3rem;}
+.choice-btn{
+  background:var(--surface);border:1px solid var(--rim);border-radius:11px;
+  padding:.9rem 1.1rem;cursor:pointer;text-align:left;color:var(--text);
+  font-size:.85rem;font-weight:500;transition:all .18s;width:100%;
+  font-family:'Space Grotesk',sans-serif;line-height:1.5;
+}
+.choice-btn:hover{border-color:var(--blue);background:rgba(59,127,255,.06);}
+
+.outcome-box{border-radius:11px;padding:.85rem 1.1rem;margin-top:.65rem;border-left:3px solid;font-size:.83rem;line-height:1.55;}
+.outcome-good{background:rgba(16,185,129,.08);border-color:var(--emerald);color:var(--emerald);}
+.outcome-bad{background:rgba(244,63,94,.08);border-color:var(--rose);color:var(--rose);}
+.outcome-neutral{background:rgba(245,158,11,.08);border-color:var(--amber);color:var(--amber);}
+
+/* ── CEO Q ── */
+.ceo-block{background:var(--surface);border:1px solid var(--rim);border-radius:14px;padding:1.3rem;margin-bottom:.85rem;}
+.ceo-q-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:.4rem;}
+.ceo-q-text{font-size:.93rem;font-weight:600;margin-bottom:.3rem;line-height:1.5;}
+.ceo-ctx{font-size:.77rem;color:var(--text2);margin-bottom:.8rem;line-height:1.55;}
+.ceo-opts{display:flex;flex-direction:column;gap:.42rem;}
+.ceo-btn{
+  background:var(--ink3);border:1px solid var(--rim);border-radius:9px;
+  padding:.75rem 1rem;cursor:pointer;text-align:left;color:var(--text);
+  font-size:.83rem;transition:all .16s;width:100%;font-family:'Space Grotesk',sans-serif;
+}
+.ceo-btn:hover:not(.answered){border-color:var(--blue);}
+.ceo-btn.correct{border-color:var(--emerald);background:rgba(16,185,129,.1);color:var(--text);}
+.ceo-btn.wrong{border-color:var(--rose);background:rgba(244,63,94,.1);color:var(--text);}
+.ceo-btn.answered{cursor:default;}
+.why-box{
+  margin-top:.65rem;padding:.7rem 1rem;border-radius:9px;font-size:.77rem;line-height:1.55;
+  background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.18);color:var(--sky);
+}
+
+/* ── AI ── */
+.ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem;margin-bottom:1.3rem;}
+.ai-tile{
+  background:var(--surface);border:1px solid var(--rim);border-radius:15px;
+  padding:1.2rem;cursor:pointer;transition:all .18s;position:relative;
+}
+.ai-tile:hover:not(.locked){border-color:var(--violet);}
+.ai-tile.chosen{border-color:var(--violet);background:rgba(139,92,246,.07);}
+.ai-tile.locked{opacity:.38;cursor:not-allowed;}
+.ai-icon{font-size:1.7rem;margin-bottom:.45rem;}
+.ai-name{font-size:.87rem;font-weight:700;margin-bottom:.25rem;}
+.ai-desc{font-size:.75rem;color:var(--text2);margin-bottom:.4rem;line-height:1.55;}
+.ai-roi{font-size:.72rem;color:var(--violet);font-weight:700;}
+
+/* ── FINAL ── */
+.score-hero{
+  background:linear-gradient(135deg,rgba(59,127,255,.12),rgba(139,92,246,.09));
+  border:1px solid rgba(59,127,255,.22);border-radius:20px;
+  padding:2.2rem;text-align:center;margin-bottom:1.3rem;
+}
+.score-super{font-size:5.5rem;font-weight:700;font-family:'Space Mono',monospace;line-height:1;margin-bottom:.2rem;}
+.score-of{font-size:.82rem;color:var(--text3);margin-bottom:.3rem;}
+.score-grade{font-size:1.4rem;font-weight:700;}
+
+.sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.65rem;margin-bottom:1.3rem;}
+.sub-tile{background:var(--surface);border:1px solid var(--rim);border-radius:13px;padding:1rem;text-align:center;}
+.sub-lbl{font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--text3);margin-bottom:.35rem;}
+.sub-val{font-size:1.55rem;font-weight:700;font-family:'Space Mono',monospace;}
+
+.insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.7rem;margin-bottom:1.3rem;}
+.insight-tile{border-radius:13px;padding:1.05rem;border:1px solid;}
+.insight-tile.bad{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.28);}
+.insight-tile.good{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.28);}
+.insight-tile.blue{background:rgba(59,127,255,.07);border-color:rgba(59,127,255,.28);}
+.insight-tile.amber{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.28);}
+.insight-lbl{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem;}
+.insight-tile.bad .insight-lbl{color:var(--rose);}
+.insight-tile.good .insight-lbl{color:var(--emerald);}
+.insight-tile.blue .insight-lbl{color:var(--blue);}
+.insight-tile.amber .insight-lbl{color:var(--amber);}
+.insight-text{font-size:.8rem;color:var(--text2);line-height:1.55;}
+
+/* ── INFO BOX ── */
+.info-box{
+  background:rgba(59,127,255,.06);border:1px solid rgba(59,127,255,.18);
+  border-radius:11px;padding:.85rem 1.05rem;font-size:.8rem;color:var(--text2);
+  margin-bottom:1.2rem;line-height:1.6;
+}
+.info-box strong{color:var(--blue);}
+.info-box.warn{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.18);}
+.info-box.warn strong{color:var(--amber);}
+.info-box.success{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.18);}
+.info-box.success strong{color:var(--emerald);}
+
+hr.divider{border:none;border-top:1px solid var(--rim);margin:1.3rem 0;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .page{padding:1.4rem 1rem;}
+  .co-grid{grid-template-columns:repeat(2,1fr);}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .action-grid{grid-template-columns:1fr;}
+  .neg-meters{grid-template-columns:repeat(3,1fr);}
+  .sub-grid{grid-template-columns:repeat(2,1fr);}
+  .insight-grid{grid-template-columns:1fr;}
+  .welcome h1{font-size:2.2rem;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback} = React;
+
+/* ══════════════════════════════════════════════════════════════
+   DATA — every pool has enough variety to feel genuinely different
+═══════════════════════════════════════════════════════════════*/
+
+const INDUSTRIES = [
+  {
+    name:"Automotive",emoji:"🚗",
+    flavor:"Vehicle recalls and just-in-time manufacturing make every disruption existential.",
+    kpiNames:{cost:"Production Cost",inventory:"Parts Inventory",profit:"OEM Margin",delivery:"Assembly Throughput",satisfaction:"Dealer Satisfaction"},
+    tone:"Your assembly lines run on 4-hour buffer stock. There is no slack."
+  },
+  {
+    name:"Pharmaceuticals",emoji:"💊",
+    flavor:"Cold-chain integrity and regulatory compliance mean disruptions can cost lives, not just revenue.",
+    kpiNames:{cost:"COGS Efficiency",inventory:"API Stockpile",profit:"Net Margin",delivery:"Fill Rate",satisfaction:"Hospital Approval"},
+    tone:"FDA compliance and patient safety sit above profit in every decision."
+  },
+  {
+    name:"Consumer Electronics",emoji:"📱",
+    flavor:"Product cycles are 6 months. A disruption today can kill a launch permanently.",
+    kpiNames:{cost:"BOM Cost",inventory:"Component Depth",profit:"Gross Margin",delivery:"Fulfillment Speed",satisfaction:"Retailer NPS"},
+    tone:"Your competitors have the same components. Speed is the only differentiator."
+  },
+  {
+    name:"Aerospace & Defence",emoji:"✈️",
+    flavor:"Single-source suppliers, long qualification cycles, and zero tolerance for defects.",
+    kpiNames:{cost:"Programme Cost",inventory:"Certified Parts",profit:"Contract Margin",delivery:"On-Time Delivery",satisfaction:"MRO Readiness"},
+    tone:"Every part is safety-critical. Substitution requires 18-month re-qualification."
+  },
+  {
+    name:"Fast Fashion",emoji:"👗",
+    flavor:"Trend windows are 3 weeks. Inventory rot and markdown risk are always seconds away.",
+    kpiNames:{cost:"Unit Landed Cost",inventory:"SKU Availability",profit:"Full-Price Sell-Through",delivery:"Store Replenishment",satisfaction:"Shopper Loyalty"},
+    tone:"Yesterday's collection is already worthless. Velocity is your currency."
+  },
+  {
+    name:"Food & Beverage",emoji:"🍫",
+    flavor:"Perishability, regulatory audits, and brand trust make supply chain failures front-page news.",
+    kpiNames:{cost:"Ingredient Cost",inventory:"Shelf Cover",profit:"EBITDA Margin",delivery:"Distribution Fill",satisfaction:"Consumer Trust"},
+    tone:"A single contamination story can eliminate 30% of revenue overnight."
+  },
+  {
+    name:"Industrial Machinery",emoji:"⚙️",
+    flavor:"Capital equipment buyers tolerate zero delay. A late excavator costs a client $200K/day.",
+    kpiNames:{cost:"Build Cost",inventory:"Sub-Assembly Stock",profit:"Project Margin",delivery:"Installation Lead",satisfaction:"Customer Uptime"},
+    tone:"Your clients' projects pause when your parts don't arrive."
+  },
+  {
+    name:"Renewable Energy",emoji:"🌱",
+    flavor:"Government contracts, grid interconnect deadlines, and rare-earth dependency create unique risk.",
+    kpiNames:{cost:"Module Cost",inventory:"Panel Stockpile",profit:"Project IRR",delivery:"Commission Rate",satisfaction:"Grid Operator Score"},
+    tone:"Missing a grid commission date triggers penalty clauses and political fallout."
+  },
+];
+
+const CO_NAMES_A = ["Nexus","Apex","Titan","Helios","Orion","Vantage","Meridian","Stratos","Vertex","Zenith","Axiom","Pinnacle","Arcus","Lumis","Vega"];
+const CO_NAMES_B = ["Global","Industries","Corp","Group","International","Holdings","Systems","Dynamics","Solutions","Manufacturing"];
+
+const CRISES = [
+  {
+    type:"Factory Fire",emoji:"🔥",urgency:"CRITICAL",
+    description:"A four-alarm fire swept through your primary manufacturing facility in Rayong, Thailand overnight. Sprinkler systems failed. 40% of your global production capacity is offline indefinitely.",
+    impact:"40% production capacity lost. Insurance adjuster won't arrive for 72 hours. Three Tier-1 customers are already on the phone threatening contract penalties.",
+    why:"Factory fires expose how much of your volume sits in a single facility. The companies that recover fastest have pre-built BCP playbooks and qualified backup sites.",
+    industryNotes:{
+      "Automotive":"With JIT lines, your assembly plants downstream will halt within 18 hours without parts.",
+      "Pharmaceuticals":"Any API manufacturing loss triggers FDA notification obligations within 3 business days.",
+      "Consumer Electronics":"Your Q4 launch is in 8 weeks. The fire directly threatens 60% of launch inventory.",
+      "Aerospace & Defence":"Certified production site loss means re-qualification before any alternative can ship.",
+      "Fast Fashion":"The trend window closes in 19 days. Production cannot restart in time for this season.",
+      "Food & Beverage":"Production halt means contract penalties with three major grocery chains.",
+      "Industrial Machinery":"Six client projects will miss their commissioning dates, triggering penalty clauses.",
+      "Renewable Energy":"Your grid commission date is immovable — missing it costs $4M in penalties."
+    }
+  },
+  {
+    type:"Supplier Bankruptcy",emoji:"💸",urgency:"HIGH",
+    description:"Magnex Components, your second-largest Tier-1 supplier (35% of critical inputs), filed for Chapter 11 at 6 AM. Their warehouse is sealed by the court. Your procurement team cannot retrieve in-transit materials.",
+    impact:"35% of critical inputs immediately unavailable. Court-appointed receiver controls the inventory. Competitors are already calling Magnex's suppliers.",
+    why:"Supplier financial health monitoring is underinvested everywhere. AI tools that scan supplier credit ratings and payment delays can give you 60-day early warning.",
+    industryNotes:{
+      "Automotive":"Magnex supplied brake calipers. Without them, final assembly for your best-selling platform halts.",
+      "Pharmaceuticals":"Magnex supplied your primary API. Batch release will stall within 48 hours.",
+      "Consumer Electronics":"Magnex supplied OLED panels. No panels means no product — and your competitor has a standing order at the same factory.",
+      "Aerospace & Defence":"Magnex held the only AS9100-certified source for three fastener specifications.",
+      "Fast Fashion":"Magnex was your sole fabric dyer in the region. Re-dyeing elsewhere takes 3 weeks.",
+      "Food & Beverage":"Magnex supplied specialty flavouring extracts with a 6-week minimum lead time.",
+      "Industrial Machinery":"Magnex supplied hydraulic actuators for your entire product line.",
+      "Renewable Energy":"Magnex made proprietary inverter modules — no substitution without re-engineering."
+    }
+  },
+  {
+    type:"Port Strike",emoji:"⚓",urgency:"HIGH",
+    description:"Dockworkers at the Port of Los Angeles and Long Beach have walked out indefinitely. Over 60% of your inbound sea freight is stuck at anchor or in transit limbo. Demurrage fees clock up at $18,000 per vessel per day.",
+    impact:"60% inbound freight frozen. Vessels accruing $18K/day demurrage. Air freight alternatives cost 8× sea freight. Estimated strike duration: 3–6 weeks.",
+    why:"Port concentration risk is the most common single point of failure in Pacific supply chains. Routing diversity and pre-negotiated air freight contracts are the fix.",
+    industryNotes:{
+      "Automotive":"90% of your component volume moves through LA/LB. Your plant runs dry in 11 days.",
+      "Pharmaceuticals":"Controlled substances cannot be air-freighted without additional DEA licensing. Lead time: 6 weeks.",
+      "Consumer Electronics":"Your holiday inventory is on 14 vessels currently at anchor. Retailers have firm delivery dates.",
+      "Aerospace & Defence":"Military contracts contain clauses that override commercial port delays — but customer tolerance is still finite.",
+      "Fast Fashion":"Your entire winter collection is on those ships. The season is 4 weeks away.",
+      "Food & Beverage":"Refrigerated containers at anchor cannot be temperature-monitored. Spoilage risk is rising hourly.",
+      "Industrial Machinery":"Heavy equipment cannot be air-freighted. East Coast port re-routing adds 21 days.",
+      "Renewable Energy":"Solar panels cannot feasibly move by air. East Coast rerouting adds 18 days and 22% cost."
+    }
+  },
+  {
+    type:"Ransomware Attack",emoji:"💻",urgency:"CRITICAL",
+    description:"At 3:14 AM, ransomware encrypted your entire ERP system. Purchase orders, inventory positions, supplier contacts, and financial records are inaccessible. Your IT team confirmed this is a state-sponsored group with a 14-day recovery estimate.",
+    impact:"Zero ERP visibility. Cannot place purchase orders. Financial system offline. Customer portals down. Attackers are demanding $12M in crypto. Cybersecurity insurers notified.",
+    why:"The digital supply chain is now as vulnerable as the physical one. Air-gapped backups, zero-trust architectures, and manual fallback procedures are no longer optional.",
+    industryNotes:{
+      "Automotive":"Kanban signals are ERP-driven. Without them, your lines run blind and will overproduce or starve.",
+      "Pharmaceuticals":"Batch records are encrypted. You cannot prove GMP compliance. FDA notification is required.",
+      "Consumer Electronics":"Retailer EDI integration is down. You cannot receive orders, confirm ship dates, or invoice.",
+      "Aerospace & Defence":"This may be a targeted attack for IP theft alongside the ransom. ITAR implications are serious.",
+      "Fast Fashion":"Allocation systems are down. Your DC is shipping blind — wrong sizes to wrong stores.",
+      "Food & Beverage":"Traceability records are encrypted. You cannot execute a recall if one becomes necessary.",
+      "Industrial Machinery":"Job costing and project scheduling are offline. You've lost visibility into 47 active projects.",
+      "Renewable Energy":"SCADA integration data for active wind farms is encrypted. Grid operators are demanding reports."
+    }
+  },
+  {
+    type:"Regional Flooding",emoji:"🌊",urgency:"HIGH",
+    description:"Unprecedented monsoon flooding in southern Vietnam has submerged two of your top-five suppliers and closed the main rail corridor to Ho Chi Minh City port for an estimated 8 weeks.",
+    impact:"Two suppliers offline 6–8 weeks. Rail corridor closed. Road alternatives add 12 days and cost 40% more. Humanitarian concerns are generating media attention.",
+    why:"Climate disruption is increasing the frequency of these events 3× per decade. Geographic supplier concentration in single climate-risk zones is a board-level ESG failure.",
+    industryNotes:{
+      "Automotive":"Both flooded suppliers provide stampings. Without them, body-in-white production halts in 9 days.",
+      "Pharmaceuticals":"One supplier was your only regional source for excipients. The other held API inventory.",
+      "Consumer Electronics":"Vietnam produces 35% of the world's electronics. Your competitors face the same crisis.",
+      "Aerospace & Defence":"Composite part suppliers are flooded. Re-sourcing composites requires 6-month re-qualification.",
+      "Fast Fashion":"Your most agile cut-and-sew factories are underwater. The spring collection is at risk.",
+      "Food & Beverage":"Primary packaging suppliers are flooded. You cannot fill orders without packaging material.",
+      "Industrial Machinery":"Casting suppliers are flooded. Re-sourcing precision castings takes 10–14 weeks minimum.",
+      "Renewable Energy":"Module lamination facilities are flooded. No modules, no installations, no revenue."
+    }
+  },
+  {
+    type:"Rare Material Embargo",emoji:"⛏️",urgency:"MEDIUM",
+    description:"The world's largest producer of lithium and cobalt has imposed an immediate export embargo following a change of government. Your Q3 and Q4 production forecasts assume full access to these materials.",
+    impact:"Core input materials unavailable for 90+ days. Product redesign to alternative materials would take 6–9 months. Competitors face identical constraints. Spot prices have risen 340% overnight.",
+    why:"Critical material dependency is a long-term strategic risk. Companies with closed-loop recycling programs, material substitution R&D, and diversified sourcing recover fastest.",
+    industryNotes:{
+      "Automotive":"Li-ion battery packs are frozen. Your EV line — 60% of future revenue — stops.",
+      "Pharmaceuticals":"Cobalt is used in catalytic converters for your API synthesis. Production chemistry must change.",
+      "Consumer Electronics":"Battery production halts. Every mobile device in your portfolio requires lithium cells.",
+      "Aerospace & Defence":"Cobalt-based superalloys in jet engine components are now unaffordable and unsourceable.",
+      "Fast Fashion":"Synthetic dyes use cobalt compounds. Your colour palette for next season is impossible.",
+      "Food & Beverage":"Cobalt is a micronutrient in some fortified products. Reformulation required.",
+      "Industrial Machinery":"Carbide cutting tools are cobalt-dependent. Your manufacturing operations are also affected.",
+      "Renewable Energy":"This is existential. Li-ion batteries are your core product. No material — no business."
+    }
+  },
+  {
+    type:"Geopolitical Conflict",emoji:"🚨",urgency:"CRITICAL",
+    description:"Armed conflict has erupted in Eastern Europe, closing borders, blocking Black Sea shipping lanes, and triggering mass displacement. Three of your supplier facilities are in the affected zone and have gone dark.",
+    impact:"Three suppliers unreachable. Energy costs spiking 85%. Cyber attacks on infrastructure rising. Insurance premiums tripling across the region. Humanitarian crisis is a reputational issue.",
+    why:"Geopolitical risk is the hardest to hedge and the most systemic when it materialises. Leaders who diversify sourcing to 5+ regions and buy political risk insurance weather these events best.",
+    industryNotes:{
+      "Automotive":"Neon gas — critical for chip lithography — is largely produced in Ukraine. Chip shortages incoming.",
+      "Pharmaceuticals":"One affected facility was a contract manufacturer. Batch ownership is in legal limbo.",
+      "Consumer Electronics":"Neon gas and palladium shortages will ripple through your entire semiconductor supply base.",
+      "Aerospace & Defence":"Titanium supply from the region is disrupted. 70% of aerospace titanium originates here.",
+      "Fast Fashion":"Two of your top factories are in the conflict zone. Workers have fled. Production is zero.",
+      "Food & Beverage":"Wheat, sunflower oil, and fertilisers from this region represent 30% of your commodity basket.",
+      "Industrial Machinery":"Steel and palladium from the region affect your build cost by an estimated 28%.",
+      "Renewable Energy":"Polysilicon producers in the region supplied 18% of your panel inputs."
+    }
+  },
+  {
+    type:"Shipping Container Shortage",emoji:"🚢",urgency:"MEDIUM",
+    description:"A cascading container imbalance — sparked by pandemic-era port congestion that never fully resolved — has reached crisis point. Containers are stranded in Asian ports. Freight rates have surged 480%. Lead times doubled from 28 to 58 days.",
+    impact:"Freight costs up 480%. Transit times doubled. Spot bookings unavailable for 6 weeks. Air freight at capacity. Your on-time delivery rate has dropped from 94% to 51% in one week.",
+    why:"Freight market volatility rewards companies with flexible contracts, nearshore options, and lean-enough inventories to ride spikes without desperate spot buying.",
+    industryNotes:{
+      "Automotive":"Sequenced parts delivery is impossible with 58-day lead times. JIT lines will idle.",
+      "Pharmaceuticals":"Temperature-controlled container availability has dropped 70%. Cold-chain products are at risk.",
+      "Consumer Electronics":"Your product launches are tied to retailer planograms set 4 months ago. You will miss them.",
+      "Aerospace & Defence":"Long-lead military contracts have some buffer, but commercial MRO customers are exposed.",
+      "Fast Fashion":"Every season misses. Fast fashion with 58-day lead times is just fashion — you've lost your speed edge.",
+      "Food & Beverage":"Perishable goods cannot sustain 58-day transits. 40% of your international range is at risk.",
+      "Industrial Machinery":"Project sites are waiting for equipment. Liquidated damages clauses are beginning to trigger.",
+      "Renewable Energy":"Installation project schedules slip. Government subsidy windows are fixed — you will lose them."
+    }
+  },
+];
+
+const ACTIONS = [
+  {
+    id:"a1",emoji:"✈️",title:"Emergency Airlift",
+    desc:"Charter dedicated air freight to fly critical components from alternate suppliers, bypassing sea and rail bottlenecks entirely.",
+    why:"Air freight costs 6–8× sea, but a single lost customer contract can cost 20× more. The maths usually works.",
+    e:{cost:-22,inventory:+18,profit:-16,delivery:+28,satisfaction:+22}
+  },
+  {
+    id:"a2",emoji:"🤝",title:"Activate Backup Suppliers",
+    desc:"Reach out to pre-qualified Tier-2 suppliers in your vendor registry and place emergency purchase orders.",
+    why:"A live pre-qualified supplier list is the single highest-ROI supply chain investment. Without it, you spend weeks qualifying instead of producing.",
+    e:{cost:-9,inventory:+22,profit:-6,delivery:+12,satisfaction:+16}
+  },
+  {
+    id:"a3",emoji:"📦",title:"Strategic Inventory Reallocation",
+    desc:"Redistribute existing stock from low-revenue regions and non-strategic SKUs to your highest-value customers and fastest-moving lines.",
+    why:"Triage is leadership. Protecting the 20% of customers driving 80% of revenue is the correct priority — and they'll remember it.",
+    e:{cost:-2,inventory:-8,profit:+10,delivery:+7,satisfaction:+12}
+  },
+  {
+    id:"a4",emoji:"📣",title:"Proactive Customer Communication",
+    desc:"Call every key account personally. Share honest timelines, allocation rules, and goodwill offers before they call you.",
+    why:"Supply chain failures hurt far less when customers feel informed and respected. Silence is interpreted as incompetence.",
+    e:{cost:-2,inventory:0,profit:-4,delivery:0,satisfaction:+35}
+  },
+  {
+    id:"a5",emoji:"🏭",title:"Emergency Nearshore Production",
+    desc:"Activate regional manufacturing partners — even at higher cost — to reduce transit dependency and restore output within 10 days.",
+    why:"Nearshoring costs more but creates permanent resilience. Every crisis reveals the long-term ROI of regional diversity.",
+    e:{cost:-17,inventory:+12,profit:-11,delivery:+23,satisfaction:+7}
+  },
+  {
+    id:"a6",emoji:"📊",title:"Demand-Side Rationing",
+    desc:"Implement transparent, fair allocation rules — publish them to all customers simultaneously with a clear rationale.",
+    why:"Transparent rationing builds trust. Playing favourites in secret destroys it and triggers channel conflict.",
+    e:{cost:0,inventory:+7,profit:-8,delivery:+2,satisfaction:-4}
+  },
+];
+
+const NEG_ROUNDS = [
+  {
+    round:1,
+    speaker:"CEO, Vantage Precision (your supplier)",
+    quote:"I appreciate you calling directly. We want to continue the relationship — but we need you to move to Net-15 payment terms and sign a 2-year volume commitment before we can prioritise your line over our other customers.",
+    context:"Payment terms affect your cash flow. Commitment length affects flexibility. But the supplier needs certainty too — they have their own creditors.",
+    choices:[
+      {text:"Accept Net-15 and 2-year terms. Lock in supply now — the cost is worth the certainty.",      trust:+18,price:-4, lead:+12, r:"good",    msg:"The supplier's CFO immediately prioritises your production slot. Your line jumps to the front of the queue. Long-term win."},
+      {text:"Counter-propose Net-30 and a 1-year commitment. Reasonable middle ground.",                   trust:+7, price:0,  lead:+6,  r:"neutral", msg:"Supplier accepts cautiously. Relationship intact. They hedge by keeping an alternative buyer in discussion."},
+      {text:"Agree to the commitment but negotiate Net-45 for this quarter only given cash constraints.",   trust:+4, price:-2, lead:+4,  r:"neutral", msg:"Supplier finds this reasonable. Partial win — you preserved cash but didn't fully excite them."},
+      {text:"Decline both conditions. Remind them of your historical volume and threaten to diversify.",    trust:-22,price:+4, lead:-14, r:"bad",     msg:"Supplier's CEO goes cold. Your allocation is quietly moved to the back of the queue. Lead times extend immediately."},
+    ]
+  },
+  {
+    round:2,
+    speaker:"CFO, Vantage Precision",
+    quote:"I'll be direct with you. Our raw material costs are up 21% since last quarter. We're asking for a 14% price increase to maintain your production line at current capacity. Without it, we'll have to reduce your allocation by 30%.",
+    context:"A 14% price increase hurts your margins. But a 30% allocation cut hurts your revenue more. There's also a creative third option here.",
+    choices:[
+      {text:"Agree to the 14% increase. Supply security outweighs the margin hit right now.",              trust:+14,price:-14,lead:+10, r:"good",    msg:"Supplier is satisfied. They upgrade you to Priority Tier. Allocation secured and on-time delivery improves significantly."},
+      {text:"Negotiate to 7%. Propose a joint cost-reduction working group to close the remaining gap.",   trust:+11,price:-7, lead:+7,  r:"good",    msg:"Creative framing wins respect. Supplier agrees. The working group actually finds $3M in shared savings over 6 months."},
+      {text:"Accept 10% increase for 90 days pending a formal benchmarking exercise.",                     trust:+5, price:-10,lead:+4,  r:"neutral", msg:"Acceptable compromise. Supplier agrees but remains uncertain about your long-term commitment."},
+      {text:"Refuse any increase. Cite your volume and imply you'll find alternatives.",                   trust:-18,price:0,  lead:-10, r:"bad",     msg:"Supplier immediately deprioritises your production. Two weeks later, a competitor locks in the allocation you lost."},
+    ]
+  },
+  {
+    round:3,
+    speaker:"Chief Commercial Officer, Vantage Precision",
+    quote:"I need to be transparent: one of your competitors has approached us offering 45% higher volume over 3 years. We're not walking away from you — but we need to understand why staying with you is the right strategic decision for our business.",
+    context:"This is a pivotal moment. Pure price-matching is expensive. Emotional arguments without substance won't work. The right answer demonstrates long-term strategic value.",
+    choices:[
+      {text:"Propose a formal strategic partnership: shared R&D, co-investment in their capacity expansion, and joint ESG reporting.",trust:+24,price:-7, lead:+18, r:"good",    msg:"The supplier's board is moved. They decline the competitor and position themselves as your exclusive partner. A relationship milestone."},
+      {text:"Present your 5-year growth roadmap with detailed volume projections showing you'll exceed the competitor's offer.",     trust:+12,price:-3, lead:+9,  r:"neutral", msg:"Data persuades them to stay. They hedge by keeping the competitor in discussion, but you remain primary."},
+      {text:"Match the volume commitment dollar-for-dollar. Business is business.",                                                  trust:+6, price:-16,lead:+5,  r:"neutral", msg:"They stay, but purely transactionally. The relationship has no emotional equity — the next competitor offer will restart this conversation."},
+      {text:"Call their bluff. Tell them you have three alternative suppliers ready to qualify.",                                    trust:-28,price:+3, lead:-22, r:"bad",     msg:"They call yours. The competitor's contract is signed within 48 hours. You spend the next 6 weeks in emergency qualification."},
+    ]
+  },
+  {
+    round:4,
+    speaker:"Quality Director, Vantage Precision",
+    quote:"One last item. We'd like to reduce physical audit frequency from quarterly to annually. Our floor supervisors find the disruption costly and demoralising. We'd like to propose replacing one audit with a digital data-sharing dashboard instead.",
+    context:"Quality audits are essential but the supplier's concern is legitimate. The question is whether digital monitoring can provide equivalent assurance.",
+    choices:[
+      {text:"Agree to the digital dashboard model. Propose a 90-day pilot with agreed KPIs before fully retiring physical audits.", trust:+18,price:0,  lead:+8,  r:"good",    msg:"Supplier feels genuinely trusted. The dashboard becomes an industry model. Defect rates drop 23% because real-time data surfaces issues earlier than quarterly audits ever did."},
+      {text:"Maintain quarterly audits but offer to fund a continuous improvement consultant for their floor.",                      trust:+10,price:-3, lead:+4,  r:"good",    msg:"Supplier appreciates the investment. Audits continue but feel collaborative rather than adversarial. A genuine quality improvement culture emerges."},
+      {text:"Reduce to semi-annual audits. A middle path.",                                                                         trust:+3, price:0,  lead:0,   r:"neutral", msg:"Acceptable compromise. Supplier is satisfied. Nothing changes dramatically in either direction."},
+      {text:"Refuse. Quarterly audits are non-negotiable per your ISO certification requirements.",                                  trust:-12,price:0,  lead:-7,  r:"bad",     msg:"Supplier feels mistrusted after three rounds of collaborative negotiation. The goodwill built earlier partially evaporates."},
+    ]
+  },
+];
+
+const CEO_QS = [
+  {
+    q:"Your CFO has proposed an immediate 35% inventory reduction to free up $180M in working capital. Your Chief Risk Officer warns this creates a single-crisis vulnerability. You have a board call in 4 hours. What is your position?",
+    ctx:"Lean inventory reduces cost of capital but creates zero buffer for disruption. You are currently in a disruption. This timing matters.",
+    opts:[
+      "Approve the full 35% reduction. Cash is king during a crisis and we need the liquidity.",
+      "Approve a targeted 12% reduction in C-class, non-critical SKUs only — preserve safety stock on strategic lines.",
+      "Defer the entire decision until the current crisis is resolved.",
+      "Increase inventory by 15% as a defensive hedge against further disruption.",
+    ],
+    correct:1,
+    why:"Selective reduction in non-critical SKUs threads the needle between financial and operational risk. Blanket cuts during active crises amplify exposure. Full deferral signals indecision to the board. Panic-buying increases costs without addressing root cause."
+  },
+  {
+    q:"A Reuters journalist calls for comment on supply disruptions that have clearly begun affecting your retail partners. Your PR director recommends 'no comment pending internal review.' What do you decide?",
+    ctx:"The story is running with or without your input. The only question is whether your perspective shapes the narrative.",
+    opts:[
+      "Issue 'no comment' as recommended. Avoid saying something that could be used against you.",
+      "Release a proactive statement within 2 hours: acknowledge the disruption, share your response actions, and give a realistic timeline.",
+      "Brief only your top 5 retail partners privately and ask them not to speak to press.",
+      "Deny the disruption is material and reference last quarter's strong results.",
+    ],
+    correct:1,
+    why:"Proactive, honest communication consistently outperforms silence or denial in supply chain crises. 'No comment' reads as guilt. Denial destroys credibility when the truth emerges — and it always does. Briefing partners privately without a public statement creates information asymmetry that leaks."
+  },
+  {
+    q:"Post-crisis, your leadership team wants to present the board with a 'lessons learned' report focused on successes to maintain morale. What's your instruction?",
+    ctx:"Board post-mortems set the organisation's learning culture for years. The precedent you set here will determine how honestly future failures are surfaced.",
+    opts:[
+      "Focus on positives. The team performed well under pressure and needs recognition.",
+      "Present a balanced 50/50 success-failure split.",
+      "Commission a full blameless post-mortem focused entirely on systemic failures and structural gaps — no individual blame, no spin.",
+      "Defer the report to next quarter when emotions have settled.",
+    ],
+    correct:2,
+    why:"Blameless post-mortems that interrogate systems rather than people are the gold standard. The 'blameless' framing encourages honesty because individuals feel safe. Boards that see only successes lose the ability to govern effectively. Deferral allows the organisation to revert to old patterns before learning is embedded."
+  },
+  {
+    q:"With your remaining discretionary budget — $8M — you must choose between two investments: (A) global supplier diversification programme adding 12 new pre-qualified suppliers across 4 regions, or (B) an AI demand forecasting platform reducing forecast error by 34%. Which do you fund?",
+    ctx:"Both have clear ROI. The question is which risk you just experienced, and which risk remains largest after this crisis.",
+    opts:[
+      "AI demand forecasting. Technology compounds — the ROI grows with every year of training data.",
+      "Supplier diversification. This crisis was caused by concentration. Address the root cause first.",
+      "Split $4M each. Partial implementation of both.",
+      "Neither. The business needs liquidity. Hold the cash.",
+    ],
+    correct:1,
+    why:"Root cause resolution takes priority over optimisation. This crisis was caused by supplier concentration — funding the thing that caused the crisis to recur is a governance failure. AI demand forecasting is valuable, but forecasting errors are a cost efficiency problem, not an existential risk. The $4M split yields insufficient investment for meaningful impact in either programme."
+  },
+  {
+    q:"Your highest-performing sales VP wants to promise three key accounts guaranteed delivery in 21 days to protect £40M of contracts that are now at risk of transfer to a competitor. Your logistics team says 28 days is realistic. What do you authorise?",
+    ctx:"Overpromising wins the deal but risks a relationship-destroying miss. Underpromising loses the deal but delivers a trust-building surprise. The competitor's offer is unknown.",
+    opts:[
+      "Approve 21 days. Winning the deal creates urgency internally to deliver.",
+      "Authorise 28 days with a 5% discount for the inconvenience. Be honest.",
+      "Authorise 25 days — split the difference as a considered risk.",
+      "Escalate to your legal team before authorising any delivery commitment.",
+    ],
+    correct:1,
+    why:"Honest commitments with fair compensation for delay are the foundation of long-term B2B relationships. The 21-day promise creates a 25% probability of a trust-destroying miss. Splitting the difference without internal confidence is false precision. Legal escalation at this stage is paralysis — the decision is commercial, not legal."
+  },
+];
+
+const AI_OPTIONS = [
+  {id:"ai1",emoji:"📈",name:"Demand Signal Intelligence",desc:"Ingests 200+ external signals — weather, social trends, economic indicators — to produce 90-day demand forecasts with 34% lower MAPE than statistical baselines.",roi:"+34% forecast accuracy · -28% excess inventory · -41% stockout frequency"},
+  {id:"ai2",emoji:"🏗️",name:"Dynamic Safety Stock Engine",desc:"Recalculates safety stock daily across every SKU, location, and supplier lead-time combination. Eliminates both overstock and understock simultaneously.",roi:"+22% working capital freed · -19% holding costs · 3× faster reorder response"},
+  {id:"ai3",emoji:"🛡️",name:"Supplier Risk Sentinel",desc:"Monitors 40+ risk signals per supplier — credit ratings, news sentiment, port congestion, weather, political indices — and flags deteriorating suppliers 60 days before failure.",roi:"60-day early warning · -43% supply disruptions · supplier health dashboard"},
+  {id:"ai4",emoji:"👁️",name:"Warehouse Vision System",desc:"Computer vision cameras track every pick, pack, and putaway in real time. Identifies misplacements, quantity errors, and safety violations without human intervention.",roi:"+31% warehouse throughput · -99.2% pick errors · -18% labour cost"},
+  {id:"ai5",emoji:"🤖",name:"Autonomous Procurement Agent",desc:"AI negotiates spot purchases, routes POs intelligently, flags contract anomalies, and learns from every procurement outcome to improve future decisions.",roi:"-17% procurement spend · 4× faster PO cycle · contract risk scoring"},
+];
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════════*/
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[rnd(0,arr.length-1)];}
+function clamp(v,lo=5,hi=100){return Math.max(lo,Math.min(hi,v));}
+
+function genCompany(){
+  const ind=pick(INDUSTRIES);
+  return {
+    name:`${pick(CO_NAMES_A)} ${pick(CO_NAMES_B)}`,
+    industry:ind.name,emoji:ind.emoji,flavor:ind.flavor,tone:ind.tone,
+    kpiNames:ind.kpiNames,
+    revenue:`$${rnd(180,6200)}M`,
+    factories:rnd(3,18),
+    warehouses:rnd(6,52),
+    suppliers:rnd(55,420),
+    invDays:rnd(14,80),
+    leadTime:`${rnd(12,58)} days`,
+    countries:rnd(7,36),
+    employees:`${rnd(1,68)}K`,
+    creditRating:pick(["AA","AA-","A+","A","A-","BBB+","BBB"]),
+    marketShare:`${rnd(4,31)}%`,
+  };
+}
+
+function genCrisis(company){
+  const c={...pick(CRISES)};
+  c.industryNote = c.industryNotes[company.industry] || c.industryNotes["Automotive"];
+  return c;
+}
+
+function genMetrics(){
+  return {
+    cost:rnd(52,78),
+    inventory:rnd(48,74),
+    profit:rnd(44,70),
+    delivery:rnd(50,76),
+    satisfaction:rnd(58,82),
+  };
+}
+
+function kpiColor(v){
+  if(v>=70)return"var(--emerald)";
+  if(v>=45)return"var(--amber)";
+  return"var(--rose)";
+}
+
+function scoreGrade(s){
+  if(s>=87)return{g:"S",label:"Exceptional — Board-Level Leader",col:"var(--emerald)"};
+  if(s>=72)return{g:"A",label:"Strong — High-Performing Executive",col:"var(--blue)"};
+  if(s>=57)return{g:"B",label:"Competent — Solid Crisis Manager",col:"var(--sky)"};
+  if(s>=42)return{g:"C",label:"Developing — Key Gaps Remain",col:"var(--amber)"};
+  return{g:"D",label:"Critical — Systemic Leadership Gaps",col:"var(--rose)"};
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════════════════════════*/
+const STEPS = ["Company","Crisis","War Room","Negotiate","CEO Q&A","AI Strategy","Results"];
+
+function StepTrail({current}){
+  return(
+    <div className="step-trail">
+      {STEPS.map((s,i)=>{
+        const state=i<current?"done":i===current?"active":"todo";
+        return(
+          <div className="st-node" key={i}>
+            {i>0&&<div className={`st-line ${i<=current?"done":""}`}/>}
+            <div className={`st-dot ${state}`}>{state==="done"?"✓":i+1}</div>
+            <span className={`st-label ${state}`}>{s}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function KpiBar({label,value,prev}){
+  const delta=prev!==undefined?value-prev:null;
+  return(
+    <div className="kpi-card">
+      <div className="kpi-lbl">{label}</div>
+      <div style={{display:"flex",alignItems:"center"}}>
+        <div className="kpi-num" style={{color:kpiColor(value)}}>{value}</div>
+        {delta!==null&&delta!==0&&(
+          <span className={`delta ${delta>0?"delta-pos":"delta-neg"}`}>{delta>0?"+":""}{delta}</span>
+        )}
+      </div>
+      <div className="progress-track">
+        <div className="progress-fill" style={{width:`${value}%`,background:kpiColor(value)}}/>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════════════════════*/
+
+function Welcome({onStart}){
+  const tickItems=["FACTORY FIRE · MAGNITUDE 4 ALERT","SUPPLIER BANKRUPTCY · LEGAL HOLD","PORT STRIKE · DAY 3","RANSOMWARE DETECTED · SYSTEMS OFFLINE","FLOOD WARNING · TIER-1 ZONE","CONTAINER RATES +480%","GEOPOLITICAL CONFLICT · BORDER CLOSURE","RARE MATERIAL EMBARGO · SPOT +340%"];
+  const ticks=[...tickItems,...tickItems];
+  return(
+    <div className="welcome fade-up">
+      <div className="welcome-eyebrow">⚡ Enterprise Crisis Simulation</div>
+      <h1>Operation <em>Lifeline</em><br/>Supply Chain Crisis Lab</h1>
+      <p className="welcome-sub">You are Chief Supply Chain Officer. A crisis has just hit. Every decision you make will determine whether your company weathers the storm — or becomes a business school case study in failure.</p>
+      <div className="feature-strip">
+        {[
+          {icon:"🏢",name:"Random Company",desc:"Lead a procedurally generated enterprise with real metrics"},
+          {icon:"⚠️",name:"Live Crisis",desc:"8 distinct crises, each with industry-specific consequences"},
+          {icon:"⚔️",name:"War Room",desc:"Choose 3 response actions — consequences are real and visible"},
+          {icon:"🤝",name:"Negotiate",desc:"4-round supplier dialogue with branching, lasting outcomes"},
+          {icon:"👔",name:"CEO Boardroom",desc:"5 executive questions grounded in real supply chain principles"},
+          {icon:"🤖",name:"AI Strategy",desc:"Invest in 2 of 5 AI tools to future-proof your operations"},
+        ].map((f,i)=>(
+          <div className="feature-tile" key={i}>
+            <div className="ft-icon">{f.icon}</div>
+            <div className="ft-name">{f.name}</div>
+            <div className="ft-desc">{f.desc}</div>
+          </div>
+        ))}
+      </div>
+      <button className="btn btn-primary btn-large" onClick={onStart}>Launch Simulation →</button>
+      <div className="ticker-wrap">
+        <div className="ticker-inner">
+          {ticks.map((t,i)=><span className="ticker-item" key={i}>◆ {t} </span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompanyScreen({company,onNext}){
+  return(
+    <div className="page fade-up">
+      <StepTrail current={0}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag">Phase 1 · Company Profile</div>
+        <div className="page-h1">{company.emoji} {company.name}</div>
+        <p className="page-sub">{company.flavor}</p>
+      </div>
+      <div className="co-grid">
+        {[
+          {l:"Industry",v:company.industry},
+          {l:"Annual Revenue",v:company.revenue},
+          {l:"Factories",v:company.factories},
+          {l:"Warehouses",v:company.warehouses},
+          {l:"Active Suppliers",v:company.suppliers},
+          {l:"Inventory Days",v:company.invDays},
+          {l:"Lead Time",v:company.leadTime},
+          {l:"Countries",v:company.countries},
+          {l:"Employees",v:company.employees},
+          {l:"Credit Rating",v:company.creditRating},
+          {l:"Market Share",v:company.marketShare},
+        ].map((s,i)=>(
+          <div className="co-tile" key={i}>
+            <div className="card-lbl">{s.l}</div>
+            <div className="card-val">{s.v}</div>
+          </div>
+        ))}
+      </div>
+      <div className="info-box">
+        <strong>⏱ Time-to-Stockout:</strong> With {company.invDays} inventory days and a lead time of {company.leadTime}, you have a limited window before customers see empty shelves. Know this number. It defines your urgency.
+      </div>
+      <div className="info-box warn">
+        <strong>⚠️ Strategic Context:</strong> {company.tone}
+      </div>
+      <button className="btn btn-primary" onClick={onNext}>View Incoming Crisis →</button>
+    </div>
+  );
+}
+
+function CrisisScreen({company,crisis,onNext}){
+  return(
+    <div className="page fade-up">
+      <StepTrail current={1}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag alert">⚠️ Phase 2 · Active Crisis</div>
+        <div className="page-h1">Incoming Alert</div>
+        <p className="page-sub">A major disruption has been confirmed. Your crisis team is assembled. You have 72 hours before media coverage begins.</p>
+      </div>
+      <div className="crisis-wrap">
+        <div style={{display:"flex",alignItems:"flex-start",gap:"1rem",marginBottom:"1rem"}}>
+          <div style={{fontSize:"2.8rem",lineHeight:1}}>{crisis.emoji}</div>
+          <div>
+            <div className="crisis-urg pulse-dot">🔴 {crisis.urgency}</div>
+            <div style={{fontSize:"1.4rem",fontWeight:700,letterSpacing:"-.02em"}}>{crisis.type}</div>
+          </div>
+        </div>
+        <p style={{color:"var(--text2)",fontSize:".88rem",lineHeight:1.65,marginBottom:"1rem"}}>{crisis.description}</p>
+        <hr className="divider"/>
+        <div className="card-lbl">Immediate Business Impact</div>
+        <p style={{fontSize:".86rem",color:"var(--text)",lineHeight:1.6}}>{crisis.impact}</p>
+        <div className="crisis-industry-note">
+          <strong>🏭 {company.industry}-Specific:</strong> {crisis.industryNote}
+        </div>
+      </div>
+      <div className="info-box">
+        <strong>💡 Why This Matters:</strong> {crisis.why}
+      </div>
+      <button className="btn btn-primary" onClick={onNext}>Enter War Room →</button>
+    </div>
+  );
+}
+
+function WarRoomScreen({company,metrics,setMetrics,onNext}){
+  const [chosen,setChosen]=useState([]);
+  const [applied,setApplied]=useState(false);
+  const [newMetrics,setNewMetrics]=useState(null);
+  const kn=company.kpiNames;
+
+  function toggle(a){
+    if(applied)return;
+    if(chosen.find(x=>x.id===a.id)){setChosen(chosen.filter(x=>x.id!==a.id));}
+    else if(chosen.length<3){setChosen([...chosen,a]);}
+  }
+
+  function apply(){
+    const nm={...metrics};
+    chosen.forEach(a=>{
+      nm.cost=clamp(nm.cost+a.e.cost);
+      nm.inventory=clamp(nm.inventory+a.e.inventory);
+      nm.profit=clamp(nm.profit+a.e.profit);
+      nm.delivery=clamp(nm.delivery+a.e.delivery);
+      nm.satisfaction=clamp(nm.satisfaction+a.e.satisfaction);
+    });
+    setNewMetrics(nm);
+    setMetrics(nm);
+    setApplied(true);
+  }
+
+  const displayMetrics=newMetrics||metrics;
+  const prevMetrics=applied?metrics:undefined;
+
+  return(
+    <div className="page fade-up">
+      <StepTrail current={2}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag">⚔️ Phase 3 · War Room</div>
+        <div className="page-h1">Choose Your Response</div>
+        <p className="page-sub">Select exactly 3 crisis response actions. Effects stack and compound. There is no perfect combination — only informed trade-offs.</p>
+      </div>
+
+      <div className="kpi-row">
+        {[
+          {l:kn.cost,k:"cost"},
+          {l:kn.inventory,k:"inventory"},
+          {l:kn.profit,k:"profit"},
+          {l:kn.delivery,k:"delivery"},
+          {l:kn.satisfaction,k:"satisfaction"},
+        ].map(m=>(
+          <KpiBar key={m.k} label={m.l} value={displayMetrics[m.k]} prev={applied?metrics[m.k]:undefined}/>
+        ))}
+      </div>
+
+      <div className="info-box">
+        <strong>📌 Rule:</strong> Choose 3 actions. All 3 execute simultaneously — their effects compound. Think about which combination of trade-offs gives you the best overall position, not just the highest single KPI.
+      </div>
+
+      <div className="action-grid">
+        {ACTIONS.map(a=>{
+          const isSel=!!chosen.find(x=>x.id===a.id);
+          const isLocked=!isSel&&chosen.length>=3;
+          return(
+            <div key={a.id} className={`action-tile ${isSel?"chosen":""} ${isLocked||applied?"locked":""} ${applied?"applied":""}`} onClick={()=>toggle(a)}>
+              {isSel&&<div className="check-badge">✓</div>}
+              <div className="action-emoji">{a.emoji}</div>
+              <div className="action-title">{a.title}</div>
+              <div className="action-desc">{a.desc}</div>
+              <div className="action-why">{a.why}</div>
+              <div className="effect-row">
+                {Object.entries(a.e).map(([k,v])=>(
+                  <span key={k} className={`etag ${v>0?"etag-pos":"etag-neg"}`}>{k.slice(0,3).toUpperCase()} {v>0?"+":""}{v}</span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {!applied&&(
+        <button className="btn btn-primary" onClick={apply} disabled={chosen.length!==3} style={{opacity:chosen.length!==3?.45:1}}>
+          Execute {chosen.length}/3 Actions →
+        </button>
+      )}
+
+      {applied&&(
+        <div className="fade-up">
+          <div className="info-box success">
+            <strong>✅ Actions Executed.</strong> KPI changes are reflected above. Every delta shown is real and will carry forward into your final score. Your next challenge: secure your supplier relationships under pressure.
+          </div>
+          <button className="btn btn-primary" onClick={onNext}>Begin Supplier Negotiations →</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NegotiateScreen({onNext,setNegScore}){
+  const [round,setRound]=useState(0);
+  const [trust,setTrust]=useState(50);
+  const [price,setPrice]=useState(50);
+  const [lead,setLead]=useState(50);
+  const [picked,setPicked]=useState(null);
+  const [cumDelta,setCumDelta]=useState(0);
+
+  function choose(c){
+    if(picked)return;
+    setPicked(c);
+    setTrust(t=>clamp(t+c.trust,0,100));
+    setPrice(p=>clamp(p+c.price,0,100));
+    setLead(l=>clamp(l+c.lead,0,100));
+    setCumDelta(d=>d+c.trust+c.lead+(c.price>0?c.price:0));
+  }
+
+  function advance(){
+    if(round+1>=NEG_ROUNDS.length){
+      const final=clamp(Math.round(50+cumDelta+(c=>c.trust+c.lead)(NEG_ROUNDS[round].choices.find(x=>x===picked)||{trust:0,lead:0})),0,100);
+      const fs=clamp(Math.round((trust+price+lead)/3),0,100);
+      setNegScore(fs);
+      onNext();
+    } else {
+      setRound(r=>r+1);
+      setPicked(null);
+    }
+  }
+
+  const cur=NEG_ROUNDS[round];
+
+  return(
+    <div className="page fade-up">
+      <StepTrail current={3}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag gold">🤝 Phase 4 · Supplier Negotiation</div>
+        <div className="page-h1">Round {round+1} of {NEG_ROUNDS.length}</div>
+        <p className="page-sub">Every choice you make here affects your supplier relationship for the next 3 years. There is no reset button.</p>
+      </div>
+
+      <div className="neg-meters">
+        {[{l:"Trust",v:trust},{l:"Price Health",v:price},{l:"Lead Time",v:lead}].map(m=>(
+          <div className="neg-meter-card" key={m.l}>
+            <div className="neg-meter-lbl">{m.l}</div>
+            <div className="neg-meter-val" style={{color:kpiColor(m.v)}}>{m.v}</div>
+            <div className="progress-track"><div className="progress-fill" style={{width:`${m.v}%`,background:kpiColor(m.v)}}/></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="quote-card">
+        "{cur.quote}"
+        <div className="quote-attr">— {cur.speaker}</div>
+      </div>
+
+      <div className="info-box">{cur.context}</div>
+
+      {!picked?(
+        <div className="choice-stack">
+          {cur.choices.map((c,i)=>(
+            <button key={i} className="choice-btn" onClick={()=>choose(c)}>
+              <strong style={{marginRight:".4rem",color:"var(--blue)"}}>{String.fromCharCode(65+i)}.</strong>{c.text}
+            </button>
+          ))}
+        </div>
+      ):(
+        <div className="fade-up">
+          <div className={`outcome-box outcome-${picked.r}`}>
+            <strong>{picked.r==="good"?"✅":picked.r==="bad"?"❌":"⚠️"}</strong>{" "}{picked.msg}
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:".35rem",marginTop:".6rem"}}>
+            {picked.trust!==0&&<span className={`etag ${picked.trust>0?"etag-pos":"etag-neg"}`}>Trust {picked.trust>0?"+":""}{picked.trust}</span>}
+            {picked.price!==0&&<span className={`etag ${picked.price>0?"etag-pos":"etag-neg"}`}>Price {picked.price>0?"+":""}{picked.price}</span>}
+            {picked.lead!==0&&<span className={`etag ${picked.lead>0?"etag-pos":"etag-neg"}`}>Lead Time {picked.lead>0?"+":""}{picked.lead}</span>}
+          </div>
+          <button className="btn btn-primary" style={{marginTop:"1.1rem"}} onClick={advance}>
+            {round+1>=NEG_ROUNDS.length?"Go to CEO Boardroom →":`Round ${round+2} of ${NEG_ROUNDS.length} →`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CEOScreen({onNext,setCeoScore}){
+  const [answers,setAnswers]=useState({});
+  const [score,setScore]=useState(0);
+  const done=Object.keys(answers).length===CEO_QS.length;
+
+  function answer(qi,oi){
+    if(answers[qi]!==undefined)return;
+    const correct=CEO_QS[qi].correct===oi;
+    setAnswers(prev=>({...prev,[qi]:{chosen:oi,correct}}));
+    if(correct)setScore(s=>s+20);
+  }
+
+  return(
+    <div className="page fade-up">
+      <StepTrail current={4}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag violet">👔 Phase 5 · CEO Boardroom</div>
+        <div className="page-h1">Executive Decision Test</div>
+        <p className="page-sub">5 questions grounded in real supply chain management principles. Each tests a distinct leadership competency.</p>
+      </div>
+
+      {CEO_QS.map((q,qi)=>{
+        const ans=answers[qi];
+        return(
+          <div className="ceo-block fade-up" key={qi}>
+            <div className="ceo-q-label">Question {qi+1} of {CEO_QS.length}</div>
+            <div className="ceo-q-text">{q.q}</div>
+            <div className="ceo-ctx">{q.ctx}</div>
+            <div className="ceo-opts">
+              {q.opts.map((opt,oi)=>{
+                let cls="ceo-btn";
+                if(ans!==undefined){
+                  cls+=" answered";
+                  if(oi===q.correct)cls+=" correct";
+                  else if(oi===ans.chosen&&!ans.correct)cls+=" wrong";
+                }
+                return(
+                  <button key={oi} className={cls} onClick={()=>answer(qi,oi)}>
+                    <strong style={{marginRight:".4rem"}}>{String.fromCharCode(65+oi)}.</strong>{opt}
+                  </button>
+                );
+              })}
+            </div>
+            {ans!==undefined&&(
+              <div className="why-box fade-up">
+                <strong>{ans.correct?"✅ Correct.":"❌ Incorrect."}</strong> {q.why}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {done&&(
+        <div className="fade-up">
+          <div className={`info-box ${score>=80?"success":score>=60?"":"warn"}`}>
+            <strong>CEO Score: {score}/100.</strong>{" "}
+            {score>=80?"Exceptional executive judgment. You understand the principles behind the decisions, not just the answers."
+              :score>=60?"Solid leadership instincts with some gaps. Review the explanations above — the reasoning matters more than the score."
+              :"Significant gaps in strategic supply chain leadership. The explanations above contain the mental models you need to develop."}
+          </div>
+          <button className="btn btn-primary" onClick={()=>{setCeoScore(score);onNext();}}>Go to AI Strategy →</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AIScreen({crisis,onNext,setAiChoices}){
+  const [chosen,setChosen]=useState([]);
+
+  function toggle(a){
+    if(chosen.find(x=>x.id===a.id)){setChosen(chosen.filter(x=>x.id!==a.id));}
+    else if(chosen.length<2){setChosen([...chosen,a]);}
+  }
+
+  return(
+    <div className="page fade-up">
+      <StepTrail current={5}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag violet">🤖 Phase 6 · AI Investment Strategy</div>
+        <div className="page-h1">Choose Your AI Investments</div>
+        <p className="page-sub">Select 2 AI tools to deploy post-crisis. The best choices directly address the vulnerabilities this crisis exposed.</p>
+      </div>
+
+      <div className="info-box warn">
+        <strong>💡 Strategy Hint:</strong> You just survived a <strong>{crisis.type}</strong>. Which of these tools would have reduced your exposure to that specific risk — or prevented it from escalating as far as it did?
+      </div>
+
+      <div className="ai-grid">
+        {AI_OPTIONS.map(a=>{
+          const isSel=!!chosen.find(x=>x.id===a.id);
+          const isLocked=!isSel&&chosen.length>=2;
+          return(
+            <div key={a.id} className={`ai-tile ${isSel?"chosen":""} ${isLocked?"locked":""}`} onClick={()=>!isLocked&&toggle(a)}>
+              {isSel&&<div className="check-badge" style={{background:"var(--violet)"}}>✓</div>}
+              <div className="ai-icon">{a.emoji}</div>
+              <div className="ai-name">{a.name}</div>
+              <div className="ai-desc">{a.desc}</div>
+              <div className="ai-roi">{a.roi}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button className="btn btn-primary" onClick={()=>{setAiChoices(chosen);onNext();}} disabled={chosen.length!==2} style={{opacity:chosen.length!==2?.45:1}}>
+        Complete Simulation →
+      </button>
+    </div>
+  );
+}
+
+function FinalScreen({company,crisis,metrics,initMetrics,negScore,ceoScore,aiChoices,onReplay}){
+  const kn=company.kpiNames;
+  const kpiAvg=Math.round((metrics.cost+metrics.inventory+metrics.profit+metrics.delivery+metrics.satisfaction)/5);
+  const overall=clamp(Math.round(kpiAvg*.35+negScore*.25+ceoScore*.25+(aiChoices.length*5)*.15),0,100);
+  const {g,label,col}=scoreGrade(overall);
+
+  const subScores=[
+    {l:"Leadership",v:ceoScore},
+    {l:"Negotiation",v:negScore},
+    {l:"Resilience",v:Math.round((metrics.inventory+metrics.delivery)/2)},
+    {l:"Cost Control",v:metrics.cost},
+    {l:"Risk Management",v:Math.round((metrics.profit+negScore)/2)},
+    {l:"Customer Sat.",v:metrics.satisfaction},
+  ];
+
+  const allKpis=[
+    {l:kn.cost,v:metrics.cost},
+    {l:kn.inventory,v:metrics.inventory},
+    {l:kn.profit,v:metrics.profit},
+    {l:kn.delivery,v:metrics.delivery},
+    {l:kn.satisfaction,v:metrics.satisfaction},
+  ];
+  const worst=allKpis.slice().sort((a,b)=>a.v-b.v)[0];
+  const best=allKpis.slice().sort((a,b)=>b.v-a.v)[0];
+
+  const expertAnalysis=(()=>{
+    if(overall>=87)return`You led ${company.name} through a ${crisis.type} with exceptional composure. Your negotiation approach preserved the supplier relationship while your CEO decisions demonstrated systems-level thinking. This is the profile of a CSCO who builds resilience before crises, not after.`;
+    if(overall>=72)return`A strong performance under pressure. Your ${crisis.type} response protected the most critical areas while accepting calculated losses elsewhere. The gap between your score and exceptional is usually in proactive communication and supplier partnership depth — revisit those moments.`;
+    if(overall>=57)return`Competent crisis management with identifiable gaps. Your ${crisis.type} response was functional but reactive. The companies that thrive through disruption have pre-built playbooks, pre-qualified suppliers, and pre-negotiated air freight contracts — not responses assembled under pressure.`;
+    return`This crisis revealed structural supply chain vulnerabilities that go beyond the immediate disruption. The ${crisis.type} you faced is recoverable — but without investment in supplier diversification, digital visibility, and crisis playbooks, the next disruption will produce similar results.`;
+  })();
+
+  function copyLinkedIn(){
+    const text=`I just led ${company.name} through a ${crisis.type} in the Operation Lifeline Supply Chain Crisis Lab.\n\n🏭 Industry: ${company.industry}\n📊 Overall Crisis Score: ${overall}/100 (${g} — ${label})\n🤝 Negotiation Score: ${negScore}/100\n👔 Leadership Score: ${ceoScore}/100\n🤖 AI Investments: ${aiChoices.map(a=>a.name).join(" & ")}\n\nThe biggest lesson? ${crisis.why}\n\nTry it yourself 👇\n\n#SupplyChain #OperationsManagement #CrisisManagement #AI`;
+    navigator.clipboard.writeText(text).catch(()=>{});
+    alert("Copied to clipboard — paste into LinkedIn!");
+  }
+
+  return(
+    <div className="page fade-up">
+      <StepTrail current={6}/>
+      <div style={{marginBottom:"1.5rem"}}>
+        <div className="phase-tag emerald">📊 Phase 7 · Executive Dashboard</div>
+        <div className="page-h1">Final Results</div>
+        <p className="page-sub">{company.name} · {company.industry} · Crisis: {crisis.type}</p>
+      </div>
+
+      <div className="score-hero">
+        <div style={{fontSize:".8rem",color:"var(--text3)",marginBottom:".3rem",textTransform:"uppercase",letterSpacing:".07em",fontWeight:700}}>Overall Crisis Score</div>
+        <div className="score-super" style={{color:col}}>{overall}</div>
+        <div className="score-of">out of 100</div>
+        <div className="score-grade" style={{color:col}}>{g} — {label}</div>
+      </div>
+
+      <div className="sub-grid">
+        {subScores.map((s,i)=>(
+          <div className="sub-tile" key={i}>
+            <div className="sub-lbl">{s.l}</div>
+            <div className="sub-val" style={{color:kpiColor(s.v)}}>{s.v}</div>
+            <div className="progress-track" style={{marginTop:".4rem"}}>
+              <div className="progress-fill" style={{width:`${s.v}%`,background:kpiColor(s.v)}}/>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="kpi-row" style={{marginBottom:"1.3rem"}}>
+        {allKpis.map((k,i)=>(
+          <div className="kpi-card" key={i}>
+            <div className="kpi-lbl">{k.l}</div>
+            <div className="kpi-num" style={{color:kpiColor(k.v)}}>{k.v}</div>
+            <div className="progress-track"><div className="progress-fill" style={{width:`${k.v}%`,background:kpiColor(k.v)}}/></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="insight-grid">
+        <div className="insight-tile bad">
+          <div className="insight-lbl">⚠️ Biggest Gap</div>
+          <div className="insight-text">Your weakest area was <strong style={{color:"var(--rose)"}}>{worst.l} ({worst.v})</strong>. In a real crisis, this would have been the area causing the most stakeholder escalations. What action could you have chosen differently to protect it?</div>
+        </div>
+        <div className="insight-tile good">
+          <div className="insight-lbl">✅ Best Decision</div>
+          <div className="insight-text">Your strongest outcome was <strong style={{color:"var(--emerald)"}}>{best.l} ({best.v})</strong>. The actions you selected aligned well with protecting this dimension — a strategic read of the situation.</div>
+        </div>
+        <div className="insight-tile blue">
+          <div className="insight-lbl">🎯 AI Investment Alignment</div>
+          <div className="insight-text">You chose <strong style={{color:"var(--blue)"}}>{aiChoices.map(a=>a.name).join(" & ")}</strong>. These should be deployed during stable periods so they're operational before the next crisis — not purchased in response to one.</div>
+        </div>
+        <div className="insight-tile amber">
+          <div className="insight-lbl">📖 Root Cause</div>
+          <div className="insight-text">The {crisis.type} exposed: <strong style={{color:"var(--amber)"}}>{crisis.why}</strong> Address the structural vulnerability, not just the symptoms.</div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginBottom:"1.3rem"}}>
+        <div className="card-lbl" style={{marginBottom:".7rem"}}>Expert Analysis</div>
+        <p style={{fontSize:".87rem",color:"var(--text2)",lineHeight:1.7}}>{expertAnalysis}</p>
+      </div>
+
+      <div className="card" style={{marginBottom:"1.5rem"}}>
+        <div className="card-lbl" style={{marginBottom:".75rem"}}>🤖 AI Roadmap</div>
+        {aiChoices.map(a=>(
+          <div key={a.id} style={{marginBottom:".8rem",paddingBottom:".8rem",borderBottom:"1px solid var(--rim)"}}>
+            <div style={{fontWeight:700,fontSize:".88rem",marginBottom:".2rem"}}>{a.emoji} {a.name}</div>
+            <div style={{fontSize:".77rem",color:"var(--text2)",marginBottom:".2rem"}}>{a.desc}</div>
+            <div style={{fontSize:".74rem",color:"var(--violet)",fontWeight:700}}>Expected ROI: {a.roi}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",gap:".7rem",flexWrap:"wrap"}}>
+        <button className="btn btn-primary" onClick={onReplay}>🔄 New Simulation</button>
+        <button className="btn btn-ghost" onClick={copyLinkedIn}>📋 Copy LinkedIn Post</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROOT APP
+═══════════════════════════════════════════════════════════════*/
+function App(){
+  const [screen,setScreen]=useState("welcome");
+  const [company,setCompany]=useState(null);
+  const [crisis,setCrisis]=useState(null);
+  const [initMetrics,setInitMetrics]=useState(null);
+  const [metrics,setMetrics]=useState(null);
+  const [negScore,setNegScore]=useState(0);
+  const [ceoScore,setCeoScore]=useState(0);
+  const [aiChoices,setAiChoices]=useState([]);
+
+  function start(){
+    const co=genCompany();
+    const cr=genCrisis(co);
+    const m=genMetrics();
+    setCompany(co);setCrisis(cr);setInitMetrics(m);setMetrics(m);
+    setNegScore(0);setCeoScore(0);setAiChoices([]);
+    setScreen("company");
+  }
+
+  function replay(){setScreen("welcome");}
+
+  return(
+    <div>
+      {screen==="welcome"   && <Welcome onStart={start}/>}
+      {screen==="company"   && <CompanyScreen company={company} onNext={()=>setScreen("crisis")}/>}
+      {screen==="crisis"    && <CrisisScreen company={company} crisis={crisis} onNext={()=>setScreen("warroom")}/>}
+      {screen==="warroom"   && <WarRoomScreen company={company} metrics={metrics} setMetrics={setMetrics} onNext={()=>setScreen("negotiate")}/>}
+      {screen==="negotiate" && <NegotiateScreen onNext={()=>setScreen("ceo")} setNegScore={setNegScore}/>}
+      {screen==="ceo"       && <CEOScreen onNext={()=>setScreen("ai")} setCeoScore={setCeoScore}/>}
+      {screen==="ai"        && <AIScreen crisis={crisis} onNext={()=>setScreen("final")} setAiChoices={setAiChoices}/>}
+      {screen==="final"     && <FinalScreen company={company} crisis={crisis} metrics={metrics} initMetrics={initMetrics} negScore={negScore} ceoScore={ceoScore} aiChoices={aiChoices} onReplay={replay}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
