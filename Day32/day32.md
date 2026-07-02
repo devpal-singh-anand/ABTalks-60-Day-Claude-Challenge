@@ -329,10 +329,8 @@ Each random client playthrough draws from this pool:
 
 ```
 Day32/
-├── day32.md                              ← This file
-├── think-like-a-marketing-strategist.html ← The randomized application (121 KB)
-├── brewcraft-hardcoded.html              ← Hardcoded BrewCraft Roasters variant
-├── brewcraft-walkthrough-script.md       ← Voiceover walkthrough script
+├── day32.md                              
+├── think-like-a-marketing-strategist.html 
 └── Screenshots/
     ├── brewcraft-01-welcome.png          — Welcome screen
     ├── brewcraft-02-mode-selection.png   — Mode selection (3 options)
@@ -375,64 +373,6 @@ Day32/
 5. **Viral moments don't guarantee retention:** The strategically sound response to virality is to pause and analyze why it worked — not to rush out more of the same. Understanding the "why" builds a durable strategy.
 6. **Prompt engineering is a marketing skill:** Learning how to ask Claude for audience research, platform strategy, content pillars, roadmaps, and event handling makes you a better marketer — AI amplifies strategic thinking.
 7. **Every decision has a consequence:** The simulator shows immediate impact, long-term impact, and alternative strategy for every event response. This teaches marketers to think beyond the immediate reaction — to the long-term implications.
-
----
-
-## 🖼️ LinkedIn Post — Recommended Screenshots
-
-### Slide 1: **brewcraft-06-platforms.png** (strategy slide)
-Shows the 9 platform options with fit explanations — demonstrates that platform choice depends on audience, not popularity.
-
-### Slide 2: **brewcraft-13-event-revealed.png** (decision slide)
-Shows the viral post event with 3 response options — demonstrates the strategic thinking required when a marketing event hits.
-
-### Slide 3: **brewcraft-16-growth-report.png** (results slide)
-Shows the final Growth Report with Overall Score 77/100, sub-scores, lessons, and recommendations — proves the simulation produces a meaningful, calculated outcome.
-
----
-
-## 📖 How to Reproduce
-
-### Option A: Randomized simulator (the main deliverable)
-
-1. Start a local HTTP server in the Day32 folder:
-   ```bash
-   cd Day32
-   python3 -m http.server 8772
-   ```
-2. Open `http://localhost:8772/think-like-a-marketing-strategist.html` in any browser
-3. Read the welcome screen
-4. Click "Start the Simulation →"
-5. Choose a mode (Own Business / Personal Brand / Random Client)
-6. Understand the business and its audience
-7. Select 3 marketing platforms based on audience fit
-8. Choose 3 content pillars with strategic roles
-9. Review the 30-day roadmap
-10. Respond to the marketing event
-11. Review your Growth Report (Overall Score, sub-scores, lessons)
-12. Click "Replay" for a completely different business and scenario
-
-### Option B: Hardcoded BrewCraft variant (for consistent screenshots/voiceover)
-
-Follow the same steps but open `http://localhost:8772/brewcraft-hardcoded.html` instead. Every playthrough shows BrewCraft Roasters (Boutique Coffee Roastery) with the same business details and the same Viral Post marketing event — useful for recording a voiceover or capturing repeatable screenshots.
-
----
-
-## 📝 LinkedIn Post Template
-
-> Day 32 of the #60DayClaudeChallenge — Built a Marketing Strategy Simulator with Claude.
->
-> My final Marketing Score: **97/100 — the maximum possible**
->
-> The biggest lesson I learned about audience-first marketing: **Strategy always comes before content.** Knowing your audience shapes every decision downstream — which platforms you choose, which content pillars you build, and how you respond when a post goes viral.
->
-> I helped BrewCraft Roasters (a boutique coffee roastery with strong local reputation but no online presence) build a marketing strategy. Chose Instagram + Google Search + Newsletter (matching their busy urban professional audience). Selected Behind the Scenes + Education + Customer Success as content pillars (covering trust, attract, and connect). When a post went viral, I chose to pause and analyze why it worked — the strategically sound decision that builds durable strategy over chasing spikes.
->
-> Final scores: Platform Strategy 100, Content Strategy 99, Audience Research 97, Decision Making 90 — the maximum possible Overall Score of 97. The simulator also taught prompt engineering — 5 reusable Claude prompts for audience research, platform strategy, content pillars, roadmaps, and event handling.
->
-> @Anthropic @ABTalksOnAI @AnilBajpai
->
-> #60DayClaudeChallenge #MarketingStrategy #AudienceFirst #ClaudeAI #PromptEngineering
 
 ---
 
