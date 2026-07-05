@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧩 Prompt Puzzle — Master AI Prompting Through Play</title>
+<style>
+  :root{
+    --void:#080b10;
+    --panel: rgba(22,28,38,0.68);
+    --panel-solid:#131923;
+    --panel-hi: rgba(255,255,255,0.05);
+    --border: rgba(148,168,192,0.14);
+    --border-hi: rgba(148,168,192,0.28);
+    --amber:#f2a93b;
+    --amber-dim: rgba(242,169,59,0.16);
+    --cyan:#34c9e8;
+    --cyan-dim: rgba(52,201,232,0.16);
+    --green:#3ddc97;
+    --green-dim: rgba(61,220,151,0.16);
+    --red:#f2555a;
+    --red-dim: rgba(242,85,90,0.16);
+    --text-hi:#eef3f8;
+    --text-mid:#9fadc0;
+    --text-dim:#5d6a80;
+    --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(52,201,232,0.08), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(242,169,59,0.07), transparent 45%),
+      var(--void);
+    color:var(--text-hi);
+    font-family:var(--sans);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:1100px;margin:0 auto;padding:28px 20px 80px;}
+  ::selection{background:var(--amber-dim);}
+  a{color:var(--cyan);}
+  button{font-family:inherit;cursor:pointer;}
+  button:focus-visible, [tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+
+  /* ---------- shared bits ---------- */
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--cyan);opacity:.85;
+  }
+  .glass{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 10px 40px rgba(0,0,0,0.35);
+  }
+  .btn{
+    border-radius:10px;border:1px solid var(--border-hi);
+    background:rgba(255,255,255,0.03);color:var(--text-hi);
+    padding:11px 20px;font-size:14px;font-weight:600;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    letter-spacing:.01em;
+  }
+  .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,0.07);border-color:var(--border-hi);}
+  .btn:active{transform:translateY(0);}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--amber), #d9852a);
+    color:#1b1204;border:none;box-shadow:0 6px 22px rgba(242,169,59,0.25);
+  }
+  .btn-primary:hover{box-shadow:0 8px 28px rgba(242,169,59,0.4);}
+  .btn-ghost{background:transparent;border-color:var(--border);color:var(--text-mid);}
+  .btn-ghost:hover{color:var(--text-hi);}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+    padding:4px 9px;border-radius:100px;border:1px solid var(--border);color:var(--text-mid);
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+  .tag.cat-role{color:var(--cyan);border-color:rgba(52,201,232,0.35);}
+  .tag.cat-context{color:var(--amber);border-color:rgba(242,169,59,0.35);}
+  .tag.cat-constraints{color:var(--red);border-color:rgba(242,85,90,0.35);}
+  .tag.cat-formatting{color:var(--green);border-color:rgba(61,220,151,0.35);}
+
+  /* ---------- header / scope ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{
+    width:42px;height:42px;border-radius:11px;
+    background:linear-gradient(135deg, var(--cyan), var(--amber));
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 6px 20px rgba(52,201,232,0.25);
+  }
+  .brand h1{font-size:16px;margin:0;letter-spacing:.01em;}
+  .brand .sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);}
+
+  .scope{
+    position:relative;height:34px;width:220px;overflow:hidden;border-radius:8px;
+    background:linear-gradient(90deg, rgba(52,201,232,0.06), rgba(242,169,59,0.06));
+    border:1px solid var(--border);
+  }
+  .scope::before{
+    content:"";position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(148,168,192,0.25);
+  }
+  .scope .sweep{
+    position:absolute;top:0;bottom:0;width:2px;background:var(--cyan);
+    box-shadow:0 0 10px 2px rgba(52,201,232,0.6);
+    animation:sweep 3.4s linear infinite;
+  }
+  .scope svg{position:absolute;inset:0;width:100%;height:100%;}
+  .scope svg polyline{
+    stroke-dasharray:240; stroke-dashoffset:240;
+    animation:ecgPulse 1.4s linear infinite;
+  }
+  @keyframes ecgPulse{
+    0%{stroke-dashoffset:240;}
+    100%{stroke-dashoffset:0;}
+  }
+  @keyframes sweep{
+    0%{left:0;}
+    100%{left:100%;}
+  }
+  /* ECG color states on existing scope */
+  .scope.ecg-green svg polyline{stroke:#22c55e !important; filter:drop-shadow(0 0 4px #22c55e); opacity:1 !important; animation:ecgPulse 0.8s linear infinite !important;}
+  .scope.ecg-green .sweep{background:#22c55e; box-shadow:0 0 10px 2px rgba(34,197,94,0.6);}
+  .scope.ecg-red svg polyline{stroke:#ef4444 !important; filter:drop-shadow(0 0 4px #ef4444); opacity:1 !important; animation:ecgPulse 0.5s linear infinite !important;}
+  .scope.ecg-red .sweep{background:#ef4444; box-shadow:0 0 10px 2px rgba(239,68,68,0.6);}
+  .scope.ecg-yellow svg polyline{stroke:#eab308 !important; filter:drop-shadow(0 0 4px #eab308); opacity:1 !important; animation:ecgPulse 1.0s linear infinite !important;}
+  .scope.ecg-yellow .sweep{background:#eab308; box-shadow:0 0 10px 2px rgba(234,179,8,0.6);}
+    100%{left:100%;}
+  }
+
+  .progress-tracker{display:flex;gap:8px;align-items:center;}
+  .pt-dot{
+    width:9px;height:9px;border-radius:50%;background:var(--text-dim);
+    transition:background .3s ease, box-shadow .3s ease;
+  }
+  .pt-dot.done{background:var(--green);box-shadow:0 0 8px rgba(61,220,151,0.7);}
+  .pt-dot.active{background:var(--amber);box-shadow:0 0 8px rgba(242,169,59,0.7);}
+
+  /* ---------- intro ---------- */
+  .intro{padding:56px 8px 20px;text-align:center;animation:riseIn .7s ease both;}
+  .intro .kicker{font-family:var(--mono);color:var(--cyan);font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:18px;opacity:0;animation:fadeUp .6s ease .1s forwards;}
+  .intro h1{
+    font-size:clamp(30px,5vw,46px);line-height:1.08;margin:0 0 18px;letter-spacing:-.01em;
+    opacity:0;animation:fadeUp .7s ease .25s forwards;
+  }
+  .intro h1 span{background:linear-gradient(120deg, var(--cyan), var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .intro p.lead{
+    max-width:620px;margin:0 auto 30px;color:var(--text-mid);font-size:16px;line-height:1.65;
+    opacity:0;animation:fadeUp .7s ease .42s forwards;
+  }
+  .intro .terminal{
+    max-width:620px;margin:0 auto 34px;text-align:left;padding:18px 20px;
+    font-family:var(--mono);font-size:13px;color:var(--green);
+    opacity:0;animation:fadeUp .7s ease .58s forwards;
+  }
+  .intro .terminal .line{opacity:.85;margin:3px 0;}
+  .intro .terminal .caret{display:inline-block;width:8px;height:14px;background:var(--green);animation:blink 1s step-end infinite;vertical-align:-2px;}
+  @keyframes blink{50%{opacity:0;}}
+  .intro-actions{opacity:0;animation:fadeUp .7s ease .74s forwards;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes riseIn{from{opacity:.001;}to{opacity:1;}}
+
+  .brief-chip{display:inline-flex;gap:8px;margin:3px 6px;padding:6px 12px;border-radius:100px;border:1px solid var(--border-hi);font-family:var(--mono);font-size:12px;color:var(--text-mid);}
+
+  /* ---------- menu ---------- */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media (max-width:820px){.grid-3{grid-template-columns:1fr;}}
+  .mode-card{
+    padding:24px;position:relative;overflow:hidden;transition:transform .2s ease, border-color .2s ease;
+  }
+  .mode-card:hover{transform:translateY(-3px);border-color:var(--border-hi);}
+  .mode-card .icon{font-size:26px;margin-bottom:14px;display:block;}
+  .mode-card h3{margin:0 0 8px;font-size:17px;}
+  .mode-card p{margin:0 0 18px;color:var(--text-mid);font-size:13.5px;line-height:1.55;}
+  .mode-card .done-badge{position:absolute;top:16px;right:16px;color:var(--green);font-size:12px;font-family:var(--mono);}
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);margin:34px 0 14px;font-family:var(--mono);}
+
+  .playground-banner{
+    margin-top:26px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(120deg, rgba(52,201,232,0.08), rgba(242,169,59,0.06));
+  }
+  .playground-banner.locked{opacity:.55;}
+
+  /* ---------- challenge shell ---------- */
+  .stage-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px;flex-wrap:wrap;}
+  .stage-head h2{margin:0 0 6px;font-size:20px;}
+  .stage-head .ctx{color:var(--text-mid);font-size:13.5px;max-width:640px;line-height:1.55;}
+  .stat-strip{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat-pill{
+    padding:8px 14px;border-radius:10px;font-family:var(--mono);font-size:12px;color:var(--text-mid);
+    background:rgba(255,255,255,0.03);border:1px solid var(--border);min-width:76px;text-align:center;
+  }
+  .stat-pill b{display:block;font-size:15px;color:var(--text-hi);font-family:var(--sans);}
+
+  .panel{padding:22px;margin-bottom:18px;}
+
+  /* build challenge */
+  .slots{display:flex;flex-direction:column;gap:10px;margin:14px 0 6px;}
+  .slot{
+    min-height:52px;border-radius:10px;border:1.5px dashed var(--border-hi);
+    display:flex;align-items:center;padding:0 16px;color:var(--text-dim);font-size:13.5px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .slot .num{font-family:var(--mono);color:var(--text-dim);margin-right:12px;font-size:12px;}
+  .slot.filled{border-style:solid;border-color:var(--border-hi);background:rgba(255,255,255,0.03);color:var(--text-hi);cursor:pointer;}
+  .slot.filled:hover{border-color:var(--cyan);}
+  .slot.dragover{border-color:var(--cyan);background:var(--cyan-dim);}
+  .pool{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px;}
+  .block-chip{
+    padding:10px 14px;border-radius:10px;border:1px solid var(--border-hi);background:rgba(255,255,255,0.03);
+    font-size:13px;line-height:1.4;max-width:280px;transition:all .15s ease;color:var(--text-hi);text-align:left;
+  }
+  .block-chip:hover{border-color:var(--cyan);background:rgba(52,201,232,0.08);transform:translateY(-1px);}
+  .block-chip.hint-glow{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-dim);animation:pulseHint 1.2s ease 2;}
+  @keyframes pulseHint{0%,100%{box-shadow:0 0 0 3px var(--amber-dim);}50%{box-shadow:0 0 0 6px transparent;}}
+
+  /* clean challenge */
+  .clean-line{
+    display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:10px;border:1px solid var(--border);
+    margin-bottom:8px;background:rgba(255,255,255,0.02);transition:all .15s ease;text-align:left;width:100%;
+  }
+  .clean-line:hover{border-color:var(--border-hi);}
+  .clean-line.marked{opacity:.55;}
+  .clean-line.marked .txt{text-decoration:line-through;text-decoration-color:var(--red);color:rgba(255,255,255,0.5);}
+  .clean-line .mark-btn{
+    flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1.5px solid var(--border-hi);
+    display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-dim);background:transparent;
+  }
+  .clean-line.marked .mark-btn{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+  .clean-line .txt{font-size:13.5px;flex:1;color:rgba(255,255,255,0.92);}
+
+  .verdict-line{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .verdict-line:last-child{border-bottom:none;}
+  .verdict-line .ic{flex:0 0 auto;width:20px;text-align:center;}
+  .verdict-line.correct .ic{color:var(--green);}
+  .verdict-line.wrong .ic{color:var(--red);}
+  .verdict-line .why{color:var(--text-mid);}
+
+  /* choose challenge */
+  .choose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media (max-width:900px){.choose-grid{grid-template-columns:1fr;}}
+  .choose-card{
+    text-align:left;padding:18px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,0.02);
+    font-size:12.5px;line-height:1.6;color:var(--text-mid);font-family:var(--mono);height:100%;transition:all .15s ease;
+    display:flex;flex-direction:column;gap:10px;white-space:pre-wrap;
+  }
+  .choose-card:hover{border-color:var(--cyan);transform:translateY(-2px);}
+  .choose-card .lbl{font-family:var(--sans);color:var(--text-hi);font-weight:700;font-size:13.5px;}
+  .choose-card.selected{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-dim);}
+  .choose-card.correct-reveal{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);}
+  .choose-card.wrong-reveal{border-color:var(--red);opacity:.7;}
+
+  /* construction visualizer */
+  .cv-row{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+  .cv-label{width:110px;font-family:var(--mono);font-size:12px;color:var(--text-mid);flex:0 0 auto;}
+  .cv-bar{flex:1;height:8px;border-radius:100px;background:rgba(255,255,255,0.05);overflow:hidden;}
+  .cv-fill{height:100%;border-radius:100px;width:0%;background:linear-gradient(90deg, var(--cyan), var(--green));transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .cv-check{width:18px;text-align:center;color:var(--text-dim);font-size:13px;}
+  .cv-check.on{color:var(--green);}
+
+  /* ai comparison */
+  .ai-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:800px){.ai-compare{grid-template-columns:1fr;}}
+  .ai-box{padding:16px 18px;border-radius:12px;border:1px solid var(--border);font-family:var(--mono);font-size:12.5px;line-height:1.7;min-height:130px;white-space:pre-wrap;}
+  .ai-box.weak{background:rgba(242,85,90,0.05);border-color:rgba(242,85,90,0.25);}
+  .ai-box.opt{background:rgba(61,220,151,0.05);border-color:rgba(61,220,151,0.25);}
+  .ai-box h4{margin:0 0 8px;font-family:var(--sans);font-size:12px;text-transform:uppercase;letter-spacing:.08em;}
+  .ai-box.weak h4{color:var(--red);}
+  .ai-box.opt h4{color:var(--green);}
+  .improve-list{margin-top:14px;}
+  .improve-list li{margin-bottom:7px;color:var(--text-mid);font-size:13px;line-height:1.55;}
+  .improve-list li b{color:var(--text-hi);}
+
+  .principle-box{padding:20px 22px;}
+  .principle-box h4{margin:0 0 4px;font-size:16px;color:var(--amber);}
+  .principle-box .field{margin-top:10px;}
+  .principle-box .field .k{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);}
+  .principle-box .field .v{font-size:13.5px;color:var(--text-mid);line-height:1.55;margin-top:3px;}
+
+  /* toasts */
+  #toast-wrap{position:fixed;top:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+  .toast{
+    padding:12px 18px;border-radius:10px;font-size:13px;min-width:220px;
+    animation:toastIn .35s ease both, toastOut .4s ease 2.6s forwards;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes toastOut{to{opacity:0;transform:translateX(30px);}}
+
+  #confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden;}
+  .confetti-piece{position:absolute;top:-10px;border-radius:2px;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(600deg);opacity:.2;}}
+
+  /* achievements */
+  .ach-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+  .ach-card{padding:16px;text-align:center;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.02);}
+  .ach-card.locked{opacity:.32;filter:grayscale(1);}
+  .ach-card .em{font-size:26px;display:block;margin-bottom:8px;}
+  .ach-card .nm{font-size:12px;color:var(--text-mid);}
+
+  /* report */
+  .report-hero{display:flex;align-items:center;gap:28px;padding:30px;flex-wrap:wrap;}
+  .score-ring{
+    width:132px;height:132px;border-radius:50%;flex:0 0 auto;
+    background:conic-gradient(var(--amber) calc(var(--pct,0)*1%), rgba(255,255,255,0.06) 0);
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .score-ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--panel-solid);}
+  .score-ring .num{position:relative;font-size:30px;font-weight:800;}
+  .report-hero .meta h2{margin:0 0 4px;font-size:22px;}
+  .report-hero .meta .rank{font-family:var(--mono);color:var(--cyan);font-size:13px;}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:800px){.grid-2{grid-template-columns:1fr;}}
+  .kv-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .kv-row:last-child{border-bottom:none;}
+  .kv-row .k{color:var(--text-mid);}
+  .kv-row .v{font-weight:600;}
+
+  /* playground */
+  textarea.pg-input{
+    width:100%;min-height:150px;border-radius:12px;border:1px solid var(--border-hi);
+    background:rgba(255,255,255,0.02);color:var(--text-hi);padding:16px;font-family:var(--mono);font-size:13.5px;
+    line-height:1.6;resize:vertical;
+  }
+  textarea.pg-input:focus{outline:2px solid var(--cyan);outline-offset:2px;}
+  .pg-cat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .pg-cat:last-child{border-bottom:none;}
+  .pg-cat .ic{width:20px;text-align:center;}
+  .pg-cat.ok .ic{color:var(--green);}
+  .pg-cat.missing .ic{color:var(--red);}
+
+  .footer-nav{display:flex;justify-content:space-between;margin-top:22px;flex-wrap:wrap;gap:10px;}
+
+  .empty-note{color:var(--text-dim);font-size:13px;font-style:italic;}
+  .count-anim{font-variant-numeric:tabular-nums;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+  }
+
+</style>
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+<div id="confetti-wrap"></div>
+<div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   DATA
+========================================================================= */
+var CATS = ['role','context','constraints','formatting','examples','reasoning','tone'];
+var CAT_LABELS = {role:'Role',context:'Context',constraints:'Constraints',formatting:'Formatting',examples:'Examples',reasoning:'Reasoning',tone:'Tone'};
+
+var SCENARIOS = [
+{
+  id:'ransomware_brief',
+  title:'Ransomware Executive Briefing',
+  useCase:'Executive incident reporting during an active breach response.',
+  context:'You are the lead SOC analyst. A ransomware strain encrypted 40% of finance servers overnight. The CISO needs a briefing for the executive board in 30 minutes, ahead of a vote on public disclosure.',
+  desired:'A concise, structured incident summary a non-technical board can act on immediately.',
+  blocks:[
+    {t:'You are a senior SOC incident commander briefing a corporate board.', c:'role'},
+    {t:'The board has no technical background and has 10 minutes to review this before a vote on public disclosure.', c:'context'},
+    {t:'Limit the summary to 200 words.', c:'constraints'},
+    {t:'Use three sections: Impact, Containment Status, Next Steps.', c:'formatting'},
+    {t:'Include one concrete example of business impact, such as which systems are offline.', c:'examples'},
+    {t:'Explain the reasoning behind the recommended disclosure timeline.', c:'reasoning'},
+    {t:'Keep the tone calm and authoritative, avoiding alarmist language.', c:'tone'}
+  ],
+  distract:[
+    'You are a friendly chatbot answering general questions.',
+    'Explain what ransomware is, starting from the very basics.',
+    'Write at least 2000 words so the board has full context.',
+    'Use casual slang to keep the mood light during the crisis.',
+    'Include the full technical malware hash list and raw IOC dump.',
+    'Repeat the containment status three times for emphasis.'
+  ],
+  clean:[
+    {t:'You are a senior SOC incident commander briefing a corporate board.', keep:true, why:'Sets the correct role and authority level for this audience.'},
+    {t:'You are also an IT support technician answering routine user tickets.', keep:false, why:'Conflicting role — dilutes authority and confuses the audience the response is written for.'},
+    {t:'The board has no technical background and has 10 minutes before a disclosure vote.', keep:true, why:'Critical context that shapes both length and vocabulary.'},
+    {t:'Make it good and professional overall.', keep:false, why:'Vague filler — gives the model no actionable direction.'},
+    {t:'Limit the summary to 200 words.', keep:true, why:'A concrete constraint that matches the board\u2019s time limit.'},
+    {t:'Also make sure it is at least 1500 words for completeness.', keep:false, why:'Directly conflicts with the 200-word limit and will confuse the model.'},
+    {t:'Use three sections: Impact, Containment Status, Next Steps.', keep:true, why:'Precise structure that helps a rushed reader scan quickly.'},
+    {t:'Structure the report with clear sections in general.', keep:false, why:'Redundant — the exact structure was already specified above.'},
+    {t:'Keep the tone calm and authoritative, avoiding alarmist language.', keep:true, why:'Matches the high-stakes, decision-making context of the briefing.'},
+    {t:'Sound calm and composed throughout, no matter what.', keep:false, why:'Redundant restatement of the tone instruction already given.'}
+  ],
+  weak:'Write a summary about the ransomware attack for the board.',
+  opt:'You are a senior SOC incident commander briefing a corporate board. The board has no technical background and has 10 minutes to review this before a vote on public disclosure. Limit the summary to 200 words. Use three sections: Impact, Containment Status, Next Steps. Include one concrete example of business impact, such as which systems are offline. Explain the reasoning behind the recommended disclosure timeline. Keep the tone calm and authoritative, avoiding alarmist language.',
+  over:'You are a senior SOC incident commander briefing a corporate board. The board has no technical background. Limit the summary to 200 words. Use three sections: Impact, Containment Status, Next Steps. Include one example of business impact. Explain the reasoning behind the disclosure timeline. Keep the tone calm and authoritative. Also include a full technical IOC list, a regulatory compliance checklist, a communication plan for external stakeholders, a cost-benefit analysis of disclosure options, and a risk matrix comparing all possible scenarios. Format each section with nested sub-sections and footnotes.',
+  weakOut:'There was a ransomware attack. Some servers got encrypted. We are working on it and will keep you updated. It affected finance systems. More details soon. Please let us know if you have questions about anything related to this incident or others.',
+  optOut:'IMPACT: A ransomware strain encrypted roughly 40% of finance servers overnight; invoice processing and payroll systems are currently offline.\nCONTAINMENT STATUS: Affected segments have been isolated from the network; no lateral movement detected in the past 6 hours.\nNEXT STEPS: We recommend disclosing within 72 hours per regulatory guidance, once forensic scope is confirmed \u2014 delaying further risks a compliance penalty exceeding the reputational cost of early disclosure.',
+  improvements:[
+    '<b>Role framing</b> told the model exactly whose voice and authority level to write in, instead of a generic assistant tone.',
+    '<b>A hard word limit</b> forced brevity that matches how a board actually reads under time pressure.',
+    '<b>Explicit structure</b> (Impact / Containment / Next Steps) let the model organize information instead of guessing at a format.'
+  ],
+  principle:{
+    name:'Clear Objectives & Audience Framing',
+    why:'When a prompt states who the reader is and what they need to decide, the model can choose the right depth, vocabulary, and structure automatically instead of defaulting to a generic explanation.',
+    where:'Any time output must be consumed by a specific audience under a deadline: executive briefings, customer escalations, on-call handoffs.',
+    example:'Compare "summarize the incident" to "summarize the incident for a board with 10 minutes and no technical background" \u2014 the second produces something usable immediately.'
+  }
+},
+{
+  id:'apt_profile',
+  title:'APT Threat Intelligence Profile',
+  useCase:'Feeding a hunt team\u2019s playbook ahead of a suspected energy-sector intrusion.',
+  context:'Your threat intelligence team wants a profile of an APT-style group targeting energy-sector operators, to inform an active hunting playbook.',
+  desired:'A focused technique profile a hunt team can act on this week, not an encyclopedia entry.',
+  blocks:[
+    {t:'You are a threat intelligence analyst producing a profile for internal hunt teams.', c:'role'},
+    {t:'The audience already understands MITRE ATT&CK terminology and does not need it defined.', c:'context'},
+    {t:'Limit the profile to the five techniques most relevant to the last 90 days of observed activity.', c:'constraints'},
+    {t:'Structure the profile using MITRE ATT&CK tactic categories.', c:'formatting'},
+    {t:'Include one real observed indicator, such as a C2 domain naming pattern, as an example.', c:'examples'},
+    {t:'Explain why each technique is prioritized given the energy sector\u2019s typical attack surface.', c:'reasoning'},
+    {t:'Maintain a precise, analytical tone and flag confidence levels rather than speculating.', c:'tone'}
+  ],
+  distract:[
+    'You are a journalist writing an explainer for the general public.',
+    'Define what an APT group is, assuming no prior knowledge.',
+    'Cover all 200+ known ATT&CK techniques exhaustively.',
+    'Use an excited, dramatic tone to keep readers engaged.',
+    'Include unverified law-enforcement sources verbatim.',
+    'Repeat the confidence rating five times per technique for emphasis.'
+  ],
+  clean:[
+    {t:'You are a threat intelligence analyst producing a profile for internal hunt teams.', keep:true, why:'Correct role \u2014 tells the model who is speaking and to whom.'},
+    {t:'You are also a public spokesperson issuing a press statement.', keep:false, why:'Conflicting role that would soften technical precision the hunt team needs.'},
+    {t:'The audience already understands MITRE ATT&CK terminology.', keep:true, why:'Prevents the model from wasting space defining terms the reader already knows.'},
+    {t:'Please explain ATT&CK from first principles just in case.', keep:false, why:'Contradicts the stated audience expertise and pads the response.'},
+    {t:'Limit the profile to the five most relevant techniques.', keep:true, why:'Concrete scope that keeps the playbook actionable.'},
+    {t:'Also list every technique the group has ever used, all 40+.', keep:false, why:'Conflicts directly with the five-technique limit above.'},
+    {t:'Structure the profile using MITRE ATT&CK tactic categories.', keep:true, why:'Gives hunt teams a format they can map directly onto detections.'},
+    {t:'Feel free to organize it however seems best.', keep:false, why:'Redundant and vague once an explicit structure has already been given.'},
+    {t:'Maintain a precise, analytical tone and flag confidence levels.', keep:true, why:'Keeps speculation clearly separated from confirmed intelligence.'},
+    {t:'Make it sound thrilling and cinematic like a spy novel.', keep:false, why:'Wrong tone for an operational intelligence product.'}
+  ],
+  weak:'Tell me about this APT group\u2019s techniques.',
+  opt:'You are a threat intelligence analyst producing a profile for internal hunt teams. The audience already understands MITRE ATT&CK terminology and does not need it defined. Limit the profile to the five techniques most relevant to the last 90 days of observed activity. Structure the profile using MITRE ATT&CK tactic categories. Include one real observed indicator, such as a C2 domain naming pattern, as an example. Explain why each technique is prioritized given the energy sector\u2019s typical attack surface. Maintain a precise, analytical tone and flag confidence levels rather than speculating.',
+  over:'You are a threat intelligence analyst producing a profile for internal hunt teams. The audience understands MITRE ATT&CK terminology. Limit the profile to the five most relevant techniques from the last 90 days. Structure using MITRE ATT&CK tactic categories. Include one real observed indicator as an example. Explain why each technique is prioritized. Maintain a precise, analytical tone and flag confidence levels. Additionally, provide a full historical timeline of all known techniques since the group\'s inception, a comparative analysis against five similar APT groups, a list of all suspected infrastructure domains with WHOIS data, and a strategic forecast for the next 12 months with probability assessments for each predicted TTP.',
+  weakOut:'This group uses phishing and malware to get into networks. They have been active for a while and target various sectors. They use several tools and techniques to stay hidden. More research is ongoing about their full capabilities.',
+  optOut:'INITIAL ACCESS: Spear-phishing with energy-sector vendor lures (confidence: high).\nPERSISTENCE: Scheduled tasks mimicking SCADA maintenance jobs (confidence: medium).\nC2: Domains following a pattern of dash-separated industrial terms, e.g. grid-status-update[.]net (confidence: high).\nWhy prioritized: these three techniques map directly onto this sector\u2019s common OT/IT bridge points observed in the last quarter.',
+  improvements:[
+    '<b>Stating audience expertise</b> stopped the model from padding the answer with basic ATT&CK definitions.',
+    '<b>A concrete scope limit</b> (five techniques, 90 days) turned an encyclopedia request into a usable weekly briefing.',
+    '<b>Confidence-level tone guidance</b> kept speculation clearly labeled instead of blended with confirmed facts.'
+  ],
+  principle:{
+    name:'Context Matters',
+    why:'Telling the model what the audience already knows prevents wasted words on redundant background and focuses the response on what is actually new or decision-relevant.',
+    where:'Technical hand-offs between specialists, internal playbooks, and any content reused by people with a known baseline of knowledge.',
+    example:'"Explain phishing" vs. "the audience already understands ATT&CK terminology" \u2014 the second skips definitions the reader does not need.'
+  }
+},
+{
+  id:'jwt_review',
+  title:'Authentication Module Code Review',
+  useCase:'Pre-release security review of a JWT auth module for a financial service.',
+  context:'You are reviewing a Node.js/Express service that implements JWT-based authentication for financial transactions, ahead of a production release next week.',
+  desired:'A prioritized, actionable vulnerability report \u2014 not a general style critique.',
+  blocks:[
+    {t:'You are a senior application security engineer performing a code review.', c:'role'},
+    {t:'The code implements JWT-based authentication in a Node.js/Express service handling financial transactions.', c:'context'},
+    {t:'Focus only on authentication and session-handling vulnerabilities, not general style issues.', c:'constraints'},
+    {t:'Report findings as a table with columns: Severity, Location, Issue, Fix.', c:'formatting'},
+    {t:'Include one example of a secure code fix for the most critical issue found.', c:'examples'},
+    {t:'Explain the security reasoning behind each fix using OWASP guidance.', c:'reasoning'},
+    {t:'Keep the tone direct and actionable, prioritized by exploitability.', c:'tone'}
+  ],
+  distract:[
+    'You are a friendly coding tutor for absolute beginners.',
+    'Review the entire codebase\u2019s formatting and naming style.',
+    'Limit the entire response to a single sentence.',
+    'Use flowery, encouraging language regardless of severity.',
+    'Include unrelated database query performance tips.',
+    'Repeat every finding twice for extra clarity.'
+  ],
+  clean:[
+    {t:'You are a senior application security engineer performing a code review.', keep:true, why:'Sets the correct expert role for the task.'},
+    {t:'You are also a beginner-friendly coding instructor.', keep:false, why:'Conflicting role that would soften the critical severity language this review needs.'},
+    {t:'The code handles JWT authentication for financial transactions.', keep:true, why:'Domain context that raises the bar for what counts as a critical finding.'},
+    {t:'Please be thorough about literally everything in the file.', keep:false, why:'Vague and conflicts with the explicit scope limit below.'},
+    {t:'Focus only on authentication and session-handling vulnerabilities.', keep:true, why:'Concrete scope that keeps the review focused on what matters for release.'},
+    {t:'Also cover unrelated code style and naming conventions in depth.', keep:false, why:'Out of scope \u2014 dilutes attention from security-critical issues.'},
+    {t:'Report findings as a table: Severity, Location, Issue, Fix.', keep:true, why:'Structured format the engineering team can triage directly.'},
+    {t:'Format it however feels natural to you.', keep:false, why:'Redundant and vague once an exact table format is specified.'},
+    {t:'Keep the tone direct and actionable, prioritized by exploitability.', keep:true, why:'Ensures the most dangerous issues surface first.'},
+    {t:'Be gentle and reassuring so no one feels criticized.', keep:false, why:'Wrong tone \u2014 risks downplaying real severity before a production release.'}
+  ],
+  weak:'Can you review this authentication code for problems?',
+  opt:'You are a senior application security engineer performing a code review. The code implements JWT-based authentication in a Node.js/Express service handling financial transactions. Focus only on authentication and session-handling vulnerabilities, not general style issues. Report findings as a table with columns: Severity, Location, Issue, Fix. Include one example of a secure code fix for the most critical issue found. Explain the security reasoning behind each fix using OWASP guidance. Keep the tone direct and actionable, prioritized by exploitability.',
+  over:'You are a senior application security engineer performing a code review. The code implements JWT-based authentication in a Node.js/Express service handling financial transactions. Focus on authentication and session-handling vulnerabilities. Report findings as a table: Severity, Location, Issue, Fix. Include one example fix. Explain security reasoning using OWASP guidance. Keep the tone direct and actionable. Also review the entire codebase for performance issues, code style violations, documentation gaps, dependency vulnerabilities, licensing compliance, accessibility concerns in any HTML templates, database query optimization opportunities, and API design best practices. Provide remediation timelines for each category.',
+  weakOut:'The code looks mostly fine but there could be some issues with how tokens are handled. You might want to double check the expiration settings and maybe look at how secrets are stored. Overall it seems okay for now.',
+  optOut:'| Severity | Location | Issue | Fix |\n|---|---|---|---|\n| Critical | auth.js:42 | JWT secret hardcoded in source | Load secret from a vaulted env var; rotate immediately |\n| High | auth.js:58 | No expiration check on refresh tokens | Enforce exp claim validation per OWASP ASVS 3.3 |\nFix example: replace the hardcoded secret with process.env.JWT_SECRET sourced from a secrets manager, then rotate the compromised key.',
+  improvements:[
+    '<b>Narrowing scope</b> to auth/session issues stopped the review from drowning critical findings in style nitpicks.',
+    '<b>A fixed table format</b> made findings scannable and directly triageable by engineers.',
+    '<b>Requiring one worked fix</b> turned a vague warning into something a developer could act on immediately.'
+  ],
+  principle:{
+    name:'Constraints Improve Precision',
+    why:'A tightly scoped instruction ("only auth and session issues") stops the model from spreading effort across low-value observations and forces it toward the highest-severity findings.',
+    where:'Security reviews, compliance audits, or any evaluation where noise competes with signal for the reader\u2019s attention.',
+    example:'"Review this code" invites style comments; "focus only on authentication vulnerabilities" produces a release-blocking findings list.'
+  }
+},
+{
+  id:'phishing_results',
+  title:'Phishing Simulation Results Briefing',
+  useCase:'Turning simulation click-rate data into a funding case for follow-up training.',
+  context:'Your security awareness team ran a company-wide phishing simulation. Department heads need a report that helps them decide whether to fund follow-up training.',
+  desired:'A short, constructive report department heads will actually read and act on.',
+  blocks:[
+    {t:'You are a security awareness program manager analyzing simulation results.', c:'role'},
+    {t:'The audience is department heads who will decide whether to fund follow-up training.', c:'context'},
+    {t:'Limit the report to the top 3 departments by click-rate.', c:'constraints'},
+    {t:'Present findings as a short table followed by a bullet-point action plan.', c:'formatting'},
+    {t:'Include one example phishing pattern that fooled the most users.', c:'examples'},
+    {t:'Explain why certain departments were more susceptible, based on their typical role exposure.', c:'reasoning'},
+    {t:'Use a constructive, non-blaming tone.', c:'tone'}
+  ],
+  distract:[
+    'You are an IT help-desk agent responding to a single support ticket.',
+    'Cover every individual employee\u2019s personal result by name.',
+    'Limit the entire response to 10 words.',
+    'Use a shaming tone to discourage repeat offenders.',
+    'Include the full raw email server logs.',
+    'List the same statistic in three different units of measurement.'
+  ],
+  clean:[
+    {t:'You are a security awareness program manager analyzing results.', keep:true, why:'Correct role for someone presenting to budget-holders, not IT support.'},
+    {t:'You are also personally responsible for firing anyone who clicked.', keep:false, why:'Wrong, punitive framing that conflicts with a constructive training goal.'},
+    {t:'The audience is department heads deciding on training funding.', keep:true, why:'Frames the report around the decision it needs to support.'},
+    {t:'Just write something informative in general.', keep:false, why:'Vague filler that adds no direction once the audience is already specified.'},
+    {t:'Limit the report to the top 3 departments by click-rate.', keep:true, why:'Keeps the report short enough for a budget conversation.'},
+    {t:'Also list results for every department and every employee.', keep:false, why:'Conflicts with the top-3 limit and raises privacy concerns.'},
+    {t:'Present findings as a table plus a bullet-point action plan.', keep:true, why:'Gives decision-makers both the data and the next step in one glance.'},
+    {t:'Use a shaming tone toward departments with high click-rates.', keep:false, why:'Undermines the constructive framing needed to get training funded, not resisted.'},
+    {t:'Use a constructive, non-blaming tone.', keep:true, why:'Keeps department heads receptive rather than defensive.'},
+    {t:'Repeat the click-rate percentage in five different phrasings.', keep:false, why:'Redundant padding that adds no new information.'}
+  ],
+  weak:'Summarize the phishing test results.',
+  opt:'You are a security awareness program manager analyzing simulation results. The audience is department heads who will decide whether to fund follow-up training. Limit the report to the top 3 departments by click-rate. Present findings as a short table followed by a bullet-point action plan. Include one example phishing pattern that fooled the most users. Explain why certain departments were more susceptible, based on their typical role exposure. Use a constructive, non-blaming tone.',
+  over:'You are a program manager, a disciplinary officer, and a data scientist simultaneously. List every department, every employee, and every click by name, but also keep it to one paragraph. Use a shaming tone for low performers and a celebratory tone for high performers in the same sentence. Include a full statistical regression analysis with confidence intervals for every data point. Repeat the overall click-rate as a percentage, a fraction, and a ratio.',
+  weakOut:'Some people clicked on the phishing email. Sales was one of the departments. We should probably do more training at some point to help reduce this in the future for everyone involved across the company.',
+  optOut:'| Department | Click Rate | Trend |\n|---|---|---|\n| Sales | 34% | \u2191 vs last quarter |\n| Finance | 21% | \u2192 flat |\n| Support | 18% | \u2193 improving |\nMost effective lure: a fake "invoice overdue" email spoofing a known vendor.\nAction plan: \u2022 Targeted training for Sales on vendor-impersonation lures \u2022 Re-test Finance in 60 days \u2022 Share Support\u2019s improvement as an internal case study.',
+  improvements:[
+    '<b>Naming the decision-maker\u2019s goal</b> (fund training or not) shaped the report around action, not just data.',
+    '<b>A top-3 limit</b> kept the report short enough for a budget meeting instead of an exhaustive spreadsheet dump.',
+    '<b>Non-blaming tone guidance</b> made the findings something department heads would want to act on rather than dispute.'
+  ],
+  principle:{
+    name:'Formatting Guides AI',
+    why:'Telling the model exactly how to lay out the response (table plus action plan) removes ambiguity about structure and makes the output immediately usable by its intended reader.',
+    where:'Any report handed to a decision-maker under time pressure: dashboards, board memos, status updates.',
+    example:'"Summarize the results" leaves structure to chance; "a table followed by a bullet action plan" guarantees a scannable, decision-ready layout.'
+  }
+},
+{
+  id:'cve_triage',
+  title:'Vulnerability Patch Prioritization',
+  useCase:'Triaging hundreds of new CVEs for a weekly patch management sprint.',
+  context:'A fresh vulnerability scan returned hundreds of new CVEs across a hybrid cloud environment. The patch management team needs to decide what to fix this sprint.',
+  desired:'A ranked, action-ready shortlist \u2014 not a full CVE dump.',
+  blocks:[
+    {t:'You are a vulnerability management lead prioritizing a patch sprint.', c:'role'},
+    {t:'The environment is a hybrid cloud with internet-facing web servers and internal databases.', c:'context'},
+    {t:'Rank only the top 10 CVEs by real-world exploitability, not just CVSS score.', c:'constraints'},
+    {t:'Output as a ranked table with CVE ID, affected asset type, and recommended action.', c:'formatting'},
+    {t:'Include one example of a CVE with known active exploitation in the wild.', c:'examples'},
+    {t:'Explain the reasoning for ranking exploitability over raw CVSS severity.', c:'reasoning'},
+    {t:'Use a decisive, engineering-focused tone.', c:'tone'}
+  ],
+  distract:[
+    'You are a marketing analyst preparing a quarterly campaign report.',
+    'List every CVE from the scan regardless of relevance.',
+    'Sort the list strictly alphabetically by CVE ID.',
+    'Use an apologetic tone about past patching delays.',
+    'Include unrelated stock price impact analysis.',
+    'Repeat the ranking criteria after every single row.'
+  ],
+  clean:[
+    {t:'You are a vulnerability management lead prioritizing a patch sprint.', keep:true, why:'Correct role for someone making sprint-scoping decisions.'},
+    {t:'You are also a compliance auditor filing a regulatory report.', keep:false, why:'Conflicting role that would shift focus from action toward documentation.'},
+    {t:'The environment is a hybrid cloud with internet-facing servers.', keep:true, why:'Environment context that changes which CVEs are actually reachable by attackers.'},
+    {t:'Assume the environment could be anything at all.', keep:false, why:'Contradicts the specific environment detail already given.'},
+    {t:'Rank only the top 10 CVEs by real-world exploitability.', keep:true, why:'Turns an unmanageable list into a sprint-sized, actionable shortlist.'},
+    {t:'Also include every CVE found, even low-severity ones, in full.', keep:false, why:'Directly conflicts with the top-10 limit above.'},
+    {t:'Output as a ranked table: CVE ID, asset type, recommended action.', keep:true, why:'Gives engineers exactly what they need to open tickets.'},
+    {t:'Sort everything alphabetically instead for simplicity.', keep:false, why:'Contradicts exploitability-based ranking, which is what actually matters here.'},
+    {t:'Use a decisive, engineering-focused tone.', keep:true, why:'Matches the fast, action-oriented context of a sprint planning session.'},
+    {t:'Apologize for how long some of these have gone unpatched.', keep:false, why:'Irrelevant tone note that adds nothing actionable.'}
+  ],
+  weak:'What CVEs should we patch first?',
+  opt:'You are a vulnerability management lead prioritizing a patch sprint. The environment is a hybrid cloud with internet-facing web servers and internal databases. Rank only the top 10 CVEs by real-world exploitability, not just CVSS score. Output as a ranked table with CVE ID, affected asset type, and recommended action. Include one example of a CVE with known active exploitation in the wild. Explain the reasoning for ranking exploitability over raw CVSS severity. Use a decisive, engineering-focused tone.',
+  over:'You are a vuln management lead, a compliance officer, and a financial analyst at once. Rank every single CVE from the scan, all of them, but also somehow keep the list to exactly 5 items. Sort by CVSS, by exploitability, and alphabetically all simultaneously. Include a full regulatory citation for every single row, plus a stock-impact estimate. Use an apologetic tone about delays and a decisive tone about next steps in the same sentence.',
+  weakOut:'There are a lot of CVEs in the scan. Some are more serious than others. You should probably patch the critical ones first and work your way down the list over the coming weeks as time allows.',
+  optOut:'| Rank | CVE | Asset | Action |\n|---|---|---|---|\n| 1 | CVE-2026-0142 | Internet-facing web server | Patch this sprint \u2014 active exploitation confirmed |\n| 2 | CVE-2025-9981 | Internal DB | Patch this sprint \u2014 public PoC exists |\nWhy exploitability over CVSS: CVE-2026-0142 has a moderate CVSS score but is being actively exploited in the wild, making it higher real-world risk than several higher-scored but theoretical findings.',
+  improvements:[
+    '<b>Environment context</b> let the model reason about which CVEs are actually internet-reachable, not just theoretically severe.',
+    '<b>Ranking by exploitability instead of raw CVSS</b> surfaced the CVE actually being attacked in the wild.',
+    '<b>A top-10 cap</b> turned an overwhelming scan output into a sprint the team could realistically execute.'
+  ],
+  principle:{
+    name:'Specificity Beats Vagueness',
+    why:'"Patch the important ones" leaves "important" undefined. Naming the exact ranking criterion (real-world exploitability) removes ambiguity and produces a defensible, consistent shortlist.',
+    where:'Any prioritization task: bug triage, incident severity calls, resource allocation.',
+    example:'"Rank by severity" vs. "rank by real-world exploitability, not just CVSS score" \u2014 the second catches actively-exploited bugs that a raw score might under-rank.'
+  }
+},
+{
+  id:'iam_audit',
+  title:'Cloud IAM Misconfiguration Audit',
+  useCase:'Reporting AWS IAM/S3 findings to a platform team that owns the Terraform stack.',
+  context:'An audit of your AWS environment found excessive S3 and IAM permissions. The findings need to go to the cloud platform team, who manage the infrastructure as Terraform.',
+  desired:'A checklist the platform team can turn directly into pull requests.',
+  blocks:[
+    {t:'You are a cloud security engineer auditing AWS IAM and S3 configurations.', c:'role'},
+    {t:'The platform team already manages this infrastructure through Terraform.', c:'context'},
+    {t:'Limit findings to misconfigurations with public or overly broad access.', c:'constraints'},
+    {t:'Format the output as a checklist grouped by resource type.', c:'formatting'},
+    {t:'Include one example Terraform snippet showing the corrected policy.', c:'examples'},
+    {t:'Explain the least-privilege reasoning behind each recommendation.', c:'reasoning'},
+    {t:'Keep the tone collaborative, framing fixes as quick wins.', c:'tone'}
+  ],
+  distract:[
+    'You are an end-user calling in with a support question.',
+    'Explain what AWS is, starting from the absolute basics.',
+    'Cover on-premise physical firewall rules instead.',
+    'Use a confrontational tone that blames the platform team.',
+    'Include an unrelated cloud billing cost breakdown.',
+    'Repeat the same Terraform snippet five times for emphasis.'
+  ],
+  clean:[
+    {t:'You are a cloud security engineer auditing IAM and S3 configurations.', keep:true, why:'Correct role for someone producing infrastructure-level findings.'},
+    {t:'You are also a billing analyst reviewing monthly cloud spend.', keep:false, why:'Unrelated role that would pull the report off-topic.'},
+    {t:'The platform team already manages this via Terraform.', keep:true, why:'Lets the model produce fixes in the format the team can actually apply.'},
+    {t:'Assume they manage everything by hand in the console.', keep:false, why:'Contradicts the stated Terraform-based workflow.'},
+    {t:'Limit findings to public or overly broad access issues.', keep:true, why:'Focuses the audit on the highest-impact misconfigurations.'},
+    {t:'Also flag every minor naming convention issue you can find.', keep:false, why:'Out of scope and dilutes attention from real access-control risk.'},
+    {t:'Format the output as a checklist grouped by resource type.', keep:true, why:'Matches how the platform team will triage and assign fixes.'},
+    {t:'Use a confrontational tone since this is their mistake.', keep:false, why:'Wrong tone \u2014 undermines collaboration needed to get fixes merged.'},
+    {t:'Keep the tone collaborative, framing fixes as quick wins.', keep:true, why:'Encourages fast adoption of the recommended fixes.'},
+    {t:'Mention the unrelated billing spend increase this month.', keep:false, why:'Irrelevant to an access-control audit and distracts from the findings.'}
+  ],
+  weak:'Check our AWS setup for security issues.',
+  opt:'You are a cloud security engineer auditing AWS IAM and S3 configurations. The platform team already manages this infrastructure through Terraform. Limit findings to misconfigurations with public or overly broad access. Format the output as a checklist grouped by resource type. Include one example Terraform snippet showing the corrected policy. Explain the least-privilege reasoning behind each recommendation. Keep the tone collaborative, framing fixes as quick wins.',
+  over:'You are a cloud security engineer, a billing analyst, and a UX designer reviewing the AWS console at once. Flag every possible issue including naming conventions and font choices in the console. Provide a fix for every resource in the account, whether or not it has a real issue, in a nested checklist within a checklist. Use a confrontational tone about past mistakes and a celebratory tone about the fixes in the same paragraph. Include full billing projections for the next five years.',
+  weakOut:'Your AWS setup has some issues. A few S3 buckets might be too open and some IAM roles have broad permissions. You should probably review and tighten these when you get a chance sometime soon.',
+  optOut:'\u2610 S3: \u201cpublic-assets\u201d bucket allows public list access \u2014 restrict to CloudFront OAC only.\n\u2610 IAM: \u201cdeploy-role\u201d has s3:* on all resources \u2014 scope to specific bucket ARNs.\nExample fix:\nresource "aws_iam_policy" "deploy_scoped" {\n  policy = jsonencode({ Statement: [{ Effect: "Allow", Action: "s3:PutObject", Resource: "arn:aws:s3:::app-artifacts/*" }] })\n}\nWhy: least privilege limits blast radius if this role\u2019s credentials are ever compromised.',
+  improvements:[
+    '<b>Naming the Terraform workflow</b> let the model produce a fix the team could paste straight into a pull request.',
+    '<b>Scoping to public/broad-access issues</b> kept the checklist focused on real risk instead of cosmetic nitpicks.',
+    '<b>Collaborative tone guidance</b> framed fixes as quick wins, making adoption more likely than a blame-focused report.'
+  ],
+  principle:{
+    name:'Examples Improve Consistency',
+    why:'Asking for one worked example (a corrected Terraform snippet) forces the model to show, not just tell \u2014 producing something the reader can directly copy instead of interpreting a description.',
+    where:'Any technical fix, code review, or configuration change where a demonstration removes ambiguity that prose alone cannot.',
+    example:'"Tighten IAM permissions" vs. "include one example Terraform snippet with the corrected policy" \u2014 only the second gives an engineer something to merge.'
+  }
+},
+{
+  id:'malware_re',
+  title:'Malware Reverse-Engineering Debrief',
+  useCase:'Briefing an incident response team after reverse-engineering a suspicious binary.',
+  context:'You reverse-engineered a suspicious binary found on a compromised host. The incident response team needs a debrief focused on detection, not a full disassembly walkthrough.',
+  desired:'A short technical brief the IR team can turn into detections today.',
+  blocks:[
+    {t:'You are a malware reverse engineer briefing the incident response team.', c:'role'},
+    {t:'The team needs actionable detection guidance, not a full disassembly walkthrough.', c:'context'},
+    {t:'Limit the summary to the persistence mechanism and command-and-control behavior.', c:'constraints'},
+    {t:'Structure the summary as: Behavior Overview, Indicators of Compromise, Detection Recommendations.', c:'formatting'},
+    {t:'Include one example YARA rule snippet for detection.', c:'examples'},
+    {t:'Explain why this persistence technique evades common EDR tools.', c:'reasoning'},
+    {t:'Keep the tone technical but concise, avoiding unnecessary jargon padding.', c:'tone'}
+  ],
+  distract:[
+    'You are a novelist writing a techno-thriller short story.',
+    'Explain assembly language from scratch for a general audience.',
+    'Cover every single function in the binary line by line.',
+    'Use a suspenseful, dramatic narrative tone throughout.',
+    'Speculate at length about the malware author\u2019s personal biography.',
+    'Repeat the IOC list in five different formats.'
+  ],
+  clean:[
+    {t:'You are a malware reverse engineer briefing the incident response team.', keep:true, why:'Correct role for someone producing technical detection guidance.'},
+    {t:'You are also a novelist crafting a dramatic narrative.', keep:false, why:'Wrong role that would push the response toward storytelling instead of detection engineering.'},
+    {t:'The team needs detection guidance, not a full disassembly walkthrough.', keep:true, why:'Focuses the debrief on what IR can act on today.'},
+    {t:'Please walk through every single assembly instruction in detail.', keep:false, why:'Conflicts with the stated need for a focused, actionable summary.'},
+    {t:'Limit the summary to persistence and C2 behavior.', keep:true, why:'Keeps the brief to the two things IR actually needs to detect and block.'},
+    {t:'Also cover unrelated string obfuscation techniques in depth.', keep:false, why:'Out of scope given the stated focus above.'},
+    {t:'Structure it as: Behavior Overview, IOCs, Detection Recommendations.', keep:true, why:'A format IR can map directly onto SIEM rules and playbooks.'},
+    {t:'Speculate about who might have written this malware.', keep:false, why:'Irrelevant to detection and introduces unverified speculation.'},
+    {t:'Keep the tone technical but concise.', keep:true, why:'Matches the fast-moving needs of an active incident response.'},
+    {t:'Make it dramatic and suspenseful to hold attention.', keep:false, why:'Wrong tone for an operational security debrief.'}
+  ],
+  weak:'What does this malware do?',
+  opt:'You are a malware reverse engineer briefing the incident response team. The team needs actionable detection guidance, not a full disassembly walkthrough. Limit the summary to the persistence mechanism and command-and-control behavior. Structure the summary as: Behavior Overview, Indicators of Compromise, Detection Recommendations. Include one example YARA rule snippet for detection. Explain why this persistence technique evades common EDR tools. Keep the tone technical but concise, avoiding unnecessary jargon padding.',
+  over:'You are a reverse engineer, a novelist, and a historian all at once. Cover every function, every string, and every byte of the binary in full detail, but also keep it to exactly one sentence. Structure it as a nested table inside a narrative inside a poem. Speculate dramatically about the author\u2019s life story and motivations at length. Use a suspenseful tone and a dry technical tone in the same paragraph, repeated three times.',
+  weakOut:'This malware does some bad things to the computer. It seems to hide itself and talk to a remote server. More analysis would be needed to fully understand everything it does and how to stop it.',
+  optOut:'BEHAVIOR OVERVIEW: Drops a scheduled task disguised as a Windows update check for persistence; beacons every 45 minutes to a fast-flux C2 domain.\nIOCs: Scheduled task name "WinUpdateCheck24"; C2 pattern *-status-check[.]top.\nDETECTION: rule susp_persistence_task { strings: $a = "WinUpdateCheck24" condition: $a }\nWhy it evades EDR: the task name mimics a legitimate OS process, so behavioral rules built around unusual binary names miss it.',
+  improvements:[
+    '<b>Scoping to persistence and C2 only</b> turned a full reverse-engineering report into a same-day actionable debrief.',
+    '<b>Requesting a YARA snippet</b> gave IR something deployable immediately, not just a description of behavior.',
+    '<b>Explaining the EDR-evasion reasoning</b> helped the team understand why existing detections missed it, informing better rules going forward.'
+  ],
+  principle:{
+    name:'Balanced Instructions',
+    why:'A good prompt gives enough structure to be useful without demanding contradictory things (full detail and one sentence, dramatic and dry). Balance means every instruction can actually be satisfied at once.',
+    where:'Any brief with real constraints: technical debriefs, executive summaries, anything where over-specification would create contradictions.',
+    example:'Asking for "full technical depth" and "one paragraph" in the same prompt forces the model to guess which one you actually meant.'
+  }
+},
+{
+  id:'zt_roadmap',
+  title:'Zero Trust Migration Roadmap',
+  useCase:'Presenting a phased Zero Trust migration plan to a CISO for budget approval.',
+  context:'Your organization runs a flat network with legacy VPN access for 5,000 employees. The CISO wants a phased roadmap toward a Zero Trust architecture to present for budget approval.',
+  desired:'An executive-ready roadmap with clear phases, not an academic architecture essay.',
+  blocks:[
+    {t:'You are an enterprise security architect designing a Zero Trust migration roadmap.', c:'role'},
+    {t:'The organization currently relies on a flat network with legacy VPN access for 5,000 employees.', c:'context'},
+    {t:'Limit the roadmap to three phases over 12 months.', c:'constraints'},
+    {t:'Present each phase as a heading with goals, key actions, and success metrics.', c:'formatting'},
+    {t:'Include one example of a pilot group for the first phase, such as the IT staff.', c:'examples'},
+    {t:'Explain the reasoning for sequencing identity verification before network segmentation.', c:'reasoning'},
+    {t:'Use a pragmatic, executive-ready tone.', c:'tone'}
+  ],
+  distract:[
+    'You are a network cabling technician doing physical installation work.',
+    'Explain what Zero Trust means using marketing brochure language.',
+    'Complete the entire migration within a single week.',
+    'Use an overly academic, theoretical tone throughout.',
+    'Include unrelated physical office badge-access details.',
+    'Repeat the definition of Zero Trust at the start of every phase.'
+  ],
+  clean:[
+    {t:'You are an enterprise security architect designing this roadmap.', keep:true, why:'Correct role for someone producing a budget-ready architecture plan.'},
+    {t:'You are also a network cabling technician doing physical wiring.', keep:false, why:'Unrelated role that has nothing to do with an architecture roadmap.'},
+    {t:'The organization relies on a flat network with legacy VPN for 5,000 employees.', keep:true, why:'Grounds the roadmap in the organization\u2019s actual starting point.'},
+    {t:'Assume there is no existing infrastructure at all.', keep:false, why:'Contradicts the stated current environment.'},
+    {t:'Limit the roadmap to three phases over 12 months.', keep:true, why:'Keeps the plan realistic and presentable for budget approval.'},
+    {t:'Also make sure the whole migration finishes in one week.', keep:false, why:'Directly conflicts with the 12-month, three-phase timeline.'},
+    {t:'Present each phase with goals, key actions, and success metrics.', keep:true, why:'Gives the CISO something concrete to approve and track.'},
+    {t:'Use marketing brochure language to describe Zero Trust.', keep:false, why:'Wrong register for an internal budget-approval document.'},
+    {t:'Use a pragmatic, executive-ready tone.', keep:true, why:'Matches the audience deciding on funding.'},
+    {t:'Redefine Zero Trust from scratch at the start of every phase.', keep:false, why:'Redundant repetition that adds no new information after the first mention.'}
+  ],
+  weak:'Help us plan a move to Zero Trust.',
+  opt:'You are an enterprise security architect designing a Zero Trust migration roadmap. The organization currently relies on a flat network with legacy VPN access for 5,000 employees. Limit the roadmap to three phases over 12 months. Present each phase as a heading with goals, key actions, and success metrics. Include one example of a pilot group for the first phase, such as the IT staff. Explain the reasoning for sequencing identity verification before network segmentation. Use a pragmatic, executive-ready tone.',
+  over:'You are an architect, a cabling technician, and a marketing copywriter simultaneously. Cover every possible phase of Zero Trust ever documented, but compress the whole roadmap into two sentences. Present it as a nested outline within a slide within a spreadsheet. Redefine Zero Trust in brochure language at the start of every single phase heading. Use an academic tone and a sales pitch tone in alternating sentences.',
+  weakOut:'Zero Trust is a good security model to move toward. You should start verifying identities more and segmenting your network. This will take some planning and probably some new tools and training for staff over time.',
+  optOut:'PHASE 1 (Months 1\u20134) \u2014 Identity Foundation: Goal: enforce MFA and conditional access. Pilot group: IT staff. Metric: 100% MFA adoption.\nPHASE 2 (Months 5\u20138) \u2014 Segmentation: Goal: isolate finance and HR network segments. Metric: zero flat-network lateral paths to critical systems.\nWhy identity first: verifying who is connecting before restructuring the network avoids segmenting around users who cannot yet be reliably authenticated.',
+  improvements:[
+    '<b>Concrete phase and timeline limits</b> turned an open-ended vision into something a CISO could actually approve a budget for.',
+    '<b>Requiring goals, actions, and metrics per phase</b> made the roadmap trackable instead of aspirational.',
+    '<b>Explaining the identity-before-segmentation sequencing</b> gave the CISO a defensible rationale to present upward.'
+  ],
+  principle:{
+    name:'Better Prompt Structure',
+    why:'Breaking a complex ask into role, scope, format, and reasoning \u2014 in that order \u2014 mirrors how the reader will actually consume the answer: who\u2019s speaking, what\u2019s in scope, how it\u2019s organized, and why the plan makes sense.',
+    where:'Any multi-phase plan, technical proposal, or roadmap presented to a decision-maker.',
+    example:'A flat request like "plan our Zero Trust move" leaves phasing, scope, and justification all to chance; a structured prompt fixes all three deliberately.'
+  }
+}
+];
+
+/* =========================================================================
+   STATE
+========================================================================= */
+var ACH_DEFS = [
+  {id:'apprentice', em:'\uD83C\uDFC5', name:'Prompt Apprentice'},
+  {id:'fast', em:'\u26A1', name:'Fast Thinker'},
+  {id:'precision', em:'\uD83C\uDFAF', name:'Precision Engineer'},
+  {id:'context', em:'\uD83E\uDDE0', name:'Context Master'},
+  {id:'optimizer', em:'\uD83D\uDE80', name:'Optimization Expert'},
+  {id:'architect', em:'\uD83C\uDFC6', name:'Prompt Architect'}
+];
+
+var state = {
+  screen:'intro',
+  mode:null,
+  usedByMode:{build:[],clean:[],choose:[]},
+  completedModes:{build:false,clean:false,choose:false},
+  session:{rounds:[]},
+  achievements:loadAchievements(),
+  current:null
+};
+
+function loadAchievements(){
+  try{
+    var raw = localStorage.getItem('pp_achievements');
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveAchievements(){
+  try{ localStorage.setItem('pp_achievements', JSON.stringify(state.achievements)); }catch(e){}
+}
+
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
+function pickScenario(mode){
+  var used = state.usedByMode[mode];
+  var pool = SCENARIOS.filter(function(s){ return used.indexOf(s.id)===-1; });
+  if(pool.length===0){ state.usedByMode[mode]=[]; pool = SCENARIOS.slice(); }
+  var chosen = pool[Math.floor(Math.random()*pool.length)];
+  state.usedByMode[mode].push(chosen.id);
+  return chosen;
+}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* =========================================================================
+   TOASTS + CONFETTI
+========================================================================= */
+function toast(msg, kind){
+  var wrap = document.getElementById('toast-wrap');
+  var el = document.createElement('div');
+  var colors = {
+    good:{bg:'rgba(61,220,151,0.14)',bd:'rgba(61,220,151,0.4)',fg:'#3ddc97'},
+    info:{bg:'rgba(52,201,232,0.14)',bd:'rgba(52,201,232,0.4)',fg:'#34c9e8'},
+    ach:{bg:'rgba(242,169,59,0.16)',bd:'rgba(242,169,59,0.45)',fg:'#f2a93b'}
+  };
+  var c = colors[kind] || colors.info;
+  el.className = 'toast glass';
+  el.style.background = c.bg;
+  el.style.border = '1px solid '+c.bd;
+  el.style.color = c.fg;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 3100);
+}
+function confetti(){
+  var wrap = document.getElementById('confetti-wrap');
+  var colors = ['#f2a93b','#34c9e8','#3ddc97','#f2555a'];
+  for(var i=0;i<44;i++){
+    var p = document.createElement('div');
+    p.className='confetti-piece';
+    var size = 5+Math.random()*6;
+    p.style.width=size+'px';
+    p.style.height=(size*1.6)+'px';
+    p.style.left=(Math.random()*100)+'vw';
+    p.style.background=colors[i%colors.length];
+    p.style.animationDuration=(2.2+Math.random()*1.6)+'s';
+    p.style.animationDelay=(Math.random()*0.4)+'s';
+    wrap.appendChild(p);
+    (function(node){ setTimeout(function(){ if(node.parentNode) node.parentNode.removeChild(node); }, 4200); })(p);
+  }
+}
+
+/* =========================================================================
+   ACHIEVEMENT CHECKS
+========================================================================= */
+function unlock(id){
+  if(state.achievements.indexOf(id)===-1){
+    state.achievements.push(id);
+    saveAchievements();
+    var def = ACH_DEFS.filter(function(a){return a.id===id;})[0];
+    if(def) toast(def.em+' Achievement unlocked: '+def.name, 'ach');
+    return true;
+  }
+  return false;
+}
+function checkAchievements(round){
+  unlock('apprentice');
+  if(round.timeSec < 30) unlock('fast');
+  if(round.mode==='build' && round.accuracy===100) unlock('precision');
+  if(round.mode==='clean' && round.accuracy===100) unlock('context');
+  if(state.completedModes.build && state.completedModes.clean && state.completedModes.choose) unlock('optimizer');
+  var others = ['apprentice','fast','precision','context','optimizer'];
+  if(others.every(function(id){return state.achievements.indexOf(id)!==-1;})) unlock('architect');
+}
+
+/* =========================================================================
+   RENDER: SHELL
+========================================================================= */
+function scopeSVG(){
+  return '<svg viewBox="0 0 220 34" preserveAspectRatio="none"><polyline id="ecgLine" points="0,17 20,17 28,6 38,29 48,17 70,17 78,10 86,24 94,17 120,17 128,6 138,29 148,17 170,17 178,10 186,24 194,17 220,17" fill="none" stroke="#f2a93b" stroke-width="1.5" opacity="0.7"/></svg>';
+}
+function setECGState(st){
+  var s = document.querySelector('.scope');
+  if(!s) return;
+  s.classList.remove('ecg-green','ecg-red','ecg-yellow');
+  if(st==='correct') s.classList.add('ecg-green');
+  else if(st==='wrong') s.classList.add('ecg-red');
+  else if(st==='medium') s.classList.add('ecg-yellow');
+}
+function header(){
+  var dots = ['build','clean','choose'].map(function(m){
+    var cls = state.completedModes[m] ? 'done' : (state.mode===m ? 'active':'');
+    return '<div class="pt-dot '+cls+'" title="'+m+'"></div>';
+  }).join('');
+  return (
+    '<div class="topbar">'+
+      '<div class="brand"><div class="mark">\uD83E\uDDE9</div>'+
+        '<div><h1>Prompt Puzzle</h1><div class="sub">CYBERSECURITY \u00B7 EXPERT TRACK</div></div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:18px;">'+
+        '<div class="progress-tracker">'+dots+'</div>'+
+        '<div class="scope">'+scopeSVG()+'<div class="sweep"></div></div>'+
+      '</div>'+
+    '</div>'
+  );
+}
+
+function render(){
+  var app = document.getElementById('app');
+  var html = header();
+  if(state.screen==='intro') html += renderIntro();
+  else if(state.screen==='menu') html += renderMenu();
+  else if(state.screen==='playing') html += renderPlaying();
+  else if(state.screen==='roundResult') html += renderRoundResult();
+  else if(state.screen==='report') html += renderReport();
+  else if(state.screen==='playground') html += renderPlayground();
+  app.innerHTML = html;
+  bindScreen();
+}
+
+/* =========================================================================
+   INTRO
+========================================================================= */
+function renderIntro(){
+  return (
+  '<div class="intro">'+
+    '<div class="kicker">Prompt Engineering Lab \u2014 Cybersecurity Track</div>'+
+    '<h1>Become a <span>Prompt Architect</span></h1>'+
+    '<p class="lead">Modern AI is incredibly powerful \u2014 but only when given clear instructions. Your mission: repair, clean, and design prompts across eight real security scenarios, from executive breach briefings to Zero Trust roadmaps.</p>'+
+    '<div class="terminal glass">'+
+      '<div class="line">&gt; loading scenario bank... 8 expert-level briefs found</div>'+
+      '<div class="line">&gt; calibrating difficulty: EXPERT</div>'+
+      '<div class="line">&gt; objective: build, clean, and choose optimal prompts<span class="caret"></span></div>'+
+    '</div>'+
+    '<div style="margin-bottom:26px;">'+
+      '<span class="brief-chip">\uD83E\uDDE9 3 Challenge Modes</span>'+
+      '<span class="brief-chip">\uD83D\uDCC8 Live Scoring</span>'+
+      '<span class="brief-chip">\uD83C\uDFC5 6 Achievements</span>'+
+      '<span class="brief-chip">\uD83E\uDDEA Free Prompt Playground</span>'+
+    '</div>'+
+    '<div class="intro-actions">'+
+      '<button class="btn btn-primary" id="beginBtn">Enter the Lab \u2192</button>'+
+    '</div>'+
+  '</div>'
+  );
+}
+
+/* =========================================================================
+   MENU
+========================================================================= */
+function modeInfo(m){
+  return {
+    build:{icon:'\uD83E\uDDE9', title:'Build the Prompt', desc:'Drag or tap the right instruction blocks into the correct order to construct an expert-grade prompt from scratch.'},
+    clean:{icon:'\uD83E\uDDF9', title:'Clean the Prompt', desc:'A bloated prompt is full of vague, duplicated, and conflicting lines. Strip it down to what actually works.'},
+    choose:{icon:'\uD83C\uDFAF', title:'Choose the Best Prompt', desc:'Compare a weak, an optimized, and an over-engineered prompt \u2014 then defend your pick.'}
+  }[m];
+}
+function renderMenu(){
+  var cards = ['build','clean','choose'].map(function(m){
+    var info = modeInfo(m);
+    var done = state.completedModes[m];
+    return (
+      '<div class="glass mode-card" data-mode="'+m+'" tabindex="0" role="button" aria-label="Start '+info.title+'">'+
+        (done ? '<div class="done-badge">\u2713 completed</div>' : '')+
+        '<span class="icon">'+info.icon+'</span>'+
+        '<h3>'+info.title+'</h3>'+
+        '<p>'+info.desc+'</p>'+
+        '<button class="btn btn-primary start-mode" data-mode="'+m+'">'+(done?'Play again':'Start challenge')+'</button>'+
+      '</div>'
+    );
+  }).join('');
+
+  var allDone = state.completedModes.build && state.completedModes.clean && state.completedModes.choose;
+  var hasRounds = state.session.rounds.length>0;
+
+  return (
+    '<div class="section-title">Choose your challenge</div>'+
+    '<div class="grid-3">'+cards+'</div>'+
+    '<div class="glass playground-banner'+(allDone?'':' locked')+'">'+
+      '<div><h3 style="margin:0 0 4px;">\uD83E\uDDEA Prompt Playground '+(allDone?'':'\uD83D\uDD12')+'</h3>'+
+      '<p style="margin:0;color:var(--text-mid);font-size:13px;">'+(allDone? 'Freely write and instantly analyze your own security prompt.' : 'Complete all three challenge modes at least once to unlock free play.')+'</p></div>'+
+      '<button class="btn '+(allDone?'btn-primary':'btn-ghost')+'" id="gotoPlayground" '+(allDone?'':'disabled')+'>Open Playground</button>'+
+    '</div>'+
+    (hasRounds ? '<div style="margin-top:14px;text-align:center;"><button class="btn btn-ghost" id="gotoReport">View Performance Report \u2192</button></div>' : '')+
+    '<div class="section-title">Achievements</div>'+
+    renderAchGrid()
+  );
+}
+function renderAchGrid(){
+  return '<div class="ach-grid">'+ACH_DEFS.map(function(a){
+    var locked = state.achievements.indexOf(a.id)===-1;
+    return '<div class="glass ach-card'+(locked?' locked':'')+'"><span class="em">'+a.em+'</span><div class="nm">'+a.name+'</div></div>';
+  }).join('')+'</div>';
+}
+
+/* =========================================================================
+   PLAYING: shared setup
+========================================================================= */
+function startMode(mode){
+  state.mode = mode;
+  setECGState('idle');
+  var scenario = pickScenario(mode);
+  if(mode==='build') setupBuild(scenario);
+  else if(mode==='clean') setupClean(scenario);
+  else setupChoose(scenario);
+  state.screen='playing';
+  render();
+}
+function setupBuild(scenario){
+  var items = scenario.blocks.map(function(b,i){ return {key:'c'+i, text:b.t, correctIndex:i}; })
+    .concat(scenario.distract.map(function(t,i){ return {key:'d'+i, text:t, correctIndex:-1}; }));
+  state.current = {
+    scenario:scenario, mode:'build',
+    pool: shuffle(items),
+    slots: new Array(scenario.blocks.length).fill(null),
+    moves:0, hints:0, start:Date.now()
+  };
+}
+function setupClean(scenario){
+  var items = scenario.clean.map(function(c,i){ return {key:'l'+i, text:c.t, keep:c.keep, why:c.why, marked:false}; });
+  state.current = {
+    scenario:scenario, mode:'clean',
+    items: shuffle(items),
+    moves:0, hints:0, start:Date.now()
+  };
+}
+function setupChoose(scenario){
+  var opts = shuffle([
+    {key:'weak', text:scenario.weak},
+    {key:'opt', text:scenario.opt},
+    {key:'over', text:scenario.over}
+  ]);
+  state.current = {
+    scenario:scenario, mode:'choose',
+    options:opts, selected:null,
+    moves:0, hints:0, start:Date.now()
+  };
+}
+
+function renderPlaying(){
+  var c = state.current, s = c.scenario;
+  var head = (
+    '<div class="stage-head">'+
+      '<div><div class="eyebrow">'+modeInfo(c.mode).icon+' '+modeInfo(c.mode).title+' \u00B7 '+esc(s.difficulty||'Expert')+'</div>'+
+      '<h2>'+esc(s.title)+'</h2>'+
+      '<div class="ctx">'+esc(s.context)+'</div></div>'+
+      '<div class="stat-strip">'+
+        '<div class="stat-pill">Moves<b id="statMoves">'+c.moves+'</b></div>'+
+        '<div class="stat-pill">Hints<b id="statHints">'+c.hints+'</b></div>'+
+        '<div class="stat-pill">Time<b id="statTime">0s</b></div>'+
+      '</div>'+
+    '</div>'
+  );
+  var body = '';
+  if(c.mode==='build') body = renderBuildBody(c,s);
+  else if(c.mode==='clean') body = renderCleanBody(c,s);
+  else body = renderChooseBody(c,s);
+
+  return head + body;
+}
+
+function renderBuildBody(c,s){
+  var slots = c.slots.map(function(item,i){
+    if(item){
+      return '<button class="slot filled" data-slot="'+i+'" aria-label="Remove block from position '+(i+1)+'"><span class="num">'+(i+1)+'</span>'+esc(item.text)+'</button>';
+    }
+    return '<div class="slot" data-slot="'+i+'" data-empty="1"><span class="num">'+(i+1)+'</span>Drop or tap a block here \u2014 position '+(i+1)+' of '+c.slots.length+'</div>';
+  }).join('');
+  var pool = c.pool.map(function(item){
+    return '<button class="block-chip" draggable="true" data-key="'+item.key+'">'+esc(item.text)+'</button>';
+  }).join('');
+  var full = c.slots.every(function(x){return x!==null;});
+  return (
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:6px;">Prompt under construction</div>'+
+      '<div class="slots">'+slots+'</div>'+
+      '<div class="eyebrow" style="margin:18px 0 2px;">Available blocks (includes decoys)</div>'+
+      '<div class="pool">'+(pool || '<span class="empty-note">All blocks placed.</span>')+'</div>'+
+    '</div>'+
+    '<div class="footer-nav">'+
+      '<button class="btn btn-ghost" id="hintBtn">\uD83D\uDCA1 Hint</button>'+
+      '<div style="display:flex;gap:10px;">'+
+        '<button class="btn btn-ghost" id="backMenuBtn">\u2190 Menu</button>'+
+        '<button class="btn btn-primary" id="submitBtn" '+(full?'':'disabled')+'>Submit prompt</button>'+
+      '</div>'+
+    '</div>'
+  );
+}
+function renderCleanBody(c,s){
+  var lines = c.items.map(function(it,i){
+    return (
+      '<button class="clean-line'+(it.marked?' marked':'')+'" data-idx="'+i+'">'+
+        '<span class="mark-btn">'+(it.marked?'\u2715':'')+'</span>'+
+        '<span class="txt">'+esc(it.text)+'</span>'+
+      '</button>'
+    );
+  }).join('');
+  return (
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:6px;">Bloated prompt \u2014 mark lines to remove</div>'+
+      '<div>'+lines+'</div>'+
+    '</div>'+
+    '<div class="footer-nav">'+
+      '<div class="empty-note">Tip: look for vague filler, duplicated instructions, and lines that contradict each other.</div>'+
+      '<div style="display:flex;gap:10px;">'+
+        '<button class="btn btn-ghost" id="backMenuBtn">\u2190 Menu</button>'+
+        '<button class="btn btn-primary" id="submitBtn">Submit cleanup</button>'+
+      '</div>'+
+    '</div>'
+  );
+}
+function renderChooseBody(c,s){
+  var labelMap = {weak:'Prompt A', opt:'Prompt B', over:'Prompt C'};
+  var cards = c.options.map(function(o){
+    var sel = c.selected===o.key ? ' selected' : '';
+    return '<button class="choose-card'+sel+'" data-key="'+o.key+'"><span class="lbl">'+labelMap[o.key]+'</span>'+esc(o.text)+'</button>';
+  }).join('');
+  return (
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:10px;">Which prompt would get the best result for this scenario?</div>'+
+      '<div class="choose-grid">'+cards+'</div>'+
+    '</div>'+
+    '<div class="footer-nav">'+
+      '<div></div>'+
+      '<div style="display:flex;gap:10px;">'+
+        '<button class="btn btn-ghost" id="backMenuBtn">\u2190 Menu</button>'+
+        '<button class="btn btn-primary" id="submitBtn" '+(c.selected?'':'disabled')+'>Lock in choice</button>'+
+      '</div>'+
+    '</div>'
+  );
+}
+
+/* =========================================================================
+   BINDING
+========================================================================= */
+var timerInterval = null;
+function bindScreen(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+
+  if(state.screen==='intro'){
+    var b = document.getElementById('beginBtn');
+    if(b) b.onclick = function(){ state.screen='menu'; render(); };
+  }
+  else if(state.screen==='menu'){
+    Array.prototype.forEach.call(document.querySelectorAll('.start-mode'), function(btn){
+      btn.onclick = function(){ startMode(btn.getAttribute('data-mode')); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.mode-card'), function(card){
+      card.addEventListener('keydown', function(e){
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); startMode(card.getAttribute('data-mode')); }
+      });
+      card.addEventListener('click', function(e){
+        if(e.target.classList.contains('start-mode')) return;
+        startMode(card.getAttribute('data-mode'));
+      });
+    });
+    var pg = document.getElementById('gotoPlayground');
+    if(pg) pg.onclick = function(){ state.screen='playground'; render(); };
+    var rp = document.getElementById('gotoReport');
+    if(rp) rp.onclick = function(){ state.screen='report'; render(); };
+  }
+  else if(state.screen==='playing'){
+    bindPlaying();
+    timerInterval = setInterval(function(){
+      var el = document.getElementById('statTime');
+      if(el && state.current) el.textContent = Math.floor((Date.now()-state.current.start)/1000)+'s';
+    }, 500);
+  }
+  else if(state.screen==='roundResult'){
+    bindRoundResult();
+  }
+  else if(state.screen==='report'){
+    bindReport();
+  }
+  else if(state.screen==='playground'){
+    bindPlayground();
+  }
+}
+
+function bindPlaying(){
+  var backBtn = document.getElementById('backMenuBtn');
+  if(backBtn) backBtn.onclick = function(){ state.screen='menu'; render(); };
+
+  var c = state.current;
+  if(c.mode==='build'){
+    Array.prototype.forEach.call(document.querySelectorAll('.pool .block-chip'), function(chip){
+      chip.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/plain', chip.getAttribute('data-key')); });
+      chip.onclick = function(){ placeFirstEmpty(chip.getAttribute('data-key')); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.slot'), function(slotEl){
+      var idx = parseInt(slotEl.getAttribute('data-slot'),10);
+      slotEl.addEventListener('dragover', function(e){ e.preventDefault(); slotEl.classList.add('dragover'); });
+      slotEl.addEventListener('dragleave', function(){ slotEl.classList.remove('dragover'); });
+      slotEl.addEventListener('drop', function(e){
+        e.preventDefault(); slotEl.classList.remove('dragover');
+        var key = e.dataTransfer.getData('text/plain');
+        placeInSlot(key, idx);
+      });
+      if(slotEl.getAttribute('data-empty')!=='1'){
+        slotEl.onclick = function(){ removeFromSlot(idx); };
+      }
+    });
+    var hintBtn = document.getElementById('hintBtn');
+    if(hintBtn) hintBtn.onclick = giveHint;
+    var submitBtn = document.getElementById('submitBtn');
+    if(submitBtn) submitBtn.onclick = submitBuild;
+  }
+  else if(c.mode==='clean'){
+    Array.prototype.forEach.call(document.querySelectorAll('.clean-line'), function(lineEl){
+      var idx = parseInt(lineEl.getAttribute('data-idx'),10);
+      lineEl.onclick = function(){
+        c.items[idx].marked = !c.items[idx].marked;
+        c.moves++;
+        render();
+      };
+    });
+    var submitBtn2 = document.getElementById('submitBtn');
+    if(submitBtn2) submitBtn2.onclick = submitClean;
+  }
+  else if(c.mode==='choose'){
+    Array.prototype.forEach.call(document.querySelectorAll('.choose-card'), function(cardEl){
+      cardEl.onclick = function(){
+        c.selected = cardEl.getAttribute('data-key');
+        c.moves++;
+        render();
+      };
+    });
+    var submitBtn3 = document.getElementById('submitBtn');
+    if(submitBtn3) submitBtn3.onclick = submitChoose;
+  }
+}
+
+function placeFirstEmpty(key){
+  var c = state.current;
+  var idx = -1;
+  for(var i=0;i<c.slots.length;i++){ if(!c.slots[i]){ idx=i; break; } }
+  if(idx===-1) return;
+  placeInSlot(key, idx);
+}
+function findPoolIndex(key){
+  var c = state.current;
+  for(var i=0;i<c.pool.length;i++){ if(c.pool[i].key===key) return i; }
+  return -1;
+}
+function placeInSlot(key, idx){
+  var c = state.current;
+  var pi = findPoolIndex(key);
+  if(pi===-1) return;
+  var item = c.pool[pi];
+  c.pool.splice(pi,1);
+  if(c.slots[idx]){ c.pool.push(c.slots[idx]); }
+  c.slots[idx] = item;
+  c.moves++;
+  render();
+}
+function removeFromSlot(idx){
+  var c = state.current;
+  var item = c.slots[idx];
+  if(!item) return;
+  c.slots[idx] = null;
+  c.pool.push(item);
+  c.moves++;
+  render();
+}
+function giveHint(){
+  var c = state.current;
+  var idx = -1;
+  for(var i=0;i<c.slots.length;i++){ if(!c.slots[i]){ idx=i; break; } }
+  if(idx===-1) return;
+  c.hints++;
+  var correctItem = null;
+  for(var j=0;j<c.pool.length;j++){ if(c.pool[j].correctIndex===idx){ correctItem=c.pool[j]; break; } }
+  render();
+  if(correctItem){
+    setTimeout(function(){
+      var chip = document.querySelector('.block-chip[data-key="'+correctItem.key+'"]');
+      if(chip){ chip.classList.add('hint-glow'); chip.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+    },30);
+  }
+  toast('Hint used \u2014 look for the glowing block for position '+(idx+1), 'info');
+}
+
+/* =========================================================================
+   SUBMIT HANDLERS -> build round result
+========================================================================= */
+function computeCatFillGeneric(accuracyPct){
+  var n = Math.round((accuracyPct/100)*CATS.length);
+  return CATS.map(function(_,i){ return i<n; });
+}
+function finishRound(result){
+  state.session.rounds.push(result);
+  state.completedModes[result.mode] = true;
+  checkAchievements(result);
+  if(result.accuracy===100) confetti();
+  state.current.result = result;
+  state.screen='roundResult';
+  render();
+  if(result.accuracy>=90) setECGState('correct');
+  else if(result.accuracy>=50) setECGState('medium');
+  else setECGState('wrong');
+}
+
+function submitBuild(){
+  var c = state.current, s = c.scenario;
+  var correctCount = 0;
+  var catFill = c.slots.map(function(item,i){
+    var ok = item && item.correctIndex===i;
+    if(ok) correctCount++;
+    return !!ok;
+  });
+  var accuracy = (correctCount===s.blocks.length) ? 100 : Math.round((correctCount/s.blocks.length)*100); if(accuracy>=80) accuracy=100;
+  var timeSec = Math.round((Date.now()-c.start)/1000);
+  finishRound({
+    mode:'build', scenario:s, accuracy:accuracy, timeSec:timeSec, moves:c.moves,
+    wrongPlacements:s.blocks.length-correctCount, hints:c.hints, catFill:catFill
+  });
+}
+function submitClean(){
+  var c = state.current, s = c.scenario;
+  var correctCount = 0;
+  c.items.forEach(function(it){ if(it.marked === !it.keep) correctCount++; });
+  var accuracy = (correctCount===c.items.length) ? 100 : Math.round((correctCount/c.items.length)*100); if(accuracy>=80) accuracy=100;
+  var timeSec = Math.round((Date.now()-c.start)/1000);
+  var catFill = computeCatFillGeneric(accuracy);
+  finishRound({
+    mode:'clean', scenario:s, accuracy:accuracy, timeSec:timeSec, moves:c.moves,
+    wrongPlacements:c.items.length-correctCount, hints:c.hints, catFill:catFill,
+    cleanItems:c.items.slice()
+  });
+}
+function submitChoose(){
+  var c = state.current, s = c.scenario;
+  var accuracy = c.selected==='opt' ? 100 : 0;
+  var timeSec = Math.round((Date.now()-c.start)/1000);
+  var catFill = computeCatFillGeneric(accuracy);
+  finishRound({
+    mode:'choose', scenario:s, accuracy:accuracy, timeSec:timeSec, moves:c.moves,
+    wrongPlacements: accuracy===100?0:1, hints:c.hints, catFill:catFill, selected:c.selected
+  });
+}
+
+/* =========================================================================
+   ROUND RESULT
+========================================================================= */
+function scoreForRound(r){
+  var timeBonus = Math.max(0, 30 - r.timeSec) / 30 * 100;
+  var hintPenalty = Math.min(r.hints * 8, 30);
+  var raw = r.accuracy*0.7 + timeBonus*0.15 + (100-hintPenalty)*0.15;
+  return Math.max(0, Math.min(100, Math.round(raw)));
+}
+
+function renderRoundResult(){
+  var c = state.current, s = c.scenario, r = c.result;
+  var score = scoreForRound(r);
+
+  var cvRows = CATS.map(function(cat,i){
+    var on = r.catFill[i];
+    return (
+      '<div class="cv-row">'+
+        '<div class="cv-label">'+CAT_LABELS[cat]+'</div>'+
+        '<div class="cv-bar"><div class="cv-fill" data-target="'+(on?100:0)+'" style="width:0%;"></div></div>'+
+        '<div class="cv-check'+(on?' on':'')+'">'+(on?'\u2713':'\u2013')+'</div>'+
+      '</div>'
+    );
+  }).join('');
+
+  var verdictBlock = '';
+  if(r.mode==='clean' && r.cleanItems){
+    verdictBlock = '<div class="glass panel"><div class="eyebrow" style="margin-bottom:8px;">Line-by-line verdict</div>'+
+      r.cleanItems.map(function(it){
+        var userCorrect = it.marked === !it.keep;
+        return '<div class="verdict-line '+(userCorrect?'correct':'wrong')+'"><div class="ic">'+(userCorrect?'\u2713':'\u2717')+'</div><div><div>'+esc(it.text)+' <span class="tag" style="margin-left:6px;">'+(it.keep?'keep':'remove')+'</span></div><div class="why">'+esc(it.why)+'</div></div></div>';
+      }).join('')+
+    '</div>';
+  }
+  if(r.mode==='choose'){
+    var explain = {
+      opt:'This prompt wins: it names the role and audience, sets a concrete limit, defines the format, and asks for one grounded example and the reasoning behind the recommendation \u2014 nothing contradicts anything else.',
+      weak:'The weak prompt gives no role, no audience, no format, and no constraints, so the model has to guess at every dimension of the response.',
+      over:'The over-engineered prompt piles on contradictory instructions (conflicting lengths, tones, and scopes at once), forcing the model to silently drop or blend requirements.'
+    };
+    verdictBlock = '<div class="glass panel"><div class="eyebrow" style="margin-bottom:8px;">Why the optimized prompt wins</div>'+
+      '<div class="verdict-line correct"><div class="ic">\u2713</div><div class="why">'+explain.opt+'</div></div>'+
+      '<div class="verdict-line wrong"><div class="ic">\u2717</div><div class="why"><b>Weak prompt:</b> '+explain.weak+'</div></div>'+
+      '<div class="verdict-line wrong"><div class="ic">\u2717</div><div class="why"><b>Over-engineered prompt:</b> '+explain.over+'</div></div>'+
+    '</div>';
+  }
+
+  return (
+    '<div class="stage-head"><div><div class="eyebrow">Round complete</div><h2>'+esc(s.title)+'</h2></div>'+
+      '<div class="stat-strip">'+
+        '<div class="stat-pill">Score<b id="cntScore">0</b></div>'+
+        '<div class="stat-pill">Accuracy<b id="cntAcc">0%</b></div>'+
+        '<div class="stat-pill">Time<b>'+r.timeSec+'s</b></div>'+
+        '<div class="stat-pill">Moves<b>'+r.moves+'</b></div>'+
+        '<div class="stat-pill">Hints<b>'+r.hints+'</b></div>'+
+      '</div>'+
+    '</div>'+
+    verdictBlock+
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:10px;">Prompt construction</div>'+
+      cvRows+
+    '</div>'+
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:10px;">AI response comparison</div>'+
+      '<div class="ai-compare">'+
+        '<div class="ai-box weak"><h4>Weak output</h4><div id="weakOutBox"></div></div>'+
+        '<div class="ai-box opt"><h4>Optimized output</h4><div id="optOutBox"></div></div>'+
+      '</div>'+
+      '<ul class="improve-list">'+s.improvements.map(function(i){ return '<li>'+i+'</li>'; }).join('')+'</ul>'+
+    '</div>'+
+    '<div class="glass principle-box">'+
+      '<div class="eyebrow">Prompt principle</div>'+
+      '<h4>'+esc(s.principle.name)+'</h4>'+
+      '<div class="field"><div class="k">Why it matters</div><div class="v">'+esc(s.principle.why)+'</div></div>'+
+      '<div class="field"><div class="k">Where it is useful</div><div class="v">'+esc(s.principle.where)+'</div></div>'+
+      '<div class="field"><div class="k">Real-world example</div><div class="v">'+esc(s.principle.example)+'</div></div>'+
+    '</div>'+
+    '<div class="footer-nav">'+
+      '<button class="btn btn-ghost" id="backMenuBtn2">\u2190 Menu</button>'+
+      '<div style="display:flex;gap:10px;">'+
+        '<button class="btn btn-ghost" id="reportBtn">View Report</button>'+
+        '<button class="btn btn-primary" id="playAgainBtn">Next scenario \u2192</button>'+
+      '</div>'+
+    '</div>'
+  );
+}
+
+function bindRoundResult(){
+  var back = document.getElementById('backMenuBtn2');
+  if(back) back.onclick = function(){ state.screen='menu'; render(); };
+  var reportBtn = document.getElementById('reportBtn');
+  if(reportBtn) reportBtn.onclick = function(){ state.screen='report'; render(); };
+  var again = document.getElementById('playAgainBtn');
+  if(again) again.onclick = function(){ startMode(state.current.mode); };
+
+  // animated counters
+  var r = state.current.result;
+  var score = scoreForRound(r);
+  animateCount(document.getElementById('cntScore'), score, '');
+  animateCount(document.getElementById('cntAcc'), r.accuracy, '%');
+
+  // construction bars
+  setTimeout(function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.cv-fill'), function(bar){
+      bar.style.width = bar.getAttribute('data-target')+'%';
+    });
+  }, 60);
+
+  // typewriter outputs
+  typewrite(document.getElementById('weakOutBox'), state.current.scenario.weakOut, 12);
+  typewrite(document.getElementById('optOutBox'), state.current.scenario.optOut, 12);
+}
+function animateCount(el, target, suffix){
+  if(!el) return;
+  var start = 0, dur = 700, t0 = performance.now();
+  function step(t){
+    var p = Math.min(1,(t-t0)/dur);
+    var val = Math.round(start + (target-start)*p);
+    el.textContent = val+suffix;
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function typewrite(el, text, speed){
+  if(!el) return;
+  el.textContent='';
+  var i=0;
+  var iv = setInterval(function(){
+    el.textContent = text.slice(0,i);
+    i+= 3;
+    if(i>text.length){ el.textContent = text; clearInterval(iv); }
+  }, speed);
+}
+
+/* =========================================================================
+   REPORT
+========================================================================= */
+function renderReport(){
+  var rounds = state.session.rounds;
+  var avgScore = rounds.length>0 ? Math.round(rounds.reduce(function(a,r){return a+r.accuracy;},0)/rounds.length) : 0;
+  setTimeout(function(){ setECGState(avgScore>=85 ? 'correct' : (avgScore>=50 ? 'medium' : 'wrong')); }, 50);
+  if(rounds.length===0){
+    return '<div class="glass panel" style="text-align:center;padding:50px;">'+
+      '<p class="empty-note">No rounds completed yet \u2014 play at least one challenge to generate your report.</p>'+
+      '<button class="btn btn-primary" id="toMenuBtn" style="margin-top:14px;">Back to menu</button>'+
+    '</div>';
+  }
+  var scores = rounds.map(scoreForRound);
+  var overall = Math.min(100, Math.round(rounds.reduce(function(a,r){return a+r.accuracy;},0)/rounds.length));
+  var rating = overall>=90 ? 'S \u2014 Master Architect' : overall>=75 ? 'A \u2014 Skilled Engineer' : overall>=60 ? 'B \u2014 Competent Practitioner' : 'C \u2014 Developing Prompter';
+
+  var catTotals = CATS.map(function(_,i){
+    var sum = rounds.reduce(function(acc,r){ return acc + (r.catFill[i]?1:0); },0);
+    return Math.round(sum/rounds.length*100);
+  });
+  var maxIdx=0, minIdx=0;
+  catTotals.forEach(function(v,i){ if(v>catTotals[maxIdx]) maxIdx=i; if(v<catTotals[minIdx]) minIdx=i; });
+
+  var avgTime = Math.round(rounds.reduce(function(a,r){return a+r.timeSec;},0)/rounds.length);
+  var cleanRounds = rounds.filter(function(r){return r.mode==='clean';});
+  var optAcc = cleanRounds.length ? Math.round(cleanRounds.reduce(function(a,r){return a+r.accuracy;},0)/cleanRounds.length) : Math.round(overall);
+  var totalHints = rounds.reduce(function(a,r){return a+r.hints;},0);
+  var bestIdx=0;
+  scores.forEach(function(s,i){ if(s>scores[bestIdx]) bestIdx=i; });
+  var bestRound = rounds[bestIdx];
+
+  var feedback = 'You show strongest command of <b>'+CAT_LABELS[CATS[maxIdx]]+'</b>, consistently including it across scenarios. '+
+    'Focus your next reps on <b>'+CAT_LABELS[CATS[minIdx]]+'</b> \u2014 it\u2019s the piece most often missing from your prompts.';
+  var milestone = overall>=90 ? 'Try mixing all three challenge modes back-to-back without hints to push toward a perfect run.' :
+    overall>=70 ? 'Aim for zero hints on your next Build round to sharpen recall of prompt structure.' :
+    'Replay the Clean the Prompt mode \u2014 spotting contradictions is the fastest way to raise your score.';
+
+  var dnaRows = CATS.map(function(cat,i){
+    return '<div class="cv-row"><div class="cv-label">'+CAT_LABELS[cat]+'</div><div class="cv-bar"><div class="cv-fill" data-target="'+catTotals[i]+'" style="width:0%;"></div></div><div class="cv-check on">'+catTotals[i]+'%</div></div>';
+  }).join('');
+
+  return (
+    '<div class="glass report-hero" style="--pct:'+overall+';">'+
+      '<div class="score-ring" style="--pct:'+overall+';"><div class="num">'+overall+'</div></div>'+
+      '<div class="meta"><h2>Prompt Performance Report</h2><div class="rank">'+rating+'</div>'+
+      '<div style="color:var(--text-mid);font-size:13px;margin-top:6px;">Based on '+rounds.length+' completed round'+(rounds.length===1?'':'s')+'</div></div>'+
+    '</div>'+
+    '<div class="grid-2" style="margin-top:16px;">'+
+      '<div class="glass panel">'+
+        '<div class="eyebrow" style="margin-bottom:10px;">Prompt DNA</div>'+
+        dnaRows+
+      '</div>'+
+      '<div class="glass panel">'+
+        '<div class="kv-row"><div class="k">Strongest skill</div><div class="v">'+CAT_LABELS[CATS[maxIdx]]+'</div></div>'+
+        '<div class="kv-row"><div class="k">Needs improvement</div><div class="v">'+CAT_LABELS[CATS[minIdx]]+'</div></div>'+
+        '<div class="kv-row"><div class="k">Average completion time</div><div class="v">'+avgTime+'s</div></div>'+
+        '<div class="kv-row"><div class="k">Clean-mode optimization accuracy</div><div class="v">'+optAcc+'%</div></div>'+
+        '<div class="kv-row"><div class="k">Hints used (total)</div><div class="v">'+totalHints+'</div></div>'+
+        '<div class="kv-row"><div class="k">Best scenario</div><div class="v">'+esc(bestRound.scenario.title)+'</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="glass panel" style="margin-top:16px;">'+
+      '<div class="eyebrow" style="margin-bottom:8px;">Personalized feedback</div>'+
+      '<p style="color:var(--text-mid);font-size:13.5px;line-height:1.6;">'+feedback+'</p>'+
+      '<div class="eyebrow" style="margin:14px 0 8px;">Suggested next milestone</div>'+
+      '<p style="color:var(--text-mid);font-size:13.5px;line-height:1.6;">'+milestone+'</p>'+
+    '</div>'+
+    '<div class="glass panel">'+
+      '<div class="eyebrow" style="margin-bottom:8px;">Final optimized prompt (best scenario: '+esc(bestRound.scenario.title)+')</div>'+
+      '<div class="ai-box opt" style="border-color:rgba(61,220,151,0.25);">'+esc(bestRound.scenario.opt)+'</div>'+
+    '</div>'+
+    '<div class="section-title">Achievements</div>'+
+    renderAchGrid()+
+    '<div class="footer-nav"><button class="btn btn-ghost" id="toMenuBtn">\u2190 Back to menu</button><div></div></div>'
+  );
+}
+function bindReport(){
+  var m = document.getElementById('toMenuBtn');
+  if(m) m.onclick = function(){ state.screen='menu'; render(); };
+  setTimeout(function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.cv-fill'), function(bar){
+      bar.style.width = bar.getAttribute('data-target')+'%';
+    });
+  }, 60);
+}
+
+/* =========================================================================
+   PLAYGROUND
+========================================================================= */
+var PG_CHECKS = [
+  {cat:'role', label:'Role framing', re:/\byou are\b|\bact as\b|\bas an?\b.{0,30}(engineer|analyst|architect|manager|lead)/i, tip:'Open by telling the model who it is speaking as, e.g. "You are a senior security engineer."'},
+  {cat:'context', label:'Audience / context', re:/\baudience\b|\bfor (a|the|beginners|executives|the board|developers|the team)\b|\bbackground\b|\bcontext\b/i, tip:'State who will read this and what they already know.'},
+  {cat:'constraints', label:'Concrete constraint', re:/\b\d+\s?(words|characters|sentences|minutes|items|phases)\b|\blimit\b|\bonly\b|\bno more than\b/i, tip:'Add a concrete limit \u2014 a word count, an item count, or a scope boundary.'},
+  {cat:'formatting', label:'Output format', re:/\bmarkdown\b|\bbullet\b|\btable\b|\bsection\b|\bheading\b|\blist\b|\bsteps\b/i, tip:'Specify the structure you want: a table, headings, or a bulleted list.'},
+  {cat:'examples', label:'Requested example', re:/\bexample\b|\be\.g\.\b|\bfor instance\b|\bsample\b/i, tip:'Ask for one concrete example to ground the response in specifics.'},
+  {cat:'reasoning', label:'Reasoning request', re:/\bexplain why\b|\breasoning\b|\bbecause\b|\bjustify\b|\brationale\b/i, tip:'Ask the model to explain its reasoning, not just give a conclusion.'},
+  {cat:'tone', label:'Tone guidance', re:/\btone\b|\bformal\b|\bcasual\b|\bprofessional\b|\bconcise\b|\bavoid jargon\b/i, tip:'Name the tone you want \u2014 e.g. "keep it concise and avoid jargon."'}
+];
+function analyzePrompt(text){
+  var results = PG_CHECKS.map(function(chk){ return {cat:chk.cat, label:chk.label, tip:chk.tip, ok: chk.re.test(text)}; });
+  var score = Math.round(results.filter(function(r){return r.ok;}).length / results.length * 100);
+  return {results:results, score:score};
+}
+function suggestImprovedPrompt(text, results){
+  var additions = [];
+  results.forEach(function(r){
+    if(!r.ok){
+      var add = {
+        role:'You are an expert practitioner addressing this exact task.',
+        context:'This is for [specific audience] who need this to make a decision.',
+        constraints:'Limit the response to a clear, specific scope (e.g. a word count or item count).',
+        formatting:'Structure the response with clear headings or a table.',
+        examples:'Include one concrete example to ground the response.',
+        reasoning:'Explain the reasoning behind the recommendation, not just the conclusion.',
+        tone:'Keep the tone precise and appropriate for the audience.'
+      }[r.cat];
+      additions.push(add);
+    }
+  });
+  var base = text.trim().length ? text.trim() : 'Describe the task here.';
+  return base + (additions.length ? ' ' + additions.join(' ') : '');
+}
+function renderPlayground(){
+  return (
+    '<div class="stage-head"><div><div class="eyebrow">Bonus mode</div><h2>\uD83E\uDDEA Prompt Playground</h2>'+
+    '<div class="ctx">Write any prompt \u2014 cybersecurity or otherwise \u2014 and get an instant structural review.</div></div></div>'+
+    '<div class="glass panel">'+
+      '<label class="eyebrow" for="pgInput" style="display:block;margin-bottom:8px;">Your prompt</label>'+
+      '<textarea class="pg-input" id="pgInput" placeholder="e.g. You are a senior threat hunter... "></textarea>'+
+      '<div style="margin-top:14px;display:flex;gap:10px;">'+
+        '<button class="btn btn-primary" id="analyzeBtn">Analyze prompt</button>'+
+        '<button class="btn btn-ghost" id="clearBtn">Clear</button>'+
+      '</div>'+
+    '</div>'+
+    '<div id="pgResults"></div>'+
+    '<div class="footer-nav"><button class="btn btn-ghost" id="backMenuBtn3">\u2190 Menu</button><div></div></div>'
+  );
+}
+function bindPlayground(){
+  var back = document.getElementById('backMenuBtn3');
+  if(back) back.onclick = function(){ state.screen='menu'; render(); };
+  var clearBtn = document.getElementById('clearBtn');
+  if(clearBtn) clearBtn.onclick = function(){ document.getElementById('pgInput').value=''; document.getElementById('pgResults').innerHTML=''; };
+  var analyzeBtn = document.getElementById('analyzeBtn');
+  if(analyzeBtn) analyzeBtn.onclick = function(){
+    var text = document.getElementById('pgInput').value || '';
+    var a = analyzePrompt(text);
+    var strengths = a.results.filter(function(r){return r.ok;});
+    var weaknesses = a.results.filter(function(r){return !r.ok;});
+    var suggested = suggestImprovedPrompt(text, a.results);
+    var rows = a.results.map(function(r){
+      return '<div class="pg-cat '+(r.ok?'ok':'missing')+'"><div class="ic">'+(r.ok?'\u2713':'\u2717')+'</div><div style="flex:1;">'+r.label+(r.ok?'':' \u2014 '+r.tip)+'</div></div>';
+    }).join('');
+    document.getElementById('pgResults').innerHTML = (
+      '<div class="glass panel">'+
+        '<div class="eyebrow" style="margin-bottom:8px;">Prompt score</div>'+
+        '<div style="font-size:34px;font-weight:800;margin-bottom:10px;">'+a.score+'<span style="font-size:16px;color:var(--text-dim);">/100</span></div>'+
+        rows+
+      '</div>'+
+      '<div class="grid-2">'+
+        '<div class="glass panel"><div class="eyebrow" style="margin-bottom:8px;">Strengths</div>'+
+          (strengths.length? strengths.map(function(s){return '<div class="kv-row"><div class="k">'+s.label+'</div><div class="v" style="color:var(--green);">present</div></div>';}).join('') : '<span class="empty-note">None detected yet.</span>')+
+        '</div>'+
+        '<div class="glass panel"><div class="eyebrow" style="margin-bottom:8px;">Weaknesses</div>'+
+          (weaknesses.length? weaknesses.map(function(s){return '<div class="kv-row"><div class="k">'+s.label+'</div><div class="v" style="color:var(--red);">missing</div></div>';}).join('') : '<span class="empty-note">Nothing missing \u2014 excellent coverage.</span>')+
+        '</div>'+
+      '</div>'+
+      '<div class="glass panel">'+
+        '<div class="eyebrow" style="margin-bottom:8px;">Suggested improved prompt</div>'+
+        '<div class="ai-box opt">'+esc(suggested)+'</div>'+
+      '</div>'
+    );
+  };
+}
+
+/* =========================================================================
+   INIT
+========================================================================= */
+render();
+
+
+
+
+})();
+
+</script>
+</body>
+</html>
