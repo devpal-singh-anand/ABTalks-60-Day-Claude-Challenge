@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Cognitive Pattern Explorer</title>
+<style>
+  :root{
+    --bg1:#0f1029; --bg2:#1b1a4b; --accent:#8b7cf6; --accent2:#5ee7df;
+    --glass:rgba(255,255,255,0.08); --glass-border:rgba(255,255,255,0.18);
+    --text:#f2f0ff; --muted:#b7b3d9; --good:#5ee7df; --warn:#ffb86b; --card-radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    color:var(--text); min-height:100vh; overflow-x:hidden;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2) 60%, #2a1a4b);
+    background-attachment:fixed;
+    position:relative;
+  }
+  #particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  .particle{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(139,124,246,.5),transparent);
+    animation:float 18s linear infinite;opacity:.5;}
+  @keyframes float{
+    0%{transform:translateY(110vh) translateX(0);}
+    100%{transform:translateY(-10vh) translateX(40px);}
+  }
+  #app{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:24px 16px 80px;}
+  header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;}
+  h1{font-size:1.6rem;margin:0;display:flex;align-items:center;gap:10px;}
+  .badgebar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--muted);}
+  .pill{background:var(--glass);border:1px solid var(--glass-border);padding:6px 12px;border-radius:20px;backdrop-filter:blur(10px);cursor:default;}
+  .pill.clickable{cursor:pointer;transition:.15s;}
+  .pill.clickable:hover{background:rgba(139,124,246,.25);}
+  .glass{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--card-radius);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,.25); padding:24px; margin-bottom:20px;
+  }
+  .fade-enter{animation:fadeIn .5s ease both;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .btn{
+    cursor:pointer;border:none;padding:12px 20px;border-radius:12px;font-size:.95rem;font-weight:600;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0f1029;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(139,124,246,.4);}
+  .btn:active{transform:translateY(0);}
+  .btn.secondary{background:var(--glass);color:var(--text);border:1px solid var(--glass-border);}
+  .btn.small-btn{padding:8px 14px;font-size:.82rem;}
+  .btn:focus-visible{outline:3px solid var(--accent2);outline-offset:2px;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+  .choice-card{
+    background:rgba(255,255,255,.05); border:1px solid var(--glass-border); border-radius:14px;
+    padding:16px; margin:10px 0; cursor:pointer; transition:.2s ease; text-align:left; width:100%;
+    color:var(--text); font-size:.95rem;
+  }
+  .choice-card:hover, .choice-card:focus-visible{background:rgba(139,124,246,.18); transform:translateX(4px); outline:none;}
+  .choice-card.selected{background:rgba(139,124,246,.35); border-color:var(--accent2); box-shadow:0 0 0 2px var(--accent2), 0 6px 20px rgba(94,231,223,.25); transform:translateX(4px);}
+  .choice-card.selected::before{content:"✓ "; font-weight:800; color:var(--accent2);}
+  .choice-card.dimmed{opacity:.4; transform:none;}
+  .timer-options{display:flex;gap:10px;flex-wrap:wrap;}
+  .locked-item{opacity:.7;cursor:default !important;}
+  .why-box{
+    margin-top:14px;padding:14px;border-left:4px solid var(--accent2);background:rgba(94,231,223,.08);
+    border-radius:8px;font-size:.9rem;color:var(--muted);
+  }
+  .progress-wrap{background:rgba(255,255,255,.08);border-radius:20px;height:10px;overflow:hidden;margin:10px 0 4px;}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .5s ease;}
+  .disclaimer-box{background:rgba(255,184,107,.08);border:1px solid rgba(255,184,107,.35);
+    border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:.85rem;color:var(--muted);line-height:1.5;}
+  .disclaimer-box strong{color:var(--text);}
+  .timer-wrap{margin:12px 0 4px;}
+  .timer-bar-track{background:rgba(255,255,255,.08);border-radius:20px;height:8px;overflow:hidden;}
+  .timer-bar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--warn),#ff6b6b);width:100%;transition:width 1s linear;}
+  .timer-text{margin:6px 0 0;}
+  .stress-pulse{animation:stressPulse 1.3s ease-in-out infinite;border-radius:14px;}
+  @keyframes stressPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,184,107,.35);}50%{box-shadow:0 0 0 9px rgba(255,184,107,0);}}
+  .progress-bar.stress-tone{background:linear-gradient(90deg,var(--warn),#ff6b6b);}
+  .cta-box{border:1px solid var(--glass-border);border-radius:14px;padding:16px;margin:16px 0;background:rgba(139,124,246,.06);}
+  .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .unavailable-box{padding:16px;border:1px dashed var(--glass-border);border-radius:12px;text-align:center;color:var(--muted);}
+  .modebtns{display:flex;gap:14px;flex-wrap:wrap;}
+  .modecard{flex:1;min-width:200px;padding:20px;border-radius:16px;border:2px solid var(--glass-border);
+    cursor:pointer;text-align:center;transition:.2s;background:rgba(255,255,255,.04);}
+  .modecard:hover{border-color:var(--accent2);transform:translateY(-3px);}
+  .modecard.selected{border-color:var(--accent2);background:rgba(94,231,223,.12);}
+  .priority-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .priority-item{
+    padding:14px 16px;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);
+    border-radius:12px;cursor:grab;display:flex;align-items:center;justify-content:space-between;
+    touch-action:none;user-select:none;
+  }
+  .priority-item.dragging{opacity:.4;}
+  .priority-item .handle{opacity:.5;font-size:1.2rem;}
+  .rank{font-weight:700;color:var(--accent2);width:24px;display:inline-block;}
+  .chip{display:inline-block;padding:4px 10px;border-radius:10px;background:rgba(139,124,246,.2);font-size:.75rem;margin-right:6px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:.9rem;}
+  .bar-track{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:10px;margin:0 10px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 1s ease;}
+  .achievement{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid var(--glass-border);
+    padding:8px 14px;border-radius:14px;margin:4px 6px 4px 0;font-size:.85rem;animation:pop .4s ease;}
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.08);}100%{transform:scale(1);opacity:1;}}
+  #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:999;}
+  .hidden{display:none !important;}
+  footer.nav{display:flex;justify-content:space-between;margin-top:16px;gap:10px;flex-wrap:wrap;}
+  .small{font-size:.8rem;color:var(--muted);}
+  h2{margin-top:0;}
+  h3{margin-bottom:6px;}
+  /* transitions */
+  .transition{text-align:center;padding:20px 10px;}
+  .transition-badge{font-size:3rem;margin-bottom:6px;animation:pop .5s ease;}
+  .xp-pop{font-size:1.8rem;font-weight:800;color:var(--accent2);margin:14px 0;animation:pop .5s ease .1s both;}
+  .unlock-chip{display:inline-block;background:rgba(139,124,246,.2);border:1px solid var(--glass-border);
+    padding:8px 16px;border-radius:14px;margin-bottom:16px;animation:pop .5s ease .2s both;}
+  /* animated timeline */
+  .tl-flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:14px 0;}
+  .tl-node{padding:10px 22px;border-radius:14px;background:rgba(139,124,246,.18);border:1px solid var(--glass-border);font-weight:600;}
+  .tl-arrow{font-size:1.4rem;color:var(--accent2);animation:bounceArrow 1.4s ease-in-out infinite;}
+  @keyframes bounceArrow{0%,100%{transform:translateY(0);opacity:.5;}50%{transform:translateY(6px);opacity:1;}}
+  /* badge */
+  .badge-rank{display:inline-flex;align-items:center;gap:10px;padding:14px 20px;border-radius:16px;
+    background:rgba(139,124,246,.15);border:1px solid var(--glass-border);font-size:1.1rem;font-weight:700;margin:10px 0;}
+  /* export row */
+  .export-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  /* comparison table */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-col{background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:12px;padding:14px;}
+  table.profile-table{width:100%;border-collapse:collapse;margin-top:8px;}
+  table.profile-table td{padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.08);font-size:.9rem;}
+  table.profile-table td:first-child{color:var(--muted);width:45%;}
+  .score-card{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:18px 20px;border-radius:16px;
+    background:linear-gradient(135deg,rgba(139,124,246,.14),rgba(94,231,223,.08));border:1px solid var(--glass-border);}
+  .score-num{font-size:2.4rem;font-weight:800;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .score-stars{font-size:1.3rem;letter-spacing:2px;color:var(--accent2);margin-top:4px;}
+  .score-meta strong{display:block;font-size:1rem;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+  /* XP toast */
+  #xp-toast-wrap{position:fixed;top:18px;right:18px;z-index:1200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+  .xp-toast{background:rgba(139,124,246,.95);color:#0f1029;font-weight:700;padding:10px 16px;border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);animation:toastIn .35s ease, toastOut .4s ease 1.4s forwards;font-size:.85rem;}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-10px) scale(.9);}to{opacity:1;transform:translateY(0) scale(1);}}
+  @keyframes toastOut{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-10px);}}
+  /* radar chart */
+  .radar-wrap{display:flex;justify-content:center;margin:14px 0;}
+  #radarChart{max-width:100%;}
+  ::selection{background:var(--accent);color:#0f1029;}
+  @media print{
+    #particles, #confetti-canvas, .btn, header .badgebar, footer.nav, #xp-toast-wrap{display:none !important;}
+    *{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+    }
+    html, body{
+      background:linear-gradient(135deg,#0f1029,#1b1a4b 60%, #2a1a4b) !important;
+      background-attachment:fixed !important;
+      color:#f2f0ff !important;
+    }
+    .glass{
+      background:rgba(255,255,255,0.08) !important;
+      border:1px solid rgba(255,255,255,0.18) !important;
+      box-shadow:none;
+      color:#f2f0ff !important;
+    }
+    .small, .muted{color:#b7b3d9 !important;}
+    .choice-card, .priority-item, .stat-row, .compare-col, .why-box,
+    .score-card, .badge-rank, .achievement, .cta-box, .disclaimer-box,
+    .bar-track, .bar-fill, .timer-bar-track, .timer-bar-fill{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+    }
+    .bar-fill, .timer-bar-fill{background:linear-gradient(90deg,#8b7cf6,#5ee7df) !important;}
+    .score-num{
+      background:linear-gradient(135deg,#8b7cf6,#5ee7df) !important;
+      -webkit-background-clip:text !important;
+      background-clip:text !important;
+      -webkit-text-fill-color:transparent !important;
+    }
+    /* page break control */
+    .glass{page-break-inside:auto;}
+    h2, h3{page-break-after:avoid;}
+    .score-card, .compare-grid, .radar-wrap, table.profile-table{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div id="particles"></div>
+<div id="xp-toast-wrap"></div>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   COGNITIVE PATTERN EXPLORER — single file app
+========================================================= */
+
+/* ---------- Persona / Style meta ---------- */
+const STYLES = {
+  analytical: {name:"Analytical Thinker", emoji:"🔍", color:"#8b7cf6",
+    desc:"You tend to break things into parts, weigh evidence, and look for the most logically consistent path forward."},
+  emotional: {name:"Emotional Intuitive", emoji:"💫", color:"#ff8bd1",
+    desc:"You often lead with how a situation feels, sensing undercurrents others miss and responding to people first."},
+  overthinker: {name:"Overthinking Loop", emoji:"🌀", color:"#ffb86b",
+    desc:"You may notice yourself replaying options, searching for a 'safe enough' answer before committing."},
+  action: {name:"Action-First Decision Maker", emoji:"⚡", color:"#5ee7df",
+    desc:"You move quickly from thought to action, preferring momentum and real-world feedback over prolonged analysis."},
+  balanced: {name:"Balanced Reflective Thinker", emoji:"⚖️", color:"#9be15d",
+    desc:"You tend to pause just long enough to consider a few angles, then commit — blending intuition and logic."}
+};
+
+const RANKS = {
+  analytical:{emoji:"🔵", label:"Curious Analyst"},
+  emotional:{emoji:"🟢", label:"Adaptive Explorer"},
+  overthinker:{emoji:"🟡", label:"Reflective Observer"},
+  action:{emoji:"🟠", label:"Fast Decision Maker"},
+  balanced:{emoji:"🟣", label:"Thoughtful Strategist"}
+};
+
+/* ---------- Scenario Pool (20+) ---------- */
+const SCENARIOS = [
+{cat:"Career", text:"Your manager offers you a new role with more visibility but an unclear scope.", choices:[
+  {t:"Ask for a written breakdown of responsibilities before deciding.", s:"analytical", why:"Seeking structure before committing reflects an analytical need for clarity."},
+  {t:"Say yes right away — you can figure out the details as you go.", s:"action", why:"Choosing momentum over certainty is a hallmark of action-first thinking."},
+  {t:"Sit with the decision for a few days, replaying pros and cons.", s:"overthinker", why:"Extended replaying of the same options often signals an overthinking loop."},
+  {t:"Notice your gut excitement (or dread) and let that guide you.", s:"emotional", why:"Trusting an internal feeling first points to emotional intuition."}
+]},
+{cat:"College", text:"You get a grade lower than expected on a major assignment.", choices:[
+  {t:"Review the rubric line-by-line to see exactly where points were lost.", s:"analytical", why:"Dissecting feedback systematically is classic analytical processing."},
+  {t:"Feel discouraged for a while before deciding what to do next.", s:"emotional", why:"Letting the emotional reaction surface first is intuitive processing."},
+  {t:"Immediately email the professor to fix it before thinking it through.", s:"action", why:"Fast response without much deliberation shows action-first tendencies."},
+  {t:"Keep wondering if you're even cut out for the subject.", s:"overthinker", why:"Spiraling into broader self-doubt is a common overthinking pattern."}
+]},
+{cat:"Team Projects", text:"A teammate disagrees with your approach in front of the group.", choices:[
+  {t:"Ask them to walk you through their logic point by point.", s:"analytical", why:"Requesting structured reasoning reflects analytical curiosity over ego."},
+  {t:"Feel a flush of defensiveness before responding.", s:"emotional", why:"Noticing the emotional charge first is typical of intuitive processors."},
+  {t:"Suggest trying both approaches quickly to see what works.", s:"action", why:"Preferring real-world testing over debate is action-oriented thinking."},
+  {t:"Replay the exchange mentally for the rest of the day.", s:"overthinker", why:"Rehashing a social moment repeatedly is a signature of the overthinking loop."}
+]},
+{cat:"AI", text:"An AI tool suggests a decision you hadn't considered.", choices:[
+  {t:"Cross-check its reasoning against your own data.", s:"analytical", why:"Verifying claims with evidence is core analytical behavior."},
+  {t:"Feel intrigued or uneasy, and let that shape your trust in it.", s:"emotional", why:"Letting a felt sense guide trust reflects emotional intuition."},
+  {t:"Try the suggestion immediately to see what happens.", s:"action", why:"Testing in real time rather than deliberating is action-first."},
+  {t:"Wonder whether relying on AI here is even the right call.", s:"overthinker", why:"Second-guessing the meta-decision is a common overthinking pattern."}
+]},
+{cat:"Technology", text:"Your laptop crashes right before a deadline.", choices:[
+  {t:"Diagnose the exact cause before trying any fix.", s:"analytical", why:"Wanting root-cause clarity first is analytical."},
+  {t:"Panic briefly, then reach out to whoever can help.", s:"emotional", why:"Leading with the felt urgency is emotionally intuitive."},
+  {t:"Grab another device and keep working immediately.", s:"action", why:"Prioritizing forward motion over full understanding is action-first."},
+  {t:"Imagine worst-case outcomes on a loop.", s:"overthinker", why:"Catastrophizing repeatedly is a common overthinking pattern."}
+]},
+{cat:"Family", text:"A family member gives you unsolicited advice about your life choices.", choices:[
+  {t:"Evaluate the advice objectively, separate from who said it.", s:"analytical", why:"Separating content from emotion is an analytical habit."},
+  {t:"Feel hurt or comforted depending on tone, before anything else.", s:"emotional", why:"The emotional read comes first for intuitive thinkers."},
+  {t:"Thank them and move on without dwelling on it.", s:"action", why:"Quick closure without extended processing is action-first."},
+  {t:"Keep replaying their words trying to decode hidden meaning.", s:"overthinker", why:"Searching for hidden meaning repeatedly is overthinking."}
+]},
+{cat:"Money", text:"You have an unexpected windfall to allocate.", choices:[
+  {t:"Build a spreadsheet comparing saving vs investing options.", s:"analytical", why:"Modeling outcomes numerically is analytical thinking."},
+  {t:"Consider what would feel most rewarding right now.", s:"emotional", why:"Prioritizing felt reward is emotionally intuitive."},
+  {t:"Move it into your usual savings account today.", s:"action", why:"Defaulting to fast, simple action is action-first."},
+  {t:"Keep debating every possible option for weeks.", s:"overthinker", why:"Prolonged indecision across many options is overthinking."}
+]},
+{cat:"Leadership", text:"You must choose between two capable people for a promotion.", choices:[
+  {t:"List measurable performance criteria to compare them fairly.", s:"analytical", why:"Using explicit criteria is analytical decision-making."},
+  {t:"Consider who seems to need the opportunity most emotionally.", s:"emotional", why:"Weighing felt human need is emotionally intuitive."},
+  {t:"Decide quickly based on your first instinct.", s:"action", why:"Fast instinctive commitment is action-first."},
+  {t:"Keep flip-flopping between the two for days.", s:"overthinker", why:"Repeated reversal of a decision is overthinking."}
+]},
+{cat:"Ethics", text:"You notice a small dishonesty in a colleague's report.", choices:[
+  {t:"Examine the evidence carefully before concluding anything.", s:"analytical", why:"Wanting proof before judgment is analytical."},
+  {t:"Feel a strong discomfort that shapes your next step.", s:"emotional", why:"Letting discomfort guide response is emotionally intuitive."},
+  {t:"Raise it directly and immediately.", s:"action", why:"Immediate confrontation is action-first."},
+  {t:"Agonize over whether it's your place to say anything.", s:"overthinker", why:"Circular deliberation over responsibility is overthinking."}
+]},
+{cat:"Time Pressure", text:"You have 10 minutes to make a decision with incomplete information.", choices:[
+  {t:"Quickly rank the few facts you do have by reliability.", s:"analytical", why:"Structuring limited data fast is still analytical."},
+  {t:"Go with what feels right in the moment.", s:"emotional", why:"Trusting feeling under time pressure is emotionally intuitive."},
+  {t:"Pick an option and move immediately.", s:"action", why:"Fast commitment despite uncertainty is action-first."},
+  {t:"Freeze while weighing every possible outcome.", s:"overthinker", why:"Freezing under pressure while over-analyzing is overthinking."}
+]},
+{cat:"Creativity", text:"You're brainstorming ideas for a new project.", choices:[
+  {t:"Research what's worked before as a starting framework.", s:"analytical", why:"Grounding creativity in prior evidence is analytical."},
+  {t:"Follow whatever idea feels most exciting.", s:"emotional", why:"Following excitement is emotionally intuitive creativity."},
+  {t:"Prototype the first workable idea immediately.", s:"action", why:"Building fast over refining ideas is action-first."},
+  {t:"Generate then discard dozens of ideas without settling.", s:"overthinker", why:"Endless idea-cycling without commitment is overthinking."}
+]},
+{cat:"Communication", text:"You need to deliver difficult feedback to a peer.", choices:[
+  {t:"Draft your points logically before the conversation.", s:"analytical", why:"Structuring the message in advance is analytical."},
+  {t:"Focus on how they'll feel receiving it.", s:"emotional", why:"Centering the other person's feelings is emotionally intuitive."},
+  {t:"Just say it plainly in the moment.", s:"action", why:"Direct, immediate delivery is action-first."},
+  {t:"Rehearse the conversation in your head many times.", s:"overthinker", why:"Excessive mental rehearsal is overthinking."}
+]},
+{cat:"Conflict Resolution", text:"Two friends ask you to take sides in their disagreement.", choices:[
+  {t:"Ask both for the facts before forming an opinion.", s:"analytical", why:"Gathering facts before judging is analytical."},
+  {t:"Sense who seems more hurt and lean that way.", s:"emotional", why:"Reading emotional cues to choose is emotionally intuitive."},
+  {t:"Suggest a resolution and move the group forward.", s:"action", why:"Pushing toward resolution quickly is action-first."},
+  {t:"Worry for days about disappointing either friend.", s:"overthinker", why:"Prolonged worry about outcomes is overthinking."}
+]},
+{cat:"Risk Taking", text:"You're offered a risky opportunity with a high potential payoff.", choices:[
+  {t:"Calculate probability and expected value before deciding.", s:"analytical", why:"Quantifying risk is analytical thinking."},
+  {t:"Notice whether it excites or scares you more.", s:"emotional", why:"Letting felt excitement/fear guide the call is emotionally intuitive."},
+  {t:"Say yes and adjust course later if needed.", s:"action", why:"Committing then adapting is action-first."},
+  {t:"Keep imagining every way it could go wrong.", s:"overthinker", why:"Fixating on worst-case scenarios is overthinking."}
+]},
+{cat:"Decision Making", text:"You're choosing between two similar job offers.", choices:[
+  {t:"Build a comparison table of pay, growth, and culture.", s:"analytical", why:"Structured comparison is analytical decision-making."},
+  {t:"Imagine yourself in each role and notice which feels right.", s:"emotional", why:"Using imagined feeling as a guide is emotionally intuitive."},
+  {t:"Pick the one that lets you start soonest.", s:"action", why:"Optimizing for speed of action is action-first."},
+  {t:"Keep re-reading both offers without deciding.", s:"overthinker", why:"Endless re-reading without choosing is overthinking."}
+]},
+{cat:"Career", text:"A colleague takes credit for part of your idea in a meeting.", choices:[
+  {t:"Note specifics and address it factually afterward.", s:"analytical", why:"Building a factual case reflects analytical thinking."},
+  {t:"Feel a wave of frustration you need to process first.", s:"emotional", why:"Processing the feeling before acting is emotionally intuitive."},
+  {t:"Speak up in the moment to clarify.", s:"action", why:"Immediate correction is action-first."},
+  {t:"Replay the meeting internally for the rest of the day.", s:"overthinker", why:"Repeated replay of the moment is overthinking."}
+]},
+{cat:"College", text:"You must pick electives for next semester.", choices:[
+  {t:"Compare syllabi and workload data for each option.", s:"analytical", why:"Data comparison before choosing is analytical."},
+  {t:"Pick whichever course sounds most interesting to you.", s:"emotional", why:"Following interest/feeling is emotionally intuitive."},
+  {t:"Register for the first reasonable option quickly.", s:"action", why:"Quick, low-deliberation choice is action-first."},
+  {t:"Keep switching your picks over many days.", s:"overthinker", why:"Repeated switching without settling is overthinking."}
+]},
+{cat:"Team Projects", text:"Your team must choose a project direction under a tight vote.", choices:[
+  {t:"Present a pros/cons list to guide the group.", s:"analytical", why:"Framing the choice with structured pros/cons is analytical."},
+  {t:"Vote for the option that feels most inspiring.", s:"emotional", why:"Choosing on inspiration is emotionally intuitive."},
+  {t:"Push for a quick vote so work can start.", s:"action", why:"Prioritizing momentum over debate is action-first."},
+  {t:"Keep raising 'what if' concerns about every option.", s:"overthinker", why:"Endless what-if questioning is overthinking."}
+]},
+{cat:"Money", text:"You're negotiating your salary for a new job.", choices:[
+  {t:"Research market rates before naming a number.", s:"analytical", why:"Grounding the ask in data is analytical."},
+  {t:"Go with the number that feels fair in the moment.", s:"emotional", why:"Trusting a felt sense of fairness is emotionally intuitive."},
+  {t:"Name a number quickly to keep things moving.", s:"action", why:"Fast decision to maintain momentum is action-first."},
+  {t:"Agonize over every possible number for days.", s:"overthinker", why:"Prolonged indecision over a number is overthinking."}
+]},
+{cat:"Leadership", text:"Your team is underperforming and morale is low.", choices:[
+  {t:"Analyze metrics to find the root cause.", s:"analytical", why:"Diagnosing with data first is analytical leadership."},
+  {t:"Check in on how people are feeling first.", s:"emotional", why:"Leading with empathy is emotionally intuitive leadership."},
+  {t:"Set a new plan in motion immediately.", s:"action", why:"Acting fast to change momentum is action-first leadership."},
+  {t:"Keep questioning whether you're the right leader for this.", s:"overthinker", why:"Self-doubt spirals are a form of overthinking."}
+]},
+{cat:"Ethics", text:"You could benefit from a loophole that feels technically legal but ethically gray.", choices:[
+  {t:"Map out the long-term consequences logically.", s:"analytical", why:"Reasoning through consequences is analytical."},
+  {t:"Notice discomfort and let that decide for you.", s:"emotional", why:"Using felt discomfort as a moral compass is emotionally intuitive."},
+  {t:"Decide quickly one way and move on.", s:"action", why:"Fast resolution without extended deliberation is action-first."},
+  {t:"Debate it endlessly in your head.", s:"overthinker", why:"Endless internal debate is overthinking."}
+]},
+{cat:"Time Pressure", text:"Your flight is boarding and you realize you forgot something important.", choices:[
+  {t:"Quickly assess what's truly essential to replace.", s:"analytical", why:"Fast prioritization under pressure is still analytical."},
+  {t:"Feel a spike of stress that colors your next move.", s:"emotional", why:"Reacting to the felt stress first is emotionally intuitive."},
+  {t:"Decide instantly to board and deal with it later.", s:"action", why:"Choosing to act rather than resolve every detail is action-first."},
+  {t:"Keep mentally listing everything you might have forgotten.", s:"overthinker", why:"Compulsive mental listing is overthinking."}
+]}
+];
+
+const PRIORITIES = ["Accuracy","Speed","Learning","Security","Creativity","Recognition","Collaboration","Curiosity","Challenge","Stability"];
+const TIMELINE_STEPS = ["Observe","Research","Reflect","Discuss","Act","Review"];
+const TOTAL_SCENARIOS = 10;
+
+/* ---------- Persistence keys ---------- */
+const SESSION_KEY = 'cpe_session_v2';
+const HISTORY_KEY = 'cpe_history_v2';
+const SOUND_KEY = 'cpe_sound_v2';
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* ---------- Sound (offline WebAudio beeps) ---------- */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; }
+  }
+  return audioCtx;
+}
+function playTone(freq=440, dur=0.12, type='sine', vol=0.06){
+  if(!state.soundOn) return;
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.value = vol;
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  osc.stop(ctx.currentTime + dur + 0.02);
+}
+function soundClick(){ playTone(520,0.08,'triangle',0.05); }
+function soundSuccess(){ playTone(440,0.12,'sine',0.06); setTimeout(()=>playTone(660,0.16,'sine',0.06),110); setTimeout(()=>playTone(880,0.2,'sine',0.07),230); }
+function soundComplete(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>playTone(f,0.18,'sine',0.06), i*120)); }
+
+/* ---------- State ---------- */
+const PHASES = ['mode','ch1','ch1-done','ch2','ch2-done','ch3','ch3-done','journal'];
+
+function defaultState(){
+  return {
+    mode: null,
+    phase: 'mode',
+    scenarioOrder: [],
+    scenarioIndex: 0,
+    answers: [],
+    priorityOrder: [...PRIORITIES],
+    timelineOrder: [],
+    xp: 0,
+    streak: 0,
+    achievements: [],
+    decisionTimes: [],
+    journalSaved: false,
+    soundOn: true
+  };
+}
+
+let state = loadSession() || defaultState();
+state.soundOn = (localStorage.getItem(SOUND_KEY) ?? 'true') === 'true';
+
+function saveSession(){
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify(state)); }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }catch(e){ return []; }
+}
+function pushHistory(entry){
+  const h = loadHistory();
+  h.push(entry);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+}
+
+/* ---------- Particles ---------- */
+function initParticles(){
+  const wrap = document.getElementById('particles');
+  const count = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 18;
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const size = 6+Math.random()*18;
+    p.style.width=p.style.height=size+'px';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(14+Math.random()*14)+'s';
+    p.style.animationDelay=(Math.random()*14)+'s';
+    wrap.appendChild(p);
+  }
+}
+
+/* ---------- Confetti ---------- */
+function fireConfetti(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#8b7cf6','#5ee7df','#ff8bd1','#ffb86b','#9be15d'];
+  let pieces = Array.from({length:120},()=>({
+    x:Math.random()*canvas.width, y:-20-Math.random()*canvas.height*0.5,
+    r:4+Math.random()*6, c:colors[Math.floor(Math.random()*colors.length)],
+    vy:2+Math.random()*3, vx:-2+Math.random()*4, rot:Math.random()*360, vr:-6+Math.random()*12
+  }));
+  let frames=0;
+  function tick(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6); ctx.restore();
+    });
+    frames++;
+    if(frames<160) requestAnimationFrame(tick);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  tick();
+}
+
+/* ---------- XP / Achievements ---------- */
+function addXP(n){
+  state.xp += n;
+  checkAchievements();
+}
+function showXPToast(text){
+  const wrap = document.getElementById('xp-toast-wrap');
+  if(!wrap) return;
+  const t = document.createElement('div');
+  t.className='xp-toast';
+  t.textContent = text;
+  wrap.appendChild(t);
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(()=>{ t.remove(); }, reduced ? 1400 : 1900);
+}
+function unlock(id){
+  if(!state.achievements.includes(id)){
+    state.achievements.push(id);
+    return true;
+  }
+  return false;
+}
+function checkAchievements(){
+  if(state.answers.length===1) unlock('first_step');
+  if(state.answers.length===TOTAL_SCENARIOS) unlock('explorer');
+  if(state.xp>=100) unlock('century');
+  if(state.streak>=3) unlock('streak3');
+}
+const ACHIEVEMENT_LABELS = {
+  first_step:"🥇 First Step Taken", explorer:"🧭 Thinking Explorer Complete",
+  century:"💯 Century of Insight", streak3:"🔥 On a Roll"
+};
+
+/* ---------- Root render ---------- */
+const app = document.getElementById('app');
+
+function progressPct(){
+  const idx = PHASES.indexOf(state.phase);
+  return Math.round((idx/(PHASES.length-1))*100);
+}
+
+function render(){
+  saveSession();
+  app.innerHTML='';
+  const header = document.createElement('header');
+  header.className='top fade-enter';
+  header.innerHTML = `
+    <h1>🧠 Cognitive Pattern Explorer</h1>
+    <div class="badgebar">
+      <span class="pill">XP: ${state.xp}</span>
+      <span class="pill">Streak: ${state.streak}🔥</span>
+      <span class="pill">${state.mode ? (state.mode==='calm'?'🌿 Calm':'⚡ Stress') : 'No mode'}</span>
+      <span class="pill clickable" id="soundToggle">${state.soundOn ? '🔊 Sounds ON' : '🔇 Sounds OFF'}</span>
+    </div>`;
+  app.appendChild(header);
+  header.querySelector('#soundToggle').addEventListener('click', ()=>{
+    state.soundOn = !state.soundOn;
+    localStorage.setItem(SOUND_KEY, state.soundOn);
+    if(state.soundOn) soundClick();
+    render();
+  });
+
+  const overallProgress = document.createElement('div');
+  overallProgress.innerHTML = `<div class="progress-wrap"><div class="progress-bar${state.mode==='stress'?' stress-tone':''}" style="width:${progressPct()}%"></div></div>
+  <div class="small">Overall completion: ${progressPct()}%</div>`;
+  app.appendChild(overallProgress);
+
+  switch(state.phase){
+    case 'mode': renderModeSelect(); break;
+    case 'ch1': renderChapter1(); break;
+    case 'ch1-done': renderTransitionScreen({
+      title:"Chapter 1 Complete ✅", subtitle:`You responded to ${TOTAL_SCENARIOS} everyday scenarios.`,
+      xp:25, unlocked:"Priority Builder", buttonText:"Continue to Chapter 2",
+      onContinue: ()=>{ state.phase='ch2'; render(); }
+    }); break;
+    case 'ch2': renderChapter2(); break;
+    case 'ch2-done': renderTransitionScreen({
+      title:"Chapter 2 Complete ✅", subtitle:"Your priority ranking has been recorded.",
+      xp:15, unlocked:"Thinking Timeline", buttonText:"Continue to Chapter 3",
+      onContinue: ()=>{ state.timelineOrder = shuffle(TIMELINE_STEPS); state.phase='ch3'; render(); }
+    }); break;
+    case 'ch3': renderChapter3(); break;
+    case 'ch3-done': renderTransitionScreen({
+      title:"Chapter 3 Complete ✅", subtitle:"Your natural processing sequence has been mapped.",
+      xp:20, unlocked:"Reflection Journal", buttonText:"Generate My Journal",
+      onContinue: ()=>{ state.phase='journal'; render(); soundComplete(); fireConfetti(); }
+    }); break;
+    case 'journal': renderJournal(); break;
+  }
+}
+
+/* ---------- Transition screen ---------- */
+function renderTransitionScreen({title, subtitle, xp, unlocked, buttonText, onContinue}){
+  addXP(xp);
+  const box = document.createElement('div');
+  box.className='glass fade-enter transition';
+  box.innerHTML = `
+    <div class="transition-badge">🎉</div>
+    <h2>${title}</h2>
+    <p class="small">${subtitle}</p>
+    <div class="xp-pop">+${xp} XP</div>
+    ${unlocked ? `<div class="unlock-chip">🔓 Unlocked: ${unlocked}</div>` : ''}
+    <div><button class="btn" id="transContinue">${buttonText} →</button></div>
+  `;
+  app.appendChild(box);
+  soundSuccess();
+  box.querySelector('#transContinue').addEventListener('click', ()=>{ soundClick(); onContinue(); });
+}
+
+/* ---------- Chapter 0: Mode select (with resume support) ---------- */
+function renderModeSelect(){
+  const hasProgress = state.answers.length>0 || state.phase!=='mode';
+  const box = document.createElement('div');
+  box.className='glass fade-enter';
+  box.innerHTML = `
+    <div class="disclaimer-box">
+      <strong>📘 Educational Self-Reflection Only</strong><br>
+      This experience is designed for learning and personal reflection. It does not diagnose, assess, or provide mental health advice. Your results simply reflect the choices you made during this session and may change across different situations.
+    </div>
+    <h2>Choose Your Exploration Mode</h2>
+    <p class="small">The same scenarios will feel different depending on your mindset. Pick whichever matches how you feel right now — there's no wrong choice.</p>
+    <div class="modebtns" id="modebtns">
+      <div class="modecard" data-mode="calm" tabindex="0" role="button" aria-pressed="false">
+        <h3>🌿 Calm Mode</h3>
+        <p class="small">No timer, softer pacing, and unlimited time to reflect. Great for exploring your thinking without pressure.</p>
+      </div>
+      <div class="modecard" data-mode="stress" tabindex="0" role="button" aria-pressed="false">
+        <h3>⚡ Stress Mode</h3>
+        <p class="small">A short countdown on every scenario, quicker pacing, and urgency in the wording — built to surface how decisions shift under pressure.</p>
+      </div>
+    </div>
+    <footer class="nav">
+      <span></span>
+      <button class="btn" id="startBtn" disabled>Begin Chapter 1 →</button>
+    </footer>
+  `;
+  app.appendChild(box);
+  const cards = box.querySelectorAll('.modecard');
+  const startBtn = box.querySelector('#startBtn');
+  cards.forEach(c=>{
+    const pick = ()=>{
+      cards.forEach(x=>{x.classList.remove('selected'); x.setAttribute('aria-pressed','false');});
+      c.classList.add('selected'); c.setAttribute('aria-pressed','true');
+      state.mode = c.dataset.mode;
+      startBtn.disabled=false;
+      soundClick();
+    };
+    c.addEventListener('click', pick);
+    c.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); pick();} });
+  });
+  startBtn.addEventListener('click', ()=>{
+    state.scenarioOrder = shuffle(SCENARIOS).slice(0, TOTAL_SCENARIOS);
+    state.scenarioIndex = 0;
+    state.phase='ch1';
+    render();
+  });
+}
+
+/* ---------- Chapter 1: Thinking Explorer ---------- */
+function renderChapter1(){
+  if(state.scenarioIndex >= state.scenarioOrder.length){
+    state.phase='ch1-done';
+    render();
+    return;
+  }
+  const sc = state.scenarioOrder[state.scenarioIndex];
+  const box=document.createElement('div');
+  box.className='glass fade-enter';
+  const isStress = state.mode==='stress';
+  const STRESS_DURATION = 60;
+  const modeIntro = isStress
+    ? `<p class="small">⚡ Trust your first instinct — make your decision before time runs out.</p>`
+    : `<p class="small">🌿 There's no clock here. Take all the time you need and notice your first instinct.</p>`;
+  const timerHTML = isStress ? `
+    <div class="timer-wrap">
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>
+      <p class="small timer-text" id="timerText">⏱ ${STRESS_DURATION}s to decide</p>
+    </div>` : '';
+  box.innerHTML = `
+    <div class="chip">${sc.cat}</div>
+    <h2 style="margin-top:10px;">${sc.text}</h2>
+    ${modeIntro}
+    ${timerHTML}
+    <div id="choices" class="${isStress ? 'stress-pulse' : ''}"></div>
+    <div id="whyArea"></div>
+    <footer class="nav">
+      <span class="small">Scenario ${state.scenarioIndex+1} of ${TOTAL_SCENARIOS}</span>
+      <button class="btn secondary hidden" id="nextBtn">Next Scenario →</button>
+    </footer>
+  `;
+  app.appendChild(box);
+  const choicesEl = box.querySelector('#choices');
+  const whyArea = box.querySelector('#whyArea');
+  const nextBtn = box.querySelector('#nextBtn');
+  const shuffledChoices = shuffle(sc.choices);
+  const decisionStart = Date.now();
+  let timerInterval = null;
+
+  function stopTimer(){
+    if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  }
+
+  function selectChoice(btn, choice){
+    if(btn.dataset.picked) return;
+    stopTimer();
+    choicesEl.classList.remove('stress-pulse');
+    choicesEl.querySelectorAll('.choice-card').forEach(b=>{
+      b.dataset.picked='1';
+      if(b!==btn) b.classList.add('dimmed');
+    });
+    btn.classList.add('selected');
+    const time = (Date.now()-decisionStart)/1000;
+    state.decisionTimes.push(time);
+    state.answers.push({cat:sc.cat, s:choice.s, why:choice.why, time});
+    state.streak++;
+    addXP(10);
+    soundClick();
+    showXPToast('+10 Reflection XP');
+    whyArea.innerHTML = `<div class="why-box"><strong>${STYLES[choice.s].emoji} ${STYLES[choice.s].name}:</strong> ${choice.why}</div>`;
+    nextBtn.classList.remove('hidden');
+    nextBtn.focus();
+    saveSession();
+  }
+
+  const choiceBtns = [];
+  shuffledChoices.forEach(choice=>{
+    const btn = document.createElement('button');
+    btn.className='choice-card';
+    btn.textContent = choice.t;
+    btn.addEventListener('click', ()=> selectChoice(btn, choice));
+    choicesEl.appendChild(btn);
+    choiceBtns.push({btn, choice});
+  });
+
+  if(isStress){
+    const stressStart = Date.now();
+    const fill = box.querySelector('#timerFill');
+    const text = box.querySelector('#timerText');
+    function tickTimer(){
+      const elapsed = (Date.now()-stressStart)/1000;
+      const remaining = Math.max(0, STRESS_DURATION - elapsed);
+      if(fill) fill.style.width = (remaining/STRESS_DURATION)*100+'%';
+      if(text){
+        const secs = Math.ceil(remaining);
+        text.textContent = secs>0 ? `⏱ ${secs}s to decide` : `⏱ Time's up — deciding for you.`;
+      }
+      if(remaining<=0){
+        stopTimer();
+        const pick = choiceBtns[Math.floor(Math.random()*choiceBtns.length)];
+        if(pick && !pick.btn.dataset.picked) selectChoice(pick.btn, pick.choice);
+      }
+    }
+    tickTimer();
+    timerInterval = setInterval(tickTimer, 200);
+  }
+
+  nextBtn.addEventListener('click', ()=>{
+    stopTimer();
+    state.scenarioIndex++;
+    render();
+  });
+}
+
+/* ---------- Chapter 2: Priority Builder ---------- */
+function renderChapter2(){
+  const isStress = state.mode==='stress';
+  const box=document.createElement('div');
+  box.className='glass fade-enter';
+  const stressSetupHTML = isStress ? `
+    <div id="ch2Setup" style="margin-bottom:14px;padding:14px;border:1px solid var(--glass-border);border-radius:12px;background:rgba(255,184,107,.06);">
+      <p class="small" style="margin:0 0 10px;"><strong>⚡ Stress Mode:</strong> Pick a time limit to reorder your priorities:</p>
+      <div class="timer-options">
+        <button class="btn secondary small-btn ch2-dur" data-dur="30">30 seconds</button>
+        <button class="btn secondary small-btn ch2-dur" data-dur="45">45 seconds</button>
+        <button class="btn secondary small-btn ch2-dur" data-dur="60">60 seconds</button>
+      </div>
+    </div>
+    <div class="timer-wrap hidden" id="ch2TimerWrap">
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="ch2TimerFill"></div></div>
+      <p class="small timer-text" id="ch2TimerText"></p>
+    </div>` : '';
+  box.innerHTML = `
+    <h2>Priority Builder</h2>
+    <p class="small">Drag to reorder these values from most (top) to least important to you. This shapes how your decisions get weighted.</p>
+    ${stressSetupHTML}
+    <ul class="priority-list" id="priorityList"></ul>
+    <footer class="nav">
+      <button class="btn secondary" id="backBtn">← Back</button>
+      <button class="btn" id="toCh2Done">Continue →</button>
+    </footer>
+  `;
+  app.appendChild(box);
+  const list = box.querySelector('#priorityList');
+  renderPriorityList(list);
+
+  let ch2Timer = null;
+  const cleanup = ()=>{ if(ch2Timer){ clearInterval(ch2Timer); ch2Timer=null; } };
+
+  if(isStress){
+    const setup = box.querySelector('#ch2Setup');
+    const timerWrap = box.querySelector('#ch2TimerWrap');
+    const fill = box.querySelector('#ch2TimerFill');
+    const text = box.querySelector('#ch2TimerText');
+    box.querySelectorAll('.ch2-dur').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(ch2Timer) return;
+        setup.classList.add('hidden');
+        timerWrap.classList.remove('hidden');
+        const duration = parseInt(btn.dataset.dur);
+        const start = Date.now();
+        function tick(){
+          const elapsed = (Date.now()-start)/1000;
+          const remaining = Math.max(0, duration - elapsed);
+          if(fill) fill.style.width = (remaining/duration)*100+'%';
+          if(text){
+            const secs = Math.ceil(remaining);
+            text.textContent = secs>0 ? `⏱ ${secs}s remaining — finalize your priority order` : `⏱ Time's up — order locked in.`;
+          }
+          if(remaining<=0){
+            cleanup();
+            list.querySelectorAll('.priority-item').forEach(li=>{ li.draggable=false; li.classList.add('locked-item'); });
+          }
+        }
+        tick();
+        ch2Timer = setInterval(tick, 200);
+      });
+    });
+  }
+
+  box.querySelector('#backBtn').addEventListener('click', ()=>{ cleanup(); state.phase='ch1'; state.scenarioIndex=Math.max(0,state.scenarioOrder.length-1); render(); });
+  box.querySelector('#toCh2Done').addEventListener('click', ()=>{ cleanup(); state.phase='ch2-done'; render(); });
+}
+
+function renderPriorityList(list){
+  list.innerHTML='';
+  state.priorityOrder.forEach((item,i)=>{
+    const li = document.createElement('li');
+    li.className='priority-item';
+    li.draggable=true;
+    li.dataset.item=item;
+    li.setAttribute('tabindex','0');
+    li.innerHTML = `<span><span class="rank">${i+1}</span>${item}</span><span class="handle">☰</span>`;
+    attachDragHandlers(li, list, state.priorityOrder, renderPriorityList);
+    list.appendChild(li);
+  });
+}
+
+function attachDragHandlers(el, container, arr, rerender){
+  el.addEventListener('dragstart', ()=>{ el.classList.add('dragging'); });
+  el.addEventListener('dragend', ()=>{
+    el.classList.remove('dragging');
+    syncOrderFromDOM(container, arr);
+    rerender(container);
+    saveSession();
+  });
+  el.addEventListener('dragover', e=>{
+    e.preventDefault();
+    const dragging = container.querySelector('.dragging');
+    if(!dragging || dragging===el) return;
+    const rect = el.getBoundingClientRect();
+    const next = (e.clientY - rect.top) > rect.height/2;
+    container.insertBefore(dragging, next ? el.nextSibling : el);
+  });
+
+  let touchStartY=null;
+  el.addEventListener('touchstart', e=>{
+    touchStartY = e.touches[0].clientY;
+    el.classList.add('dragging');
+  }, {passive:true});
+  el.addEventListener('touchmove', e=>{
+    const touchY = e.touches[0].clientY;
+    const target = document.elementFromPoint(e.touches[0].clientX, touchY);
+    const targetItem = target && target.closest('.priority-item');
+    if(targetItem && targetItem!==el && container.contains(targetItem)){
+      const rect = targetItem.getBoundingClientRect();
+      const next = (touchY - rect.top) > rect.height/2;
+      container.insertBefore(el, next ? targetItem.nextSibling : targetItem);
+    }
+  }, {passive:true});
+  el.addEventListener('touchend', ()=>{
+    el.classList.remove('dragging');
+    syncOrderFromDOM(container, arr);
+    rerender(container);
+    saveSession();
+  });
+
+  el.addEventListener('keydown', e=>{
+    const idx = arr.indexOf(el.dataset.item);
+    if(e.key==='ArrowUp' && idx>0){
+      e.preventDefault();
+      [arr[idx-1],arr[idx]]=[arr[idx],arr[idx-1]];
+      rerender(container);
+      saveSession();
+      setTimeout(()=>{ container.children[idx-1].focus(); },0);
+    } else if(e.key==='ArrowDown' && idx<arr.length-1){
+      e.preventDefault();
+      [arr[idx+1],arr[idx]]=[arr[idx],arr[idx+1]];
+      rerender(container);
+      saveSession();
+      setTimeout(()=>{ container.children[idx+1].focus(); },0);
+    }
+  });
+}
+
+function syncOrderFromDOM(container, arr){
+  const items = [...container.children].map(li=>li.dataset.item);
+  arr.length=0;
+  items.forEach(i=>arr.push(i));
+}
+
+/* ---------- Chapter 3: Thinking Timeline ---------- */
+function renderChapter3(){
+  const isStress = state.mode==='stress';
+  const box=document.createElement('div');
+  box.className='glass fade-enter';
+  const stressSetupHTML = isStress ? `
+    <div id="ch3Setup" style="margin-bottom:14px;padding:14px;border:1px solid var(--glass-border);border-radius:12px;background:rgba(255,184,107,.06);">
+      <p class="small" style="margin:0 0 10px;"><strong>⚡ Stress Mode:</strong> Pick a time limit to reorder your timeline:</p>
+      <div class="timer-options">
+        <button class="btn secondary small-btn ch3-dur" data-dur="30">30 seconds</button>
+        <button class="btn secondary small-btn ch3-dur" data-dur="45">45 seconds</button>
+        <button class="btn secondary small-btn ch3-dur" data-dur="60">60 seconds</button>
+      </div>
+    </div>
+    <div class="timer-wrap hidden" id="ch3TimerWrap">
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="ch3TimerFill"></div></div>
+      <p class="small timer-text" id="ch3TimerText"></p>
+    </div>` : '';
+  box.innerHTML = `
+    <h2>Thinking Timeline</h2>
+    <p class="small">Reorder these steps to reflect how you naturally move through a decision — top is what you do first.</p>
+    ${stressSetupHTML}
+    <ul class="priority-list" id="timelineList"></ul>
+    <footer class="nav">
+      <button class="btn secondary" id="backBtn2">← Back</button>
+      <button class="btn" id="toCh3Done">Generate Reflection Journal →</button>
+    </footer>
+  `;
+  app.appendChild(box);
+  const list = box.querySelector('#timelineList');
+  if(!state.timelineOrder.length) state.timelineOrder = shuffle(TIMELINE_STEPS);
+  renderTimelineList(list);
+
+  let ch3Timer = null;
+  const cleanup = ()=>{ if(ch3Timer){ clearInterval(ch3Timer); ch3Timer=null; } };
+
+  if(isStress){
+    const setup = box.querySelector('#ch3Setup');
+    const timerWrap = box.querySelector('#ch3TimerWrap');
+    const fill = box.querySelector('#ch3TimerFill');
+    const text = box.querySelector('#ch3TimerText');
+    box.querySelectorAll('.ch3-dur').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(ch3Timer) return;
+        setup.classList.add('hidden');
+        timerWrap.classList.remove('hidden');
+        const duration = parseInt(btn.dataset.dur);
+        const start = Date.now();
+        function tick(){
+          const elapsed = (Date.now()-start)/1000;
+          const remaining = Math.max(0, duration - elapsed);
+          if(fill) fill.style.width = (remaining/duration)*100+'%';
+          if(text){
+            const secs = Math.ceil(remaining);
+            text.textContent = secs>0 ? `⏱ ${secs}s remaining — finalize your timeline` : `⏱ Time's up — order locked in.`;
+          }
+          if(remaining<=0){
+            cleanup();
+            list.querySelectorAll('.priority-item').forEach(li=>{ li.draggable=false; li.classList.add('locked-item'); });
+          }
+        }
+        tick();
+        ch3Timer = setInterval(tick, 200);
+      });
+    });
+  }
+
+  box.querySelector('#backBtn2').addEventListener('click', ()=>{ cleanup(); state.phase='ch2'; render(); });
+  box.querySelector('#toCh3Done').addEventListener('click', ()=>{ cleanup(); state.phase='ch3-done'; render(); });
+}
+
+function renderTimelineList(list){
+  list.innerHTML='';
+  state.timelineOrder.forEach((item,i)=>{
+    const li=document.createElement('li');
+    li.className='priority-item';
+    li.draggable=true;
+    li.dataset.item=item;
+    li.setAttribute('tabindex','0');
+    li.innerHTML=`<span><span class="rank">${i+1}</span>${item}</span><span class="handle">☰</span>`;
+    attachDragHandlers(li, list, state.timelineOrder, renderTimelineList);
+    list.appendChild(li);
+  });
+}
+
+/* ---------- Scoring / Report ---------- */
+function computeReport(){
+  const counts = {analytical:0, emotional:0, overthinker:0, action:0, balanced:0};
+  state.answers.forEach(a=> counts[a.s]!==undefined ? counts[a.s]++ : null);
+  const total = state.answers.length || 1;
+  const dist = {};
+  Object.keys(counts).forEach(k=> dist[k] = Math.round((counts[k]/total)*100));
+
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  let dominantKey = sorted[0][0];
+  let secondaryKey = sorted[1] ? sorted[1][0] : sorted[0][0];
+  const max = sorted[0][1], min = sorted[sorted.length-1][1];
+  if(total>=6 && (max-min) <= Math.ceil(total*0.15)) dominantKey='balanced';
+
+  const avgTime = state.decisionTimes.length
+    ? (state.decisionTimes.reduce((a,b)=>a+b,0)/state.decisionTimes.length) : 0;
+  const decisionSpeed = avgTime < 3 ? "Fast" : avgTime < 7 ? "Moderate" : "Deliberate";
+
+  const overthinkRatio = counts.overthinker/total;
+  const reflectionDepth = overthinkRatio>0.4 ? "Deep, sometimes recursive" : overthinkRatio>0.2 ? "Moderate" : "Light and efficient";
+
+  const uniqueStylesUsed = Object.values(counts).filter(v=>v>0).length;
+  const adaptability = uniqueStylesUsed>=4 ? "High — you flex across situations" :
+                        uniqueStylesUsed===3 ? "Moderate — a few consistent patterns" :
+                        "Focused — you lean on familiar patterns";
+
+  const strengths = {
+    analytical:"Clear, evidence-based reasoning under complexity.",
+    emotional:"Reading people and situations with empathy and nuance.",
+    overthinker:"Thoroughness — little gets overlooked.",
+    action:"Momentum — you turn thought into progress quickly.",
+    balanced:"Flexibility — adapting your approach to fit the moment."
+  };
+  const blindspots = {
+    analytical:"May delay action while waiting for 'enough' data.",
+    emotional:"May be swayed by mood in moments needing detachment.",
+    overthinker:"Risk of decision fatigue and delayed closure.",
+    action:"May skip steps that would have prevented rework.",
+    balanced:"May take slightly longer to commit than specialists in one style."
+  };
+  const habits = {
+    analytical:["Set a 'good enough' data threshold before deciding.","Timebox research phases.","Pair with an intuitive thinker for balance."],
+    emotional:["Name the feeling before acting on it.","Journal reactions before responding to conflict.","Pair intuition with one quick fact-check."],
+    overthinker:["Use a decision deadline.","Limit yourself to 3 options max.","Practice 'good enough' closure rituals."],
+    action:["Pause for one breath before big decisions.","Do a 2-minute risk scan before committing.","Revisit outcomes to extract lessons."],
+    balanced:["Notice which mode you default to under stress.","Keep a lightweight decision journal.","Protect space for both fast and slow thinking."]
+  };
+
+  // Richer profile traits
+  const riskAnswers = state.answers.filter(a=>a.cat==="Risk Taking");
+  const riskStyles = riskAnswers.map(a=>a.s);
+  let riskPref = "Moderate";
+  if(riskStyles.length){
+    if(riskStyles.some(s=>s==='action')) riskPref="Higher — comfortable committing under uncertainty";
+    else if(riskStyles.every(s=>s==='analytical'||s==='overthinker')) riskPref="Cautious — prefers calculated risk";
+  } else {
+    riskPref = counts.action > counts.overthinker ? "Higher — comfortable committing under uncertainty" : "Cautious — prefers calculated risk";
+  }
+
+  const confidence = (overthinkRatio<0.15 && (counts.analytical+counts.action)/total>0.4) ? "High"
+    : overthinkRatio>0.35 ? "Developing" : "Moderate";
+
+  const infoPref = counts.analytical >= counts.emotional ? "Evidence Before Action" : "Instinct Before Analysis";
+
+  const commAnswers = state.answers.filter(a=>a.cat==="Communication"||a.cat==="Conflict Resolution");
+  const commMap = {analytical:"Structured", emotional:"Empathetic", action:"Direct", overthinker:"Cautious", balanced:"Adaptive"};
+  let commStyle;
+  if(commAnswers.length){
+    const cCounts={}; commAnswers.forEach(a=>cCounts[a.s]=(cCounts[a.s]||0)+1);
+    const top = Object.entries(cCounts).sort((a,b)=>b[1]-a[1])[0][0];
+    commStyle = commMap[top] || "Adaptive";
+  } else {
+    commStyle = commMap[dominantKey] || "Adaptive";
+  }
+
+  const reflectionStyle = (dominantKey==='analytical'||dominantKey==='overthinker') ? "Structured"
+    : dominantKey==='action' ? "Spontaneous"
+    : dominantKey==='emotional' ? "Intuitive" : "Flexible";
+
+  return {
+    dist, counts, dominantKey, secondaryKey, decisionSpeed, reflectionDepth, adaptability,
+    strength: strengths[dominantKey], blindspot: blindspots[dominantKey],
+    habits: habits[dominantKey], avgTime, riskPref, confidence, infoPref, commStyle, reflectionStyle,
+    total
+  };
+}
+
+/* ---------- Reflection Score ---------- */
+function computeReflectionScore(report, prevSession){
+  const uniqueStylesUsed = Object.values(report.counts).filter(v=>v>0).length;
+  let score = 55;
+  score += uniqueStylesUsed * 6;              // up to +24/+30 for varied thinking
+  if(report.confidence==="High") score += 12;
+  else if(report.confidence==="Moderate") score += 6;
+  if(report.reflectionDepth==="Moderate") score += 5;
+  else if(report.reflectionDepth==="Deep, sometimes recursive") score += 3;
+  if(prevSession) score += 8;                 // completed both modes
+  score = Math.max(40, Math.min(100, Math.round(score)));
+
+  const stars = Math.max(1, Math.round(score/20));
+  const awarenessLabel = score>=90 ? "Excellent" : score>=75 ? "Strong" : score>=60 ? "Developing" : "Emerging";
+  return {score, stars, awarenessLabel};
+}
+
+/* ---------- Reflection Journey (history timeline) ---------- */
+function buildReflectionJourneyHTML(history){
+  if(!history || history.length < 2){
+    return `
+      <h3 style="margin-top:20px;">📈 Reflection Journey</h3>
+      <div class="unavailable-box">
+        <p style="margin:0;">Play at least one more session to start building your Reflection Journey — a timeline of how your dominant thinking style shifts session to session.</p>
+      </div>
+    `;
+  }
+  const nodes = history.map((h,i)=>{
+    const styleName = STYLES[h.dominantKey] ? STYLES[h.dominantKey].name : h.dominantKey;
+    const styleEmoji = STYLES[h.dominantKey] ? STYLES[h.dominantKey].emoji : '';
+    const modeLabel = h.mode==='calm' ? '🌿 Calm' : '⚡ Stress';
+    const scoreLabel = (typeof h.reflectionScore === 'number') ? ` • Score ${h.reflectionScore}/100` : '';
+    const arrow = i < history.length-1 ? `<div class="tl-arrow">↓</div>` : '';
+    return `
+      <div class="tl-node" style="text-align:center;line-height:1.5;">
+        <div class="small" style="opacity:.75;">Session ${i+1} • ${modeLabel}</div>
+        <strong>${styleEmoji} ${styleName}</strong>
+        ${scoreLabel ? `<div class="small" style="opacity:.75;">${scoreLabel.replace(' • ','')}</div>` : ''}
+      </div>${arrow}`;
+  }).join('');
+
+  return `
+    <h3 style="margin-top:20px;">📈 Reflection Journey</h3>
+    <p class="small">Your dominant thinking style across every session played so far, in order.</p>
+    <div class="tl-flow">${nodes}</div>
+  `;
+}
+
+/* ---------- Personalized observation generator (6-8) ---------- */
+function generateObservations(report){
+  const c = report.counts, total = report.total;
+  const pool = [];
+  if(c.analytical/total >= 0.3) pool.push("You usually prefer gathering enough evidence before committing to a choice.");
+  if(c.overthinker/total < 0.2) pool.push("You rarely get stuck rehashing a decision once you've made it.");
+  if(state.mode==='stress' && c.action >= c.analytical) pool.push("You become more action-oriented once time pressure enters the picture.");
+  if(state.priorityOrder[0]==="Accuracy") pool.push("You value accuracy over speed in most situations.");
+  if(state.timelineOrder.slice(-2).includes("Review")) pool.push("You naturally circle back to review outcomes after a decision is made.");
+  if(c.emotional>0 && c.analytical>0) pool.push("You balance logic with intuition, especially in unfamiliar situations.");
+  if(c.action/total >= 0.3) pool.push("You tend to move from idea to action quickly rather than waiting for certainty.");
+  if(c.emotional/total >= 0.3) pool.push("You often sense the emotional undertone of a situation before analyzing the details.");
+  if(Object.values(c).filter(v=>v>0).length>=4) pool.push("You adapt your thinking style to fit the situation rather than relying on one default approach.");
+  if(c.overthinker/total >= 0.3) pool.push("You may notice yourself replaying decisions longer than the situation strictly requires.");
+  if(state.priorityOrder.slice(0,3).includes("Creativity")||state.priorityOrder.slice(0,3).includes("Curiosity")) pool.push("You're drawn to novelty and exploration when prioritizing what matters.");
+  if(state.priorityOrder.slice(0,3).includes("Security")||state.priorityOrder.slice(0,3).includes("Stability")) pool.push("Stability and security consistently rank high in what you optimize for.");
+  if(report.decisionSpeed==="Fast") pool.push("You tend to commit to decisions quickly once you have the essentials.");
+  if(report.decisionSpeed==="Deliberate") pool.push("You give yourself real time before locking in a decision.");
+
+  // ensure 6-8 unique, fallback generic fillers if short
+  const fillers = [
+    "Your thinking pattern shifts slightly depending on context — that flexibility is itself a pattern worth noticing.",
+    "No single style dominates every scenario for you, which is common and healthy.",
+    "The way you approach small decisions often mirrors how you approach bigger ones."
+  ];
+  let result = [...new Set(pool)];
+  let i=0;
+  while(result.length<6 && i<fillers.length){ result.push(fillers[i]); i++; }
+  return result.slice(0,8);
+}
+
+/* ---------- Cross-chapter integrated reflection ---------- */
+function generateOverallReflection(report){
+  const topPriorities = state.priorityOrder.slice(0,3);
+  const firstStep = state.timelineOrder[0];
+  const lastStep = state.timelineOrder[state.timelineOrder.length-1];
+  const styleName = STYLES[report.dominantKey].name;
+
+  const evidenceLeaning = ["Accuracy","Security","Stability","Learning"].some(p=>topPriorities.includes(p));
+  const noveltyLeaning = ["Creativity","Curiosity","Challenge"].some(p=>topPriorities.includes(p));
+
+  let mid;
+  if(report.dominantKey==='analytical' && evidenceLeaning){
+    mid = "value evidence before action and rarely make impulsive decisions";
+  } else if(report.dominantKey==='action'){
+    mid = "prefer momentum, choosing forward motion over prolonged deliberation";
+  } else if(report.dominantKey==='emotional'){
+    mid = "let felt sense and human context guide choices before pure logic takes over";
+  } else if(report.dominantKey==='overthinker'){
+    mid = "give situations extended thought, sometimes circling back before settling";
+  } else {
+    mid = "flex between logic and intuition depending on what a situation calls for";
+  }
+  const noveltyClause = noveltyLeaning ? " You also gravitate toward creativity and curiosity when weighing what matters." : "";
+
+  return `Your choices consistently show a preference for ${report.dominantKey==='overthinker' ? 'thorough' : (report.dominantKey==='action' ? 'fast-moving' : 'structured')} decision-making. Across scenarios, priorities, and sequencing — starting with "${firstStep}" and ending with "${lastStep}" — you tend to ${mid}.${noveltyClause} As a ${styleName}, this pattern showed up most clearly in ${state.mode==='calm' ? 'calm, unhurried' : 'high-pressure, time-sensitive'} conditions.`;
+}
+
+/* ---------- Mode comparison insight ---------- */
+function generateComparisonInsight(prev, curr){
+  if(!prev) return null;
+  const insights = [];
+  const actionDelta = curr.dist.action - prev.dist.action;
+  const analyticalDelta = curr.dist.analytical - prev.dist.analytical;
+  const overthinkDelta = curr.dist.overthinker - prev.dist.overthinker;
+
+  if(prev.mode !== curr.mode){
+    if(curr.mode==='stress' && actionDelta > 10){
+      insights.push("Under pressure you tend to move toward quicker action instead of extended analysis.");
+    } else if(curr.mode==='calm' && analyticalDelta > 10){
+      insights.push("In calmer conditions you slow down and lean more heavily on analysis.");
+    }
+    if(curr.mode==='stress' && overthinkDelta < -10){
+      insights.push("Time pressure appears to shrink your overthinking loop rather than trigger it.");
+    } else if(curr.mode==='stress' && overthinkDelta > 10){
+      insights.push("Interestingly, pressure seems to intensify your tendency to second-guess rather than speed you up.");
+    }
+  } else {
+    insights.push(`Your pattern stayed fairly consistent between sessions in ${curr.mode==='calm'?'Calm':'Stress'} mode.`);
+  }
+  if(!insights.length){
+    insights.push("Your thinking distribution shifted only slightly between sessions — a sign of a fairly stable default style.");
+  }
+  return insights.join(" ");
+}
+
+function computeComparisonBullets(prev, curr, report){
+  const bullets = [];
+  const prevTimes = prev.decisionTimes || [];
+  const prevAvg = prevTimes.length ? prevTimes.reduce((a,b)=>a+b,0)/prevTimes.length : null;
+  const currAvg = report.avgTime;
+
+  if(prevAvg && currAvg){
+    const pct = Math.round(((prevAvg - currAvg) / prevAvg) * 100);
+    if(Math.abs(pct) >= 5){
+      bullets.push(`Decisions were <strong>${Math.abs(pct)}% ${pct>0?'faster':'slower'}</strong> than your last session`);
+    } else {
+      bullets.push("Decision speed stayed about the same as last session");
+    }
+  }
+
+  const actionDelta = curr.dist.action - prev.dist.action;
+  const analyticalDelta = curr.dist.analytical - prev.dist.analytical;
+  const emotionalDelta = curr.dist.emotional - prev.dist.emotional;
+  const overthinkDelta = curr.dist.overthinker - prev.dist.overthinker;
+
+  if(actionDelta >= 8) bullets.push("Choices were more <strong>action-oriented</strong> than before");
+  else if(actionDelta <= -8) bullets.push("Choices were less action-oriented than before");
+
+  if(emotionalDelta >= 8 || (curr.mode==='stress' && overthinkDelta<=-8)) bullets.push("Responses leaned slightly more <strong>intuitive</strong>");
+  else if(analyticalDelta >= 8) bullets.push("Responses leaned slightly more <strong>analytical</strong>");
+
+  if(overthinkDelta <= -10) bullets.push("Noticeably less second-guessing this time");
+  else if(overthinkDelta >= 10) bullets.push("A bit more second-guessing crept in this time");
+
+  if(!bullets.length) bullets.push("Your overall pattern stayed fairly stable between sessions");
+  return bullets;
+}
+
+/* ---------- Radar chart (Canvas, offline, no deps) ---------- */
+function drawRadarChart(canvasId, dist){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const size = canvas.width; // 360 css px baseline
+  canvas.style.width = size+'px';
+  canvas.style.height = size+'px';
+  canvas.width = size*dpr;
+  canvas.height = size*dpr;
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,size,size);
+
+  const keys = Object.keys(dist);
+  const n = keys.length;
+  const cx = size/2, cy = size/2, maxR = size/2 - 56;
+  const angleStep = (Math.PI*2)/n;
+  const rings = 4;
+
+  const styleReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const gridColor = 'rgba(255,255,255,0.18)';
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#b7b3d9';
+
+  // grid rings
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+  for(let r=1;r<=rings;r++){
+    const rad = (maxR*r)/rings;
+    ctx.beginPath();
+    for(let i=0;i<=n;i++){
+      const ang = -Math.PI/2 + i*angleStep;
+      const x = cx + rad*Math.cos(ang);
+      const y = cy + rad*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  // spokes + labels
+  ctx.fillStyle = textColor;
+  ctx.font = '12px system-ui, sans-serif';
+  keys.forEach((k,i)=>{
+    const ang = -Math.PI/2 + i*angleStep;
+    const x2 = cx + maxR*Math.cos(ang);
+    const y2 = cy + maxR*Math.sin(ang);
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+    const lx = cx + (maxR+26)*Math.cos(ang);
+    const ly = cy + (maxR+26)*Math.sin(ang);
+    ctx.textAlign = Math.cos(ang) > 0.3 ? 'left' : Math.cos(ang) < -0.3 ? 'right' : 'center';
+    ctx.textBaseline = Math.sin(ang) > 0.3 ? 'top' : Math.sin(ang) < -0.3 ? 'bottom' : 'middle';
+    const label = STYLES[k] ? STYLES[k].emoji : k;
+    ctx.fillText(label, lx, ly);
+  });
+
+  // data polygon
+  function drawPolygon(alpha, drawStroke){
+    ctx.beginPath();
+    keys.forEach((k,i)=>{
+      const val = Math.max(0, Math.min(100, dist[k]||0))/100;
+      const rad = maxR*val;
+      const ang = -Math.PI/2 + i*angleStep;
+      const x = cx + rad*Math.cos(ang);
+      const y = cy + rad*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = `rgba(139,124,246,${alpha})`;
+    ctx.fill();
+    if(drawStroke){
+      ctx.strokeStyle = '#5ee7df';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+  drawPolygon(0.35, true);
+
+  // dots on vertices
+  keys.forEach((k,i)=>{
+    const val = Math.max(0, Math.min(100, dist[k]||0))/100;
+    const rad = maxR*val;
+    const ang = -Math.PI/2 + i*angleStep;
+    const x = cx + rad*Math.cos(ang);
+    const y = cy + rad*Math.sin(ang);
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle = '#5ee7df';
+    ctx.fill();
+  });
+}
+
+/* ---------- Export helpers ---------- */
+function buildJournalText(report, overallReflection, observations, badge, analytics, comparison, prevSession, reflectionScore){
+  const lines = [];
+  lines.push("COGNITIVE PATTERN EXPLORER — YOUR COGNITIVE REFLECTION JOURNAL");
+  lines.push("Generated: " + new Date().toLocaleString());
+  lines.push("Mode: " + (state.mode==='calm'?'Calm':'Stress'));
+  lines.push("");
+  lines.push("EXPLORER RANK: " + badge.emoji + " " + badge.label);
+  lines.push("");
+  if(reflectionScore){
+    lines.push("REFLECTION SCORE: " + reflectionScore.score + "/100 (" + '★'.repeat(reflectionScore.stars) + '☆'.repeat(5-reflectionScore.stars) + ")");
+    lines.push("  Decision Awareness: " + reflectionScore.awarenessLabel);
+    lines.push("");
+  }
+  lines.push("THINKING STYLE DISTRIBUTION");
+  Object.entries(report.dist).forEach(([k,v])=> lines.push(`  ${STYLES[k].name}: ${v}%`));
+  lines.push("");
+  lines.push("THINKING PROFILE");
+  lines.push("  Primary Style: " + STYLES[report.dominantKey].name);
+  lines.push("  Secondary Style: " + STYLES[report.secondaryKey].name);
+  lines.push("  Decision Speed: " + report.decisionSpeed);
+  lines.push("  Confidence: " + report.confidence);
+  lines.push("  Risk Preference: " + report.riskPref);
+  lines.push("  Information Preference: " + report.infoPref);
+  lines.push("  Communication Style: " + report.commStyle);
+  lines.push("  Reflection Style: " + report.reflectionStyle);
+  lines.push("");
+  lines.push("CHAPTER SUMMARY");
+  lines.push("  Chapter 1 — Decision Style: " + STYLES[report.dominantKey].name);
+  lines.push("  Chapter 2 — Top Priorities: " + state.priorityOrder.slice(0,3).join(", "));
+  lines.push("  Chapter 3 — Decision Sequence: " + state.timelineOrder.join(" -> "));
+  lines.push("");
+  lines.push("OVERALL REFLECTION");
+  lines.push("  " + overallReflection);
+  lines.push("");
+  lines.push("PERSONALIZED OBSERVATIONS");
+  observations.forEach(o=> lines.push("  - " + o));
+  lines.push("");
+  lines.push("STRENGTH: " + report.strength);
+  lines.push("BLIND SPOT: " + report.blindspot);
+  lines.push("");
+  lines.push("PRACTICAL HABITS");
+  report.habits.forEach(h=> lines.push("  - " + h));
+  lines.push("");
+  lines.push("CALM VS STRESS COMPARISON");
+  lines.push("  People often notice that under stress they rely more on intuition or fast action, while");
+  lines.push("  calm situations allow for deeper reflection. Replay in the opposite mode to compare your own patterns.");
+  if(comparison){
+    lines.push(`  Previous Session (${prevSession.mode==='calm'?'Calm':'Stress'}):`);
+    Object.entries(prevSession.dist).forEach(([k,v])=> lines.push(`    ${STYLES[k].name}: ${v}%`));
+    lines.push(`  Current Session (${state.mode==='calm'?'Calm':'Stress'}):`);
+    Object.entries(report.dist).forEach(([k,v])=> lines.push(`    ${STYLES[k].name}: ${v}%`));
+    lines.push("  Key Observation: " + comparison);
+  } else {
+    lines.push(`  This is your first recorded session (${state.mode==='calm'?'Calm':'Stress'} mode). Replay in the opposite mode next time to unlock a comparison.`);
+  }
+  lines.push("");
+  lines.push("REPLAY ANALYTICS");
+  lines.push("  Games Played: " + analytics.gamesPlayed);
+  lines.push("  Average Decision Time: " + analytics.avgTime + "s");
+  lines.push("  Fastest Decision: " + analytics.fastest + "s");
+  lines.push("  Most Common Thinking Style: " + analytics.mostCommonStyle);
+  lines.push("  Mode Played Most: " + analytics.modeMost);
+  lines.push("");
+  lines.push("EDUCATIONAL NOTICE");
+  lines.push("  This experience is designed for self-reflection and learning only. It is not a");
+  lines.push("  psychological assessment or diagnostic tool. Thinking patterns naturally vary");
+  lines.push("  across situations, environments, and life experiences.");
+  return lines.join("\n");
+}
+
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- Analytics across history ---------- */
+function computeAnalytics(history){
+  if(!history.length){
+    return {gamesPlayed:0, avgTime:"0.0", fastest:"0.0", mostCommonStyle:"—", modeMost:"—"};
+  }
+  const gamesPlayed = history.length;
+  let allTimes = [];
+  history.forEach(h=>{ if(h.decisionTimes) allTimes = allTimes.concat(h.decisionTimes); });
+  const avgTime = allTimes.length ? (allTimes.reduce((a,b)=>a+b,0)/allTimes.length).toFixed(1) : "0.0";
+  const fastest = allTimes.length ? Math.min(...allTimes).toFixed(1) : "0.0";
+
+  const styleCounts = {};
+  history.forEach(h=> styleCounts[h.dominantKey]=(styleCounts[h.dominantKey]||0)+1);
+  const mostCommonKey = Object.entries(styleCounts).sort((a,b)=>b[1]-a[1])[0][0];
+  const mostCommonStyle = STYLES[mostCommonKey] ? STYLES[mostCommonKey].name : mostCommonKey;
+
+  const modeCounts = {};
+  history.forEach(h=> modeCounts[h.mode]=(modeCounts[h.mode]||0)+1);
+  const modeMostKey = Object.entries(modeCounts).sort((a,b)=>b[1]-a[1])[0][0];
+  const modeMost = modeMostKey==='calm' ? '🌿 Calm' : '⚡ Stress';
+
+  return {gamesPlayed, avgTime, fastest, mostCommonStyle, modeMost};
+}
+
+/* ---------- Start the opposite mode (keeps XP/achievements, resets session) ---------- */
+function startOppositeMode(){
+  const keepXp = state.xp;
+  const keepAchievements = state.achievements;
+  const newMode = state.mode==='calm' ? 'stress' : 'calm';
+  clearSession();
+  state = defaultState();
+  state.xp = keepXp;
+  state.achievements = keepAchievements;
+  state.mode = newMode;
+  state.scenarioOrder = shuffle(SCENARIOS).slice(0, TOTAL_SCENARIOS);
+  state.scenarioIndex = 0;
+  state.phase = 'ch1';
+  render();
+}
+
+/* ---------- Chapter 4: Reflection Journal ---------- */
+function renderJournal(){
+  const history = loadHistory();
+  // Comparison only unlocks once the OPPOSITE mode has been completed —
+  // not just any previous session.
+  const prevSession = [...history].reverse().find(h => h.mode && h.mode !== state.mode) || null;
+  const report = computeReport();
+  const reflectionScore = computeReflectionScore(report, prevSession);
+
+  if(!state.journalSaved){
+    pushHistory({
+      mode: state.mode,
+      dist: report.dist,
+      dominantKey: report.dominantKey,
+      decisionTimes: state.decisionTimes,
+      reflectionScore: reflectionScore.score,
+      timestamp: Date.now()
+    });
+    state.journalSaved = true;
+    saveSession();
+  }
+
+  const updatedHistory = loadHistory();
+  const analytics = computeAnalytics(updatedHistory);
+  const observations = generateObservations(report);
+  const badge = RANKS[report.dominantKey];
+  const overallReflection = generateOverallReflection(report);
+  const comparisonInsight = prevSession ? generateComparisonInsight(prevSession, {mode:state.mode, dist:report.dist}) : null;
+  const comparisonBullets = prevSession ? computeComparisonBullets(prevSession, {mode:state.mode, dist:report.dist}, report) : null;
+
+  const journeyHTML = buildReflectionJourneyHTML(updatedHistory);
+
+  const box=document.createElement('div');
+  box.className='glass fade-enter';
+
+  const distBars = Object.entries(report.dist).map(([k,v])=>`
+    <div class="stat-row">
+      <span>${STYLES[k].emoji} ${STYLES[k].name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${v}%;background:linear-gradient(90deg, ${STYLES[k].color}, var(--accent2))"></div></div>
+      <span>${v}%</span>
+    </div>`).join('');
+
+  const achievementsHTML = state.achievements.map(id=>`<span class="achievement">${ACHIEVEMENT_LABELS[id]||id}</span>`).join('')
+    || '<span class="small">No achievements yet — replay to earn more!</span>';
+
+  const timelineFlow = state.timelineOrder.map((step,i)=>{
+    const arrow = i < state.timelineOrder.length-1 ? `<div class="tl-arrow">↓</div>` : '';
+    return `<div class="tl-node">${step}</div>${arrow}`;
+  }).join('');
+
+  const calmStressEducation = `
+    <p class="small">People often notice that under stress they rely more on intuition or fast action, while calm situations allow for deeper reflection. Replay in the opposite mode to compare your own patterns.</p>
+  `;
+
+  const comparisonHTML = prevSession ? `
+    <h3 style="margin-top:20px;">🌿⚡ Calm vs Stress Comparison</h3>
+    ${calmStressEducation}
+    <div class="compare-grid">
+      <div class="compare-col">
+        <strong>Last Session</strong><br>
+        <span class="small">${prevSession.mode==='calm'?'🌿 Calm Mode':'⚡ Stress Mode'}</span>
+        ${Object.entries(prevSession.dist).map(([k,v])=>`<div class="stat-row"><span>${STYLES[k].name}</span><span>${v}%</span></div>`).join('')}
+      </div>
+      <div class="compare-col">
+        <strong>Current Session</strong><br>
+        <span class="small">${state.mode==='calm'?'🌿 Calm Mode':'⚡ Stress Mode'}</span>
+        ${Object.entries(report.dist).map(([k,v])=>`<div class="stat-row"><span>${STYLES[k].name}</span><span>${v}%</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="why-box" style="margin-top:12px;">
+      <strong>🔎 Interesting Observation</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;">
+        ${comparisonBullets.map(b=>`<li class="small">${b}</li>`).join('')}
+      </ul>
+      <p class="small" style="margin:10px 0 0;">${comparisonInsight}</p>
+    </div>
+  ` : `
+    <h3 style="margin-top:20px;">🌿⚡ Calm vs Stress Comparison</h3>
+    ${calmStressEducation}
+    <div class="unavailable-box">
+      <p style="margin:0 0 10px;"><strong>Comparison unavailable.</strong><br>Complete the opposite mode to unlock your Thinking Pattern Comparison.</p>
+      <button class="btn secondary small-btn" id="ctaOppositeInline">🔁 Do ${state.mode==='calm'?'⚡ Stress':'🌿 Calm'} Mode</button>
+    </div>
+  `;
+
+  const ctaBoxHTML = prevSession ? `
+    <div class="cta-box">
+      <h3 style="margin-top:0;">🎉 Comparison Unlocked!</h3>
+      <p class="small">You've completed both modes — your Thinking Pattern Comparison is ready below, or download your full report now.</p>
+      <div class="cta-row">
+        <button class="btn" id="ctaDownload">⬇️ Download Report</button>
+      </div>
+    </div>
+  ` : `
+    <div class="cta-box">
+      <h3 style="margin-top:0;">What's next?</h3>
+      <p class="small">You've completed ${state.mode==='calm'?'🌿 Calm':'⚡ Stress'} Mode. Download your report now, or complete ${state.mode==='calm'?'⚡ Stress':'🌿 Calm'} Mode to unlock a side-by-side Thinking Pattern Comparison.</p>
+      <div class="cta-row">
+        <button class="btn" id="ctaDownload">⬇️ Download Report</button>
+        <button class="btn secondary" id="ctaOpposite">🔁 Do ${state.mode==='calm'?'⚡ Stress':'🌿 Calm'} Mode</button>
+      </div>
+    </div>
+  `;
+
+  box.innerHTML = `
+    <h2>📓 Your Cognitive Reflection Journal</h2>
+    <p class="small">Mode: ${state.mode==='calm' ? '🌿 Calm' : '⚡ Stress'} • Scenarios explored: ${state.answers.length}</p>
+
+    <div class="badge-rank">${badge.emoji} Explorer Rank: ${badge.label}</div>
+
+    <h3 style="margin-top:20px;">🎯 Reflection Score</h3>
+    <div class="score-card">
+      <div>
+        <div class="score-num">${reflectionScore.score}<span style="font-size:1.1rem;color:var(--muted);font-weight:600;">/100</span></div>
+        <div class="score-stars">${'★'.repeat(reflectionScore.stars)}${'☆'.repeat(5-reflectionScore.stars)}</div>
+      </div>
+      <div class="score-meta">
+        <span class="small">Decision Awareness</span>
+        <strong>${reflectionScore.awarenessLabel}</strong>
+        <p class="small" style="margin:6px 0 0;max-width:420px;">Reflects the variety of thinking styles you drew on, how consistent your responses were, and how much of your own pattern you've explored so far.</p>
+      </div>
+    </div>
+
+    ${ctaBoxHTML}
+
+    <h3>Thinking Style Distribution</h3>
+    ${distBars}
+
+    <h3 style="margin-top:20px;">🕸️ Thinking Profile Radar</h3>
+    <div class="radar-wrap"><canvas id="radarChart" width="360" height="360" role="img" aria-label="Radar chart of thinking style distribution"></canvas></div>
+
+    <h3 style="margin-top:20px;">🧬 Thinking Profile</h3>
+    <table class="profile-table">
+      <tr><td>Primary Style</td><td>${STYLES[report.dominantKey].emoji} ${STYLES[report.dominantKey].name}</td></tr>
+      <tr><td>Secondary Style</td><td>${STYLES[report.secondaryKey].emoji} ${STYLES[report.secondaryKey].name}</td></tr>
+      <tr><td>Decision Speed</td><td>${report.decisionSpeed}</td></tr>
+      <tr><td>Confidence</td><td>${report.confidence}</td></tr>
+      <tr><td>Risk Preference</td><td>${report.riskPref}</td></tr>
+      <tr><td>Information Preference</td><td>${report.infoPref}</td></tr>
+      <tr><td>Communication Style</td><td>${report.commStyle}</td></tr>
+      <tr><td>Reflection Style</td><td>${report.reflectionStyle}</td></tr>
+    </table>
+
+    <h3 style="margin-top:20px;">🧩 Cross-Chapter Summary</h3>
+    <table class="profile-table">
+      <tr><td>Chapter 1 — Decision Style</td><td>${STYLES[report.dominantKey].name}</td></tr>
+      <tr><td>Chapter 2 — Top Priorities</td><td>${state.priorityOrder.slice(0,3).join(", ")}</td></tr>
+      <tr><td>Chapter 3 — Decision Sequence</td><td>${state.timelineOrder.slice(0,4).join(" → ")}</td></tr>
+    </table>
+    <div class="why-box" style="margin-top:10px;"><strong>Overall Reflection:</strong> ${overallReflection}</div>
+
+    <h3 style="margin-top:20px;">🔀 Your Thinking Timeline</h3>
+    <div class="tl-flow">${timelineFlow}</div>
+
+    ${journeyHTML}
+
+    ${comparisonHTML}
+
+    <h3 style="margin-top:20px;">📌 Personalized Observations</h3>
+    <ul>${observations.map(o=>`<li class="small">${o}</li>`).join('')}</ul>
+
+    <div class="grid2" style="margin-top:10px;">
+      <div><h3>💪 Biggest Strength</h3><p class="small">${report.strength}</p></div>
+      <div><h3>🕳️ Blind Spot to Watch</h3><p class="small">${report.blindspot}</p></div>
+    </div>
+
+    <h3 style="margin-top:20px;">Three Practical Habits</h3>
+    <ul>${report.habits.map(h=>`<li class="small">${h}</li>`).join('')}</ul>
+
+    <h3 style="margin-top:20px;">📊 Replay Analytics</h3>
+    <table class="profile-table">
+      <tr><td>Games Played</td><td>${analytics.gamesPlayed}</td></tr>
+      <tr><td>Average Decision Time</td><td>${analytics.avgTime}s</td></tr>
+      <tr><td>Fastest Decision</td><td>${analytics.fastest}s</td></tr>
+      <tr><td>Most Common Thinking Style</td><td>${analytics.mostCommonStyle}</td></tr>
+      <tr><td>Mode Played Most</td><td>${analytics.modeMost}</td></tr>
+    </table>
+
+    <h3 style="margin-top:20px;">Replay Recommendation</h3>
+    <p class="small">Try the ${state.mode==='calm'?'⚡ Stress':'🌿 Calm'} mode next time — the same scenarios often surface a different side of your thinking.</p>
+
+    <h3 style="margin-top:20px;">🏆 Achievements</h3>
+    <div>${achievementsHTML}</div>
+    <p class="small" style="margin-top:8px;">Total XP: ${state.xp}</p>
+
+    <h3 style="margin-top:20px;">Export This Journal</h3>
+    <div class="export-row">
+      <button class="btn secondary small-btn" id="exportTxt">⬇️ Download .txt</button>
+      <button class="btn secondary small-btn" id="exportJson">⬇️ Download .json</button>
+      <button class="btn secondary small-btn" id="printBtn">🖨️ Print Report</button>
+    </div>
+
+    <div class="disclaimer-box" style="margin-top:20px;">
+      <strong>📘 Educational Notice</strong><br>
+      This experience is designed for self-reflection and learning only. It is not a psychological assessment or diagnostic tool. Thinking patterns naturally vary across situations, environments, and life experiences.
+    </div>
+
+    <footer class="nav">
+      <button class="btn secondary" id="restartBtn">🔄 Replay with New Scenarios</button>
+      <button class="btn" id="backCh3">← Review Timeline</button>
+    </footer>
+  `;
+  app.appendChild(box);
+  drawRadarChart('radarChart', report.dist);
+
+  function downloadTxtReport(){
+    const txt = buildJournalText(report, overallReflection, observations, badge, analytics, comparisonInsight, prevSession, reflectionScore);
+    downloadFile('cognitive-pattern-journal.txt', txt, 'text/plain');
+  }
+
+  const ctaDownloadBtn = box.querySelector('#ctaDownload');
+  if(ctaDownloadBtn) ctaDownloadBtn.addEventListener('click', downloadTxtReport);
+  const ctaOppositeBtn = box.querySelector('#ctaOpposite');
+  if(ctaOppositeBtn) ctaOppositeBtn.addEventListener('click', ()=>{ soundClick(); startOppositeMode(); });
+  const ctaOppositeInlineBtn = box.querySelector('#ctaOppositeInline');
+  if(ctaOppositeInlineBtn) ctaOppositeInlineBtn.addEventListener('click', ()=>{ soundClick(); startOppositeMode(); });
+
+  box.querySelector('#exportTxt').addEventListener('click', downloadTxtReport);
+  box.querySelector('#exportJson').addEventListener('click', ()=>{
+    const jsonData = {
+      generatedAt: new Date().toISOString(),
+      mode: state.mode,
+      distribution: report.dist,
+      profile: {
+        primaryStyle: STYLES[report.dominantKey].name,
+        secondaryStyle: STYLES[report.secondaryKey].name,
+        decisionSpeed: report.decisionSpeed,
+        confidence: report.confidence,
+        riskPreference: report.riskPref,
+        informationPreference: report.infoPref,
+        communicationStyle: report.commStyle,
+        reflectionStyle: report.reflectionStyle
+      },
+      chapters: {
+        chapter1DecisionStyle: STYLES[report.dominantKey].name,
+        chapter2TopPriorities: state.priorityOrder.slice(0,3),
+        chapter3DecisionSequence: state.timelineOrder
+      },
+      overallReflection,
+      observations,
+      strength: report.strength,
+      blindspot: report.blindspot,
+      habits: report.habits,
+      comparison: prevSession ? {previous: prevSession, current: {mode:state.mode, dist:report.dist}, insight: comparisonInsight} : null,
+      analytics,
+      badge,
+      xp: state.xp,
+      reflectionScore
+    };
+    downloadFile('cognitive-pattern-journal.json', JSON.stringify(jsonData,null,2), 'application/json');
+  });
+  box.querySelector('#printBtn').addEventListener('click', ()=> window.print());
+
+  box.querySelector('#restartBtn').addEventListener('click', ()=>{
+    const keepXp = state.xp;
+    clearSession();
+    state = defaultState();
+    state.xp = keepXp;
+    render();
+  });
+  box.querySelector('#backCh3').addEventListener('click', ()=>{ state.phase='ch3'; render(); });
+}
+
+/* ---------- Init ---------- */
+initParticles();
+// If a session was mid-progress on load, phase is preserved by loadSession; just render.
+if(!PHASES.includes(state.phase)) state.phase='mode';
+render();
+</script>
+</body>
+</html>
