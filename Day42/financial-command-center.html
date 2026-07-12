@@ -1,0 +1,2633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — Lifetime Financial Command Center</title>
+<style>
+/* ============================================================
+   MERIDIAN — DESIGN TOKENS
+   Signature: The "Wealth Spine" — a horizontal age/net-worth
+   ribbon that runs through the Overview as the hero element.
+   ============================================================ */
+:root{
+  --bg-0:#0B1220;
+  --bg-1:#0F172A;
+  --bg-2:#111827;
+  --panel: rgba(255,255,255,0.035);
+  --panel-solid:#151E30;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --text-0:#F1F5F9;
+  --text-1:#B9C2D0;
+  --text-2:#7C8AA0;
+  --teal:#12B8AA;
+  --teal-dim: rgba(18,184,170,0.15);
+  --gold:#D4AF37;
+  --gold-dim: rgba(212,175,55,0.15);
+  --rose:#E1667C;
+  --rose-dim: rgba(225,102,124,0.15);
+  --amber:#E0A339;
+  --amber-dim: rgba(224,163,57,0.15);
+  --violet:#8B7FD6;
+  --violet-dim: rgba(139,127,214,0.15);
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 20px;
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.35);
+  --shadow-lift: 0 20px 50px rgba(0,0,0,0.5);
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+html[data-theme="light"]{
+  --bg-0:#F6F4EE;
+  --bg-1:#EFEBE1;
+  --bg-2:#FFFFFF;
+  --panel: rgba(20,20,20,0.03);
+  --panel-solid:#FFFFFF;
+  --border: rgba(20,20,20,0.09);
+  --border-strong: rgba(20,20,20,0.16);
+  --text-0:#1B1F27;
+  --text-1:#4B5468;
+  --text-2:#828EA3;
+  --shadow-soft: 0 10px 24px rgba(30,30,20,0.08);
+  --shadow-lift: 0 20px 44px rgba(30,30,20,0.14);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family: var(--font-body);
+  background: var(--bg-0);
+  color: var(--text-0);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition: background .4s var(--ease), color .4s var(--ease);
+  position:relative;
+}
+/* Executive background: layered radial gradients + blueprint grid + vignette */
+.bg-layer{
+  position:fixed; inset:0; z-index:-3; pointer-events:none;
+  background:
+    radial-gradient(1100px 700px at 12% -8%, rgba(18,184,170,0.10), transparent 60%),
+    radial-gradient(900px 600px at 100% 10%, rgba(212,175,55,0.07), transparent 55%),
+    radial-gradient(1200px 800px at 50% 120%, rgba(139,127,214,0.08), transparent 60%),
+    var(--bg-0);
+  transition: background .4s var(--ease);
+}
+html[data-theme="light"] .bg-layer{
+  background:
+    radial-gradient(1100px 700px at 12% -8%, rgba(18,184,170,0.07), transparent 60%),
+    radial-gradient(900px 600px at 100% 10%, rgba(212,175,55,0.10), transparent 55%),
+    radial-gradient(1200px 800px at 50% 120%, rgba(139,127,214,0.05), transparent 60%),
+    var(--bg-0);
+}
+.bg-grid{
+  position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.35;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 20%, black 40%, transparent 90%);
+}
+.bg-vignette{
+  position:fixed; inset:0; z-index:-1; pointer-events:none;
+  box-shadow: inset 0 0 220px rgba(0,0,0,0.55);
+}
+html[data-theme="light"] .bg-vignette{ box-shadow: inset 0 0 180px rgba(30,25,10,0.10); }
+
+::selection{ background: var(--teal); color:#04120F; }
+a{color:inherit;}
+button{font-family:inherit;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:8px;}
+
+/* ================= APP SHELL ================= */
+.app{ display:flex; min-height:100vh; }
+
+/* ---------------- SIDEBAR ---------------- */
+.sidebar{
+  width:252px; flex-shrink:0; position:sticky; top:0; height:100vh;
+  background: linear-gradient(180deg, var(--panel-solid), var(--bg-1));
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  transition: width .3s var(--ease);
+  z-index:40;
+}
+.sidebar.collapsed{ width:76px; }
+.sb-brand{
+  display:flex; align-items:center; gap:10px; padding:22px 20px; border-bottom:1px solid var(--border);
+}
+.sb-mark{
+  width:34px; height:34px; border-radius:9px; flex-shrink:0;
+  background: conic-gradient(from 220deg, var(--teal), var(--gold), var(--violet), var(--teal));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: var(--shadow-soft);
+}
+.sb-mark svg{width:18px; height:18px;}
+.sb-brand-text{ overflow:hidden; white-space:nowrap; }
+.sb-brand-text b{ font-family:var(--font-display); font-size:16.5px; letter-spacing:.2px; }
+.sb-brand-text span{ display:block; font-size:10.5px; color:var(--text-2); letter-spacing:1.5px; text-transform:uppercase; margin-top:1px;}
+.sidebar.collapsed .sb-brand-text{ display:none; }
+
+.sb-nav{ flex:1; padding:14px 12px; overflow-y:auto; }
+.sb-section-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:1.4px; color:var(--text-2); padding:14px 12px 8px; }
+.sidebar.collapsed .sb-section-label{ display:none; }
+.sb-item{
+  display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; cursor:pointer;
+  color:var(--text-1); font-size:13.5px; font-weight:500; white-space:nowrap; overflow:hidden;
+  transition: background .2s var(--ease), color .2s var(--ease); position:relative; margin-bottom:2px;
+}
+.sb-item svg{ width:17px; height:17px; flex-shrink:0; opacity:.85; }
+.sb-item:hover{ background: var(--panel); color:var(--text-0); }
+.sb-item.active{ background: var(--teal-dim); color: var(--teal); }
+.sb-item.active svg{ opacity:1; }
+.sb-item .badge{ margin-left:auto; font-size:9.5px; background:var(--gold-dim); color:var(--gold); padding:2px 6px; border-radius:20px; font-weight:700; }
+.sidebar.collapsed .sb-item span.label, .sidebar.collapsed .sb-item .badge{ display:none; }
+
+.sb-footer{ height:82px; box-sizing:border-box; padding:0 14px; border-top:1px solid var(--border); display:flex; align-items:center; flex-shrink:0; }
+.sb-collapse-btn{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:9px; border-radius:9px; background:var(--panel); border:1px solid var(--border);
+  color:var(--text-2); font-size:12px; cursor:pointer; transition:.2s;
+}
+.sb-collapse-btn:hover{ color:var(--text-0); border-color:var(--border-strong); }
+
+/* ---------------- MAIN ---------------- */
+.main{ flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* HEADER */
+.topbar{
+  position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:16px;
+  padding:14px 28px; border-bottom:1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-1) 78%, transparent);
+  backdrop-filter: blur(14px);
+}
+.topbar h1{ font-family:var(--font-display); font-size:19px; font-weight:600; letter-spacing:.2px; }
+.topbar .sub{ font-size:11.5px; color:var(--text-2); margin-top:1px; }
+.tb-search{
+  margin-left:auto; display:flex; align-items:center; gap:8px; background:var(--panel);
+  border:1px solid var(--border); padding:8px 12px; border-radius:10px; width:260px; color:var(--text-2);
+  transition:.2s;
+}
+.tb-search:focus-within{ border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); }
+.tb-search input{ background:none; border:none; outline:none; color:var(--text-0); font-size:12.5px; width:100%; }
+.tb-search svg{ width:14px; height:14px; flex-shrink:0; }
+.tb-kbd{ font-size:10px; border:1px solid var(--border-strong); padding:1px 5px; border-radius:5px; color:var(--text-2); }
+.tb-btn{
+  display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; background:var(--panel);
+  border:1px solid var(--border); cursor:pointer; color:var(--text-1); transition:.2s; font-size:12.5px;
+}
+.tb-btn:hover{ color:var(--text-0); border-color:var(--border-strong); transform:translateY(-1px); }
+.tb-btn svg{ width:15px; height:15px; }
+.tb-avatar{
+  width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--teal),var(--violet));
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#04120F;
+}
+
+.content{ flex:1; min-height:0; overflow-y:auto; padding:26px 28px 40px; max-width:1440px; width:100%; margin:0 auto; }
+.view{ display:none; animation: fadeUp .5s var(--ease); }
+.view.active{ display:block; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+.view-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
+.view-head h2{ font-family:var(--font-display); font-size:26px; font-weight:600; }
+.view-head p{ color:var(--text-2); font-size:13px; margin-top:4px; max-width:560px; }
+.view-actions{ display:flex; gap:10px; }
+
+/* ============= CARD PRIMITIVES ============= */
+.card{
+  background: linear-gradient(160deg, var(--panel), transparent), var(--panel-solid);
+  border:1px solid var(--border); border-radius: var(--radius-l);
+  box-shadow: var(--shadow-soft);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+.card:hover{ border-color:var(--border-strong); }
+.glass{ backdrop-filter: blur(10px); }
+
+/* ============= KPI GRID ============= */
+.kpi-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:22px;}
+@media(max-width:1300px){ .kpi-grid{ grid-template-columns:repeat(3,1fr);} }
+@media(max-width:760px){ .kpi-grid{ grid-template-columns:repeat(2,1fr);} }
+.kpi{
+  padding:18px; position:relative; overflow:hidden; cursor:default;
+}
+.kpi:hover{ transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.kpi .kpi-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.kpi-icon{
+  width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+}
+.kpi-icon svg{ width:17px; height:17px; }
+.kpi .trend{ font-size:11px; font-weight:700; display:flex; align-items:center; gap:3px; padding:3px 7px; border-radius:20px; }
+.trend.up{ color:#3FD08A; background:rgba(63,208,138,0.12); }
+.trend.down{ color:var(--rose); background:var(--rose-dim); }
+.trend.flat{ color:var(--text-2); background:var(--panel); }
+.kpi-label{ font-size:11.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px;}
+.kpi-value{ font-family:var(--font-mono); font-size:23px; font-weight:700; letter-spacing:-.3px;}
+.kpi-sub{ font-size:11px; color:var(--text-2); margin-top:6px; }
+.kpi::after{
+  content:''; position:absolute; right:-30px; bottom:-30px; width:110px; height:110px; border-radius:50%;
+  background: radial-gradient(circle, var(--glow-color,var(--teal)) 0%, transparent 70%); opacity:.14; pointer-events:none;
+}
+
+/* tooltip */
+[data-tip]{ position:relative; }
+[data-tip]::before{
+  content: attr(data-tip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(4px);
+  background:#05070C; color:#fff; font-size:11px; padding:7px 10px; border-radius:8px; width:max-content; max-width:220px;
+  opacity:0; pointer-events:none; transition:.2s; box-shadow:var(--shadow-lift); z-index:60; line-height:1.4; border:1px solid rgba(255,255,255,.1);
+}
+[data-tip]:hover::before{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============= LAYOUT GRIDS ============= */
+.grid-2{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+@media(max-width:1000px){ .grid-2,.grid-3,.grid-4{ grid-template-columns:1fr; } }
+.section-gap{ margin-bottom:16px; }
+
+.card-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px 0; }
+.card-head h3{ font-size:14.5px; font-weight:700; letter-spacing:.2px; }
+.card-head .muted{ font-size:11px; color:var(--text-2); }
+.card-body{ padding:16px 20px 20px; }
+.pill-toggle{ display:flex; background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:3px; gap:2px;}
+.pill-toggle button{ border:none; background:none; color:var(--text-2); font-size:11px; padding:5px 11px; border-radius:16px; cursor:pointer; transition:.2s;}
+.pill-toggle button.active{ background:var(--teal); color:#04120F; font-weight:700;}
+
+/* ============= HERO WEALTH SPINE ============= */
+.hero-spine{ padding:22px 24px 10px; margin-bottom:20px; position:relative; overflow:hidden;}
+.hero-spine .hs-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; flex-wrap:wrap; gap:10px;}
+.hero-spine h2{ font-family:var(--font-display); font-size:21px; }
+.hero-spine p{ color:var(--text-2); font-size:12.5px; max-width:480px; margin-top:4px;}
+.hs-stats{ display:flex; gap:26px; flex-wrap:wrap; }
+.hs-stat b{ display:block; font-family:var(--font-mono); font-size:19px; }
+.hs-stat span{ font-size:10.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:.8px;}
+.spine-canvas-wrap{ position:relative; margin-top:6px; }
+#spineCanvas{ width:100%; display:block; height:220px; }
+.spine-legend{ display:flex; gap:18px; padding:0 4px 14px; flex-wrap:wrap; }
+.leg-item{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-2); }
+.leg-dot{ width:9px; height:9px; border-radius:3px; }
+
+/* ============= HEALTH SCORE ============= */
+.health-card{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:22px 20px; }
+.gauge-wrap{ position:relative; width:190px; height:120px; }
+.gauge-value{ position:absolute; bottom:6px; left:0; right:0; text-align:center; }
+.gauge-value b{ font-family:var(--font-mono); font-size:34px; }
+.gauge-value span{ display:block; font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:1px; }
+.health-cat{ font-size:13px; font-weight:700; padding:4px 14px; border-radius:20px; margin-top:8px; }
+.health-plan{ text-align:left; margin-top:16px; width:100%; }
+.health-plan li{ list-style:none; font-size:12px; color:var(--text-1); padding:8px 0; border-top:1px solid var(--border); display:flex; gap:8px; }
+.health-plan li b{ color:var(--text-0); }
+
+/* ============= CHART CARDS ============= */
+.chart-card canvas{ width:100%; display:block; }
+.donut-wrap{ display:flex; align-items:center; gap:20px; }
+.donut-legend{ flex:1; display:flex; flex-direction:column; gap:9px; }
+.dl-row{ display:flex; align-items:center; gap:8px; font-size:12px; }
+.dl-row .dot{ width:9px; height:9px; border-radius:3px; flex-shrink:0;}
+.dl-row .name{ flex:1; color:var(--text-1); }
+.dl-row .val{ font-family:var(--font-mono); font-weight:700; font-size:11.5px;}
+
+/* progress ring small */
+.mini-ring{ position:relative; width:56px; height:56px; flex-shrink:0;}
+.mini-ring span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; font-family:var(--font-mono);}
+
+/* budget bars */
+.budget-row{ display:flex; align-items:center; gap:12px; padding:10px 0; }
+.budget-row .bi{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.budget-row .bi svg{ width:16px; height:16px;}
+.budget-info{ flex:1; min-width:0; }
+.budget-info .top{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;}
+.budget-info .top .cat{ color:var(--text-0); font-weight:600;}
+.budget-info .top .amt{ font-family:var(--font-mono); color:var(--text-2); font-size:11px;}
+.bar-track{ height:7px; border-radius:6px; background:var(--panel); overflow:hidden; border:1px solid var(--border);}
+.bar-fill{ height:100%; border-radius:6px; transition:width 1s var(--ease); }
+
+/* ============= MODULES ============= */
+.module-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+@media(max-width:1000px){ .module-grid{ grid-template-columns:1fr; } }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+@media(max-width:560px){ .field-row{ grid-template-columns:1fr; } }
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.6px; display:flex; justify-content:space-between;}
+.field label b{ color:var(--gold); font-family:var(--font-mono); font-weight:700; text-transform:none; letter-spacing:0;}
+.field input[type=number], .field input[type=text], .field select{
+  background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:9px 11px; color:var(--text-0);
+  font-size:13px; font-family:var(--font-mono); outline:none; transition:.2s;
+}
+.field input:focus, .field select:focus{ border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); }
+.field input[type=range]{ -webkit-appearance:none; width:100%; height:5px; border-radius:6px; background:var(--panel); border:1px solid var(--border); }
+.field input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--teal); cursor:pointer; box-shadow:0 0 0 4px var(--teal-dim);}
+.field select{ appearance:none; cursor:pointer; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:10px; border:1px solid var(--border-strong);
+  background:var(--panel); color:var(--text-0); cursor:pointer; font-size:12.5px; font-weight:600; transition:.2s;
+}
+.btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-soft); }
+.btn.primary{ background:linear-gradient(135deg, var(--teal), #0E9488); border:none; color:#04120F; }
+.btn.gold{ background:linear-gradient(135deg, var(--gold), #B8912B); border:none; color:#2A2003; }
+.btn svg{ width:14px; height:14px; }
+
+.result-strip{ display:flex; gap:14px; flex-wrap:wrap; margin-top:6px; padding-top:14px; border-top:1px dashed var(--border);}
+.result-chip{ flex:1; min-width:130px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px;}
+.result-chip span{ font-size:10.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:.6px;}
+.result-chip b{ display:block; font-family:var(--font-mono); font-size:17px; margin-top:4px;}
+
+/* ============= INSIGHTS ============= */
+.insight-card{ display:flex; gap:14px; padding:16px; align-items:flex-start; margin-bottom:12px;}
+.insight-icon{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.insight-icon svg{ width:18px; height:18px;}
+.insight-body h4{ font-size:13.5px; margin-bottom:4px;}
+.insight-body p{ font-size:12.5px; color:var(--text-1); line-height:1.55;}
+.insight-tag{ display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; padding:2px 8px; border-radius:20px; margin-bottom:6px; font-weight:700;}
+
+/* ============= WHAT-IF ============= */
+.whatif-grid{ display:grid; grid-template-columns:340px 1fr; gap:16px; }
+@media(max-width:1000px){ .whatif-grid{ grid-template-columns:1fr; } }
+.slider-row{ margin-bottom:18px; }
+.slider-row .lbl{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px; }
+.slider-row .lbl b{ font-family:var(--font-mono); color:var(--teal); }
+
+/* ============= TABLES ============= */
+table.data-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+table.data-table th{ text-align:left; color:var(--text-2); text-transform:uppercase; font-size:10.5px; letter-spacing:.6px; padding:8px 10px; border-bottom:1px solid var(--border-strong); position:sticky; top:0; background:var(--panel-solid);}
+table.data-table td{ padding:9px 10px; border-bottom:1px solid var(--border); font-family:var(--font-mono); color:var(--text-1); }
+table.data-table tr:hover td{ background:var(--panel); color:var(--text-0); }
+.scroll-table{ max-height:340px; overflow-y:auto; border-radius:12px; border:1px solid var(--border);}
+
+/* ============= CHECKLIST ============= */
+.checklist{ display:flex; flex-direction:column; gap:8px; }
+.check-item{ display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--panel); cursor:pointer; transition:.2s;}
+.check-item:hover{ border-color:var(--border-strong); }
+.check-item .box{ width:18px; height:18px; border-radius:5px; border:1.5px solid var(--border-strong); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:.2s;}
+.check-item.done .box{ background:var(--teal); border-color:var(--teal); }
+.check-item.done .box svg{ width:11px; height:11px; stroke:#04120F; }
+.check-item.done span{ text-decoration:line-through; color:var(--text-2); }
+.check-item span{ font-size:12.5px; }
+
+/* ============= FOOTER ============= */
+.footer{ flex-shrink:0; height:82px; box-sizing:border-box; padding:8px 28px; border-top:1px solid var(--border); text-align:center; color:var(--text-2); font-size:11.5px; display:flex; align-items:center; justify-content:center; }
+.footer b{ color:var(--text-1); }
+
+/* ============= FAB & TOAST ============= */
+.fab{
+  position:fixed; bottom:34px; right:34px; z-index:80; width:54px; height:54px; border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--violet)); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow:var(--shadow-lift); border:none; transition:.25s var(--ease);
+}
+.fab:hover{ transform:scale(1.08) rotate(90deg); }
+.fab svg{ width:22px; height:22px; stroke:#04120F;}
+.fab-menu{
+  position:fixed; bottom:98px; right:34px; z-index:79; display:flex; flex-direction:column; gap:8px;
+  opacity:0; pointer-events:none; transform:translateY(10px); transition:.25s var(--ease);
+}
+.fab-menu.open{ opacity:1; pointer-events:auto; transform:translateY(0); }
+.fab-menu button{
+  display:flex; align-items:center; gap:8px; background:var(--panel-solid); border:1px solid var(--border-strong);
+  padding:9px 14px; border-radius:24px; font-size:12px; color:var(--text-0); cursor:pointer; box-shadow:var(--shadow-soft); white-space:nowrap;
+}
+.fab-menu button:hover{ border-color:var(--teal); color:var(--teal); }
+.fab-menu button svg{ width:14px; height:14px;}
+
+.toast-stack{ position:fixed; top:20px; right:20px; z-index:100; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  background:var(--panel-solid); border:1px solid var(--border-strong); border-left:3px solid var(--teal);
+  padding:12px 16px; border-radius:10px; font-size:12.5px; box-shadow:var(--shadow-lift); min-width:240px;
+  animation: slideIn .35s var(--ease); display:flex; align-items:center; gap:10px;
+}
+.toast.warn{ border-left-color:var(--amber); }
+.toast.bad{ border-left-color:var(--rose); }
+@keyframes slideIn{ from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:translateX(0);} }
+
+/* ============= SETTINGS ============= */
+.setting-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);}
+.setting-row:last-child{ border-bottom:none;}
+.setting-row .st-label b{ display:block; font-size:13px; }
+.setting-row .st-label span{ font-size:11.5px; color:var(--text-2); }
+.switch{ width:42px; height:24px; border-radius:20px; background:var(--panel); border:1px solid var(--border-strong); position:relative; cursor:pointer; transition:.2s; flex-shrink:0;}
+.switch::after{ content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--text-2); transition:.25s var(--ease);}
+.switch.on{ background:var(--teal-dim); border-color:var(--teal);}
+.switch.on::after{ transform:translateX(18px); background:var(--teal);}
+
+/* ============= UTIL ============= */
+.muted{ color:var(--text-2); }
+.mono{ font-family:var(--font-mono); }
+.flex-between{ display:flex; align-items:center; justify-content:space-between; }
+.gap-8{gap:8px;} .gap-12{gap:12px;}
+.mt-10{margin-top:10px;} .mt-16{margin-top:16px;} .mt-20{margin-top:20px;}
+.hidden{ display:none !important; }
+.tag-good{ background:rgba(63,208,138,0.14); color:#3FD08A;}
+.tag-warn{ background:var(--amber-dim); color:var(--amber);}
+.tag-bad{ background:var(--rose-dim); color:var(--rose);}
+.tag-info{ background:var(--teal-dim); color:var(--teal);}
+
+@media print{
+  body:not(.printing-report) *{ display:none !important; }
+  body.printing-report .sidebar,
+  body.printing-report .topbar,
+  body.printing-report .fab,
+  body.printing-report .fab-menu,
+  body.printing-report .toast-stack{ display:none !important; }
+  body.printing-report .content > section.view{ display:none !important; }
+  body.printing-report .content > section#view-reports{ display:block !important; }
+  body.printing-report #view-reports .view-actions{ display:none !important; }
+  body.printing-report .main{ height:auto; overflow:visible; }
+  body.printing-report .content{ overflow:visible; padding:0; max-width:100%; }
+  body.printing-report .footer{ display:none !important; }
+  body.printing-report .card{ break-inside:avoid; }
+  body.printing-report #endOfDashboard{ break-before:page; page-break-before:always; }
+}
+@media(max-width:900px){
+  .sidebar{ position:fixed; left:-260px; z-index:90; transition:left .3s var(--ease);}
+  .sidebar.mobile-open{ left:0; }
+  .kpi-grid{ grid-template-columns:1fr 1fr; }
+  .tb-search{ display:none; }
+  .content{ padding:20px 14px 60px; }
+  .screen-nav{ left:0 !important; }
+}
+
+/* ============= SCREEN CAROUSEL (per-tab horizontal screens) ============= */
+.carousel-viewport{ position:relative; overflow:hidden; touch-action: pan-y; user-select:none; transition: height .32s var(--ease); }
+.screen-track{ display:flex; align-items:flex-start; transition: transform .42s var(--ease); will-change:transform; }
+.screen{
+  flex:0 0 100%; max-width:100%; min-width:0;
+  display:flex; flex-direction:column; gap:16px;
+  padding:2px 2px 6px; box-sizing:border-box;
+}
+.screen-nav{
+  position:fixed; left:252px; right:0; bottom:34px; z-index:15;
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  transition:left .3s var(--ease);
+}
+.sidebar.collapsed ~ .main .screen-nav{ left:76px; }
+.screen-arrow{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  background:var(--panel); border:1px solid var(--border); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:var(--text-1);
+  font-size:18px; line-height:1; transition:.2s var(--ease);
+}
+.screen-arrow:hover:not(:disabled){ border-color:var(--teal); color:var(--teal); transform:translateY(-1px); }
+.screen-arrow:disabled{ opacity:.3; cursor:default; }
+.screen-dots{ display:flex; align-items:center; gap:8px; }
+.screen-dot{
+  width:8px; height:8px; border-radius:5px; background:var(--border-strong); border:none; cursor:pointer;
+  padding:0; transition: all .25s var(--ease);
+}
+.screen-dot.active{ background:var(--teal); width:24px; }
+.screen-count{ font-size:11px; color:var(--text-2); font-family:var(--font-mono); margin-left:6px; min-width:44px; }
+@media(max-width:600px){
+  .screen-nav{ gap:10px; left:0; }
+  .screen-count{ display:none; }
+}
+/* Keep the floating action button clear of the screen navigation row */
+body.has-carousel .fab{ bottom:34px; }
+body.has-carousel .fab-menu{ bottom:98px; }
+body.has-carousel .footer-text{ display:none; }
+
+/* Generic: any view marked single-screen fills the content area and
+   stops with a small ~1cm gap above the footer divider, instead of
+   leaving a big empty gap. Per-view rules below add specific tweaks. */
+.view.single-screen{ height:100%; display:none; }
+.view.single-screen.active{ display:flex; flex-direction:column; }
+.view.single-screen > .view-head{ margin-bottom:10px; flex-shrink:0; }
+.view.single-screen > .module-grid{ flex:1; min-height:0; }
+.view.single-screen > .module-grid > .card,
+.view.single-screen > .module-grid > div{ display:flex; flex-direction:column; min-height:0; }
+.view.single-screen .card-head{ padding:10px 16px 0; flex-shrink:0; }
+.view.single-screen .card-body{ padding:8px 16px 12px; flex:1; min-height:0; overflow-y:auto; }
+.view.single-screen .slider-row{ margin-bottom:7px; }
+.view.single-screen .slider-row .lbl{ margin-bottom:3px; font-size:11.5px; }
+.view.single-screen .field-row{ margin-bottom:8px; gap:10px; }
+.view.single-screen .field{ gap:3px; }
+.view.single-screen .result-strip{ margin-top:2px; padding-top:8px; gap:10px; }
+.view.single-screen .result-chip{ padding:8px 10px; }
+.view.single-screen .result-chip b{ font-size:14.5px; margin-top:2px; }
+.view.single-screen .card.section-gap{ flex:0 0 auto; margin-bottom:0; }
+.view.single-screen .card.section-gap .card-head{ padding:10px 16px 0; }
+.view.single-screen .card.section-gap .card-body{ padding:10px 16px 12px; flex:0 0 auto; }
+.view.single-screen .card.section-gap .result-strip{ padding-top:0; border-top:none; margin-top:0; }
+
+/* Budget & Expenses specifics */
+#view-budget .view-head p{ display:none; }
+#view-budget #budgetAllocBody{ flex:0 0 auto; overflow:visible; }
+#view-budget .muted{ font-size:10.5px !important; margin-top:2px; }
+#view-budget #budgetChartBody{ display:flex; align-items:center; justify-content:center; }
+#view-budget .module-grid > div{ display:flex; flex-direction:column; }
+#view-budget .module-grid > div > .card{ flex:0 0 auto; }
+#view-budget .module-grid > div > .card:last-child{ flex:1; min-height:0; display:flex; flex-direction:column; }
+
+/* Investment Portfolio specifics */
+#view-invest .module-grid{ flex:1 1 60%; margin-bottom:16px; }
+
+/* Income & Career specifics — fill the space with generous
+   breathing room instead of leaving a blank stretched gap */
+#view-income .card-body{ padding:26px 26px 26px; }
+#view-income .field-row{ gap:22px; margin-bottom:26px; }
+#view-income .field input{ padding:13px 15px; font-size:14px; }
+#view-income .field label{ font-size:12px; }
+#view-income .result-strip{ gap:18px; padding-top:22px; margin-top:8px; }
+#view-income .result-chip{ padding:18px 20px; }
+#view-income .result-chip span{ font-size:11.5px; }
+#view-income .result-chip b{ font-size:21px; margin-top:8px; }
+
+/* Same spacious treatment for Emergency Fund, Tax Planner, Retirement & FI */
+#view-savings .card-body, #view-tax .card-body, #view-retire .card-body{ padding:26px 26px 26px; }
+#view-savings .field-row, #view-tax .field-row, #view-retire .field-row{ gap:22px; margin-bottom:26px; }
+#view-savings .field input, #view-tax .field input, #view-retire .field input{ padding:13px 15px; font-size:14px; }
+#view-savings .field label, #view-tax .field label, #view-retire .field label{ font-size:12px; }
+#view-savings .result-strip, #view-tax .result-strip, #view-retire .result-strip{ gap:18px; padding-top:22px; margin-top:8px; }
+#view-savings .result-chip, #view-tax .result-chip, #view-retire .result-chip{ padding:18px 20px; }
+#view-savings .result-chip span, #view-tax .result-chip span, #view-retire .result-chip span{ font-size:11.5px; }
+#view-savings .result-chip b, #view-tax .result-chip b, #view-retire .result-chip b{ font-size:21px; margin-top:8px; }
+#view-tax .muted{ font-size:12px !important; margin-bottom:14px; }
+#view-tax table.data-table td, #view-tax table.data-table th{ padding:13px 12px; font-size:13.5px; }
+
+/* What-If Simulator — all three panels (levers, outcome, scenarios) shrunk
+   down and given real breathing room / gaps between them, instead of
+   stretching edge-to-edge to fill all available space */
+#view-whatif{ gap:0; }
+#view-whatif .whatif-grid{ flex:1; min-height:0; margin-bottom:16px; }
+#view-whatif .whatif-grid > .card{ display:flex; flex-direction:column; min-height:0; }
+#view-whatif .whatif-grid .card-head{ padding:10px 16px 0; flex-shrink:0; }
+#view-whatif .whatif-grid .card-body{ padding:12px 16px 14px; flex:1; min-height:0; display:flex; flex-direction:column; }
+#view-whatif #whatifControls{ display:flex; flex-direction:column; justify-content:flex-start; gap:0; min-height:0; overflow-y:auto; padding-right:6px; scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent; }
+#view-whatif #whatifControls::-webkit-scrollbar{ width:5px; }
+#view-whatif #whatifControls::-webkit-scrollbar-track{ background:transparent; }
+#view-whatif #whatifControls::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:6px; }
+#view-whatif #whatifControls::after{ content:''; display:block; flex-shrink:0; height:4px; }
+#view-whatif .whatif-grid .card:nth-child(2) .card-body{ justify-content:center; gap:10px; overflow:visible; }
+#view-whatif .whatif-grid .card:nth-child(2) canvas{ flex-shrink:0; max-height:160px; }
+#view-whatif .result-strip{ margin-top:0; }
+#view-whatif #whatifControls .slider-row{ margin-bottom:3px; }
+#view-whatif #whatifControls .slider-row:last-of-type{ margin-bottom:3px; }
+#view-whatif #whatifControls .slider-row .lbl{ margin-bottom:1px; font-size:11px; }
+#view-whatif #whatifControls .slider-row .lbl span{ font-size:11px; }
+#view-whatif #whatifControls input[type=range]{ height:4px; }
+#view-whatif .wi-toggle{
+  display:flex; align-items:flex-start; gap:6px; cursor:pointer;
+  font-size:9.5px; color:var(--text-1); line-height:1.25;
+  padding:3px 7px; margin-bottom:3px;
+  background:var(--panel); border:1px solid var(--border); border-radius:7px;
+}
+#view-whatif .wi-toggle:last-child{ margin-bottom:0; }
+#view-whatif .wi-toggle input[type=checkbox]{ margin-top:1px; flex-shrink:0; cursor:pointer; accent-color:var(--teal); }
+#view-whatif .wi-toggle b{ color:var(--text-0); font-weight:600; }
+#view-whatif .card.section-gap{ flex:0 0 auto; margin-bottom:0; }
+#view-whatif .card.section-gap .card-body{ padding:12px 16px 14px; }
+#view-whatif .card.section-gap .scroll-table{ max-height:90px; }
+
+/* Overview carousel screens: stretch to fill available height (matches the
+   single-screen ~1cm-gap-above-footer-divider treatment) instead of sizing
+   purely to natural content height. */
+#view-overview .screen-track{ align-items:stretch; }
+#view-overview .screen{ height:100%; }
+#view-overview .screen > *:last-child{ min-height:0; }
+#view-overview .screen > *:last-child.card{ flex:1 1 auto; display:flex; flex-direction:column; }
+#view-overview .screen > *:last-child.card .card-body{ flex:1; min-height:0; overflow-y:auto; }
+#view-overview .screen > *:last-child:not(.card){ flex:1 1 auto; }
+#view-overview .screen > *:last-child:not(.card) > .card{ display:flex; flex-direction:column; min-height:0; }
+#view-overview .screen > *:last-child:not(.card) > .card .card-body{ flex:1; min-height:0; overflow-y:auto; }
+#view-overview .card.hero-spine{ display:flex; flex-direction:column; }
+#view-overview .spine-canvas-wrap{ flex:1 1 auto; min-height:0; }
+#view-overview .chart-card{ display:flex; flex-direction:column; min-height:0; }
+#view-overview .chart-card .card-body{ flex:1; min-height:0; display:flex; flex-direction:column; }
+
+/* Net Worth Timeline specifics */
+#view-networth .scroll-table{ height:100%; max-height:none; }
+#networthTable tbody tr.row-hover td{ background:var(--teal-dim); color:var(--text-0); }
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-grid"></div>
+<div class="bg-vignette"></div>
+
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#04120F" stroke-width="2.4"><path d="M3 17l5-6 4 4 8-10"/></svg></div>
+      <div class="sb-brand-text"><b>Meridian</b><span>Wealth Command Center</span></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section-label">Command</div>
+      <div class="sb-item active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="label">Overview</span></div>
+      <div class="sb-item" data-view="whatif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span class="label">What-If Simulator</span><span class="badge">LIVE</span></div>
+      <div class="sb-item" data-view="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/><path d="M9 21h6M10 18h4"/></svg><span class="label">Insights Center</span></div>
+      <div class="sb-section-label">Modules</div>
+      <div class="sb-item" data-view="income"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span class="label">Income &amp; Career</span></div>
+      <div class="sb-item" data-view="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span class="label">Budget &amp; Expenses</span></div>
+      <div class="sb-item" data-view="savings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg><span class="label">Emergency Fund</span></div>
+      <div class="sb-item" data-view="invest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M6 21V10M12 21V4M18 21v-7"/></svg><span class="label">Investment Portfolio</span></div>
+      <div class="sb-item" data-view="tax"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6l3 4v14a2 2 0 01-2 2H8a2 2 0 01-2-2V6l3-4z"/><path d="M9 12h6M9 16h4"/></svg><span class="label">Tax Planner</span></div>
+      <div class="sb-item" data-view="retire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg><span class="label">Retirement &amp; FI</span></div>
+      <div class="sb-item" data-view="goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg><span class="label">Goal Tracker</span></div>
+      <div class="sb-item" data-view="networth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-10"/><path d="M14 5h7v7"/></svg><span class="label">Net Worth Timeline</span></div>
+      <div class="sb-section-label">Records</div>
+      <div class="sb-item" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h10l4 4v14H3V3z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg><span class="label">Reports</span></div>
+      <div class="sb-item" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 01-4 0v-.2a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 010-4h.2a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 014 0v.2a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 010 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg><span class="label">Settings</span></div>
+    </nav>
+    <div class="sb-footer">
+      <button class="sb-collapse-btn" id="collapseBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <span class="label">Collapse</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn" id="mobileNavBtn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div>
+        <h1 id="topbarTitle">Executive Overview</h1>
+        <div class="sub" id="topbarSub">Your lifetime financial trajectory, from first paycheck to financial independence</div>
+      </div>
+      <div class="tb-search" data-tip="Search modules (press /)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="globalSearch" placeholder="Search modules, reports, settings…">
+        <span class="tb-kbd">/</span>
+      </div>
+      <button class="tb-btn" id="themeToggle" data-tip="Toggle theme (T)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="themeIcon"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <div class="tb-avatar">S</div>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ OVERVIEW ============ -->
+      <section class="view active" id="view-overview">
+        <div class="card hero-spine glass">
+          <div class="hs-head">
+            <div>
+              <h2>The Wealth Spine — Age 18 → 60</h2>
+              <p>A single simulated path of your income, expenses and net worth across your entire working life, driven by the assumptions in the What-If Simulator.</p>
+            </div>
+            <div class="hs-stats">
+              <div class="hs-stat"><b id="spineFI">—</b><span>Age at Financial Independence</span></div>
+              <div class="hs-stat"><b id="spineNW60">—</b><span>Net Worth at 60</span></div>
+              <div class="hs-stat"><b id="spinePeak">—</b><span>Peak Annual Savings</span></div>
+            </div>
+          </div>
+          <div class="spine-canvas-wrap"><canvas id="spineCanvas"></canvas></div>
+          <div class="spine-legend">
+            <div class="leg-item"><span class="leg-dot" style="background:var(--teal)"></span>Net Worth</div>
+            <div class="leg-item"><span class="leg-dot" style="background:var(--gold)"></span>Annual Income</div>
+            <div class="leg-item"><span class="leg-dot" style="background:var(--violet)"></span>Annual Expenses</div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="grid-2 section-gap">
+          <div class="card chart-card">
+            <div class="card-head">
+              <h3>Cash Flow Forecast — First 15 Working Years</h3>
+              <div class="pill-toggle" id="cfToggle">
+                <button class="active" data-r="15">15Y</button>
+                <button data-r="30">30Y</button>
+                <button data-r="42">Lifetime</button>
+              </div>
+            </div>
+            <div class="card-body"><canvas id="cashflowChart" height="230"></canvas></div>
+          </div>
+          <div class="card health-card glass">
+            <div class="card-head" style="padding:0; width:100%;"><h3>Financial Health Score</h3><span class="muted" data-tip="Weighted: Savings 25% · Emergency Fund 20% · Debt 15% · Diversification 15% · Cash Flow 15% · Goal Pace 10%">ⓘ</span></div>
+            <div class="gauge-wrap"><canvas id="gaugeCanvas" width="380" height="240"></canvas>
+              <div class="gauge-value"><b id="healthScoreNum">—</b><span>out of 100</span></div>
+            </div>
+            <div class="health-cat" id="healthCat">—</div>
+            <ul class="health-plan" id="healthPlan"></ul>
+          </div>
+        </div>
+
+        <div class="grid-3 section-gap">
+          <div class="card">
+            <div class="card-head"><h3>Projected Asset Allocation</h3></div>
+            <div class="card-body">
+              <div class="donut-wrap">
+                <canvas id="allocDonut" width="130" height="130"></canvas>
+                <div class="donut-legend" id="allocLegend"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Emergency Fund Status</h3></div>
+            <div class="card-body" id="efStatusBody"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Budget Utilization</h3></div>
+            <div class="card-body" id="budgetUtilBody"></div>
+          </div>
+        </div>
+
+        <div class="card section-gap">
+          <div class="card-head"><h3>Monthly Expense Breakdown (Projected Post-Job)</h3><span class="muted">Editable in Budget &amp; Expenses module</span></div>
+          <div class="card-body" id="expenseBreakdownBody"></div>
+        </div>
+      </section>
+
+      <!-- ============ WHAT-IF SIMULATOR ============ -->
+      <section class="view single-screen" id="view-whatif">
+        <div class="view-head">
+          <div><h2>What-If Simulator</h2><p>Drag the levers below to instantly recompute your entire 42-year financial journey — salary growth, inflation, returns, SIP, and retirement age all feed the Wealth Spine live.</p></div>
+          <div class="view-actions"><button class="btn" id="resetWhatIf">Reset to Defaults</button></div>
+        </div>
+        <div class="whatif-grid">
+          <div class="card">
+            <div class="card-body" id="whatifControls"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Simulated Outcome</h3><span class="muted">Recalculates instantly</span></div>
+            <div class="card-body">
+              <canvas id="whatifChart" height="160"></canvas>
+              <div class="result-strip" id="whatifResults"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card section-gap">
+          <div class="card-head"><h3>Scenario Comparison</h3><span class="muted">Save up to 3 scenarios to compare side by side</span></div>
+          <div class="card-body">
+            <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+              <button class="btn primary" id="saveScenarioBtn">＋ Save Current Scenario</button>
+              <button class="btn" id="clearScenariosBtn">Clear All</button>
+            </div>
+            <div class="scroll-table"><table class="data-table" id="scenarioTable"><thead><tr><th>Scenario</th><th>Salary Growth</th><th>Inflation</th><th>Returns</th><th>SIP/mo</th><th>Retire Age</th><th>Net Worth @ Retirement</th><th>FI Age</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ INSIGHTS CENTER ============ -->
+      <section class="view" id="view-insights">
+        <div class="view-head"><div><h2>Insights Center</h2><p>A rule-based engine reads your simulation and profile to generate plain-language recommendations — no external AI, fully offline.</p></div></div>
+        <div id="insightsList"></div>
+      </section>
+
+      <!-- ============ INCOME & CAREER ============ -->
+      <section class="view single-screen" id="view-income">
+        <div class="view-head"><div><h2>Income &amp; Career Projector</h2><p>Model your salary trajectory from fresher to senior professional.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>Career Inputs</h3></div><div class="card-body" id="incomeInputs"></div></div>
+          <div class="card"><div class="card-head"><h3>Salary Growth Curve</h3></div><div class="card-body"><canvas id="salaryChart" height="340"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- ============ BUDGET & EXPENSES ============ -->
+      <section class="view single-screen" id="view-budget">
+        <div class="view-head"><div><h2>Budget Planner &amp; Expense Analytics</h2><p>A 50/30/20-style framework projected against your future income.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>Expenses</h3></div><div class="card-body" id="budgetInputs"></div></div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="card"><div class="card-head"><h3>Budget Allocation Rule</h3></div><div class="card-body" id="budgetAllocBody"></div></div>
+            <div class="card"><div class="card-head"><h3>Category Breakdown</h3></div><div class="card-body" id="budgetChartBody"><canvas id="budgetBarChart" height="190"></canvas></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EMERGENCY FUND ============ -->
+      <section class="view single-screen" id="view-savings">
+        <div class="view-head"><div><h2>Emergency Fund Builder</h2><p>Standard guidance: 6 months of essential expenses in a liquid, low-risk instrument before aggressive investing.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>Fund Inputs</h3></div><div class="card-body" id="efInputs"></div></div>
+          <div class="card"><div class="card-head"><h3>Build-Up Timeline</h3></div><div class="card-body"><canvas id="efChart" height="340"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- ============ INVESTMENT PORTFOLIO ============ -->
+      <section class="view single-screen" id="view-invest">
+        <div class="view-head"><div><h2>Investment Portfolio &amp; SIP Compounding</h2><p>Simulate systematic investing with compound growth across equity and debt.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>SIP Configuration</h3></div><div class="card-body" id="investInputs"></div></div>
+          <div class="card"><div class="card-head"><h3>Compounding Growth</h3></div><div class="card-body"><canvas id="sipChart" height="150"></canvas></div></div>
+        </div>
+        <div class="card section-gap">
+          <div class="card-head"><h3>Portfolio Diversification Check</h3></div>
+          <div class="card-body" id="diversificationBody"></div>
+        </div>
+      </section>
+
+      <!-- ============ TAX PLANNER ============ -->
+      <section class="view single-screen" id="view-tax">
+        <div class="view-head"><div><h2>Tax Planner (India — Simplified New Regime FY24-25 slabs)</h2><p>Estimate annual tax liability as your income grows. Educational estimate only — not tax advice.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>Income Details</h3></div><div class="card-body" id="taxInputs"></div></div>
+          <div class="card"><div class="card-head"><h3>Slab-wise Breakdown</h3></div><div class="card-body" id="taxBreakdownBody"></div></div>
+        </div>
+      </section>
+
+      <!-- ============ RETIREMENT & FI ============ -->
+      <section class="view single-screen" id="view-retire">
+        <div class="view-head"><div><h2>Retirement &amp; Financial Independence Planner</h2><p>Estimate the corpus needed to sustain your lifestyle without active income, and the age you could reach it.</p></div></div>
+        <div class="module-grid">
+          <div class="card"><div class="card-head"><h3>FI Assumptions</h3></div><div class="card-body" id="retireInputs"></div></div>
+          <div class="card"><div class="card-head"><h3>Corpus vs Requirement</h3></div><div class="card-body"><canvas id="retireChart" height="340"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- ============ GOAL TRACKER ============ -->
+      <section class="view" id="view-goals">
+        <div class="view-head"><div><h2>Goal Tracker</h2><p>Track progress toward specific milestones on your simulated timeline.</p></div>
+          <div class="view-actions"><button class="btn primary" id="addGoalBtn">＋ Add Goal</button></div>
+        </div>
+        <div class="module-grid" id="goalsGrid"></div>
+      </section>
+
+      <!-- ============ NET WORTH TIMELINE ============ -->
+      <section class="view single-screen" id="view-networth">
+        <div class="view-head"><div><h2>Net Worth Timeline</h2><p>Your full simulated balance sheet growth, year by year, from first job to age 60.</p></div></div>
+        <div class="module-grid">
+          <div class="card">
+            <div class="card-head"><h3>Year-by-Year Ledger</h3></div>
+            <div class="card-body"><div class="scroll-table"><table class="data-table" id="networthTable"><thead><tr><th>Age</th><th>Year</th><th>Annual Income</th><th>Annual Expenses</th><th>Annual Savings</th><th>Investment Value</th><th>Net Worth</th></tr></thead><tbody></tbody></table></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Net Worth Growth</h3></div>
+            <div class="card-body"><canvas id="networthFullChart" height="300"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section class="view" id="view-reports">
+        <div class="view-head"><div><h2>Reports</h2><p>Print-ready summaries of your financial plan.</p></div>
+          <div class="view-actions"><button class="btn primary" id="printReportBtn">🖨 Export / Print Report</button></div>
+        </div>
+        <div class="card">
+          <div class="card-body" id="reportBody"></div>
+        </div>
+
+        <!-- ============ SUMMARY (part of Reports, prints as page 2) ============ -->
+        <section class="card" style="margin-top:30px; padding:26px;" id="endOfDashboard"></section>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="view-head"><div><h2>Settings</h2><p>Personalize the dashboard and manage your data.</p></div></div>
+        <div class="card"><div class="card-body">
+          <div class="setting-row"><div class="st-label"><b>Theme</b><span>Switch between Dark (Bloomberg-style) and Light (Apple Finance-style)</span></div><div class="switch" id="settingsThemeSwitch"></div></div>
+          <div class="setting-row"><div class="st-label"><b>Currency</b><span>Display currency across the dashboard</span></div>
+            <select id="currencySelect" style="background:var(--panel); border:1px solid var(--border); color:var(--text-0); padding:8px 12px; border-radius:8px; font-family:var(--font-mono);">
+              <option value="₹">₹ INR</option><option value="$">$ USD</option><option value="£">£ GBP</option><option value="€">€ EUR</option>
+            </select>
+          </div>
+          <div class="setting-row"><div class="st-label"><b>Sidebar collapsed by default</b><span>Start with a compact navigation rail</span></div><div class="switch" id="settingsCollapseSwitch"></div></div>
+          <div class="setting-row"><div class="st-label"><b>Reduced motion</b><span>Minimize animations across the interface</span></div><div class="switch" id="settingsMotionSwitch"></div></div>
+          <div class="setting-row"><div class="st-label"><b>Local data</b><span>All data is stored only in this browser via LocalStorage — nothing leaves your device</span></div><button class="btn" id="exportDataBtn">Export JSON</button></div>
+          <div class="setting-row"><div class="st-label"><b>Reset dashboard</b><span>Clear all inputs and restore defaults</span></div><button class="btn" style="border-color:var(--rose); color:var(--rose);" id="resetAllBtn">Reset Everything</button></div>
+        </div></div>
+
+        <div class="card section-gap">
+          <div class="card-head"><h3>Keyboard Shortcuts</h3></div>
+          <div class="card-body">
+            <div class="grid-3">
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Toggle theme</span><span class="tb-kbd">T</span></div>
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Focus search</span><span class="tb-kbd">/</span></div>
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Collapse sidebar</span><span class="tb-kbd">[</span></div>
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Print report</span><span class="tb-kbd">Ctrl+P</span></div>
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Go to Overview</span><span class="tb-kbd">G then O</span></div>
+              <div class="flex-between" style="padding:6px 0;"><span class="muted">Go to What-If</span><span class="tb-kbd">G then W</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span class="footer-text">Built entirely offline with HTML, CSS &amp; JavaScript — no external APIs, frameworks or trackers. <b>Meridian</b> is an educational planning tool, not financial advice.</span>
+    </footer>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></button>
+<div class="fab-menu" id="fabMenu">
+  <button data-view="whatif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Run What-If</button>
+  <button id="fabAddGoal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add Goal</button>
+  <button id="fabPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/></svg>Export Report</button>
+  <button id="fabReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9"/><path d="M3 3v6h6"/></svg>Reset Dashboard</button>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const DEFAULTS = {
+  theme:'dark', currency:'₹', reducedMotion:false, sidebarCollapsed:false,
+  age:18, startAge:22, retireAge:55, lifeEndAge:60,
+  startSalaryAnnual:450000, // ₹4.5L fresher
+  salaryGrowth:8,           // % per year
+  inflation:6,              // % per year
+  expectedReturn:10,        // % blended
+  savingsRate:35,           // % of income saved (student wants to build habit)
+  sipMonthly:2000,
+  emergencyMonths:6,
+  equityAllocation:60,      // % of investments
+  hasLoan:false,
+  budgetNeeds:50, budgetWants:30, budgetSavings:20,
+  goals:[
+    {id:1,name:'Laptop / Big Purchase',target:80000,current:15000,byAge:23},
+    {id:2,name:'First Emergency Fund',target:150000,current:0,byAge:24},
+    {id:3,name:'Wealth Milestone: ₹10L',target:1000000,current:0,byAge:28}
+  ],
+  checklist:[
+    {id:1,text:'Open a zero-balance savings account before your first salary',done:false},
+    {id:2,text:'Set up auto-debit SIP on day 1 of your career',done:false},
+    {id:3,text:'Build a 6-month emergency fund before investing aggressively',done:false},
+    {id:4,text:'Get a health + term insurance policy early (premiums are cheapest young)',done:false},
+    {id:5,text:'Track every expense for the first 3 months to learn your patterns',done:false},
+    {id:6,text:'File your first ITR on time, even if income is below taxable limit',done:false},
+    {id:7,text:'Avoid lifestyle inflation matching salary hikes 1:1',done:false},
+    {id:8,text:'Review and rebalance your portfolio once a year',done:false}
+  ],
+  expenseCategories:[
+    {name:'Housing/Rent', pct:28, icon:'home', group:'needs'},
+    {name:'Food & Groceries', pct:15, icon:'food', group:'needs'},
+    {name:'Transport', pct:8, icon:'transport', group:'needs'},
+    {name:'Utilities & Phone', pct:6, icon:'utility', group:'needs'},
+    {name:'Subscriptions', pct:4, icon:'sub', group:'wants'},
+    {name:'Health & Fitness', pct:5, icon:'health', group:'needs'},
+    {name:'Entertainment', pct:6, icon:'fun', group:'wants'},
+    {name:'Miscellaneous', pct:8, icon:'misc', group:'wants'}
+  ],
+  scenarios:[]
+};
+
+let S = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('meridian_state_v1');
+    if(raw){ return Object.assign({}, DEFAULTS, JSON.parse(raw)); }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function saveState(){
+  try{ localStorage.setItem('meridian_state_v1', JSON.stringify(S)); }catch(e){}
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', S.theme);
+  document.getElementById('settingsThemeSwitch').classList.toggle('on', S.theme==='dark');
+  const icon = document.getElementById('themeIcon');
+  icon.innerHTML = S.theme==='dark'
+    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+    : '<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>';
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  S.theme = S.theme==='dark' ? 'light' : 'dark';
+  applyTheme(); saveState();
+  toast('Theme switched to '+(S.theme==='dark'?'Dark':'Light')+' mode');
+});
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function toast(msg, type){
+  const stack = document.getElementById('toastStack');
+  const el = document.createElement('div');
+  el.className='toast'+(type?' '+type:'');
+  el.innerHTML = '<span>'+msg+'</span>';
+  stack.appendChild(el);
+  setTimeout(()=>{ el.style.transition='.4s'; el.style.opacity='0'; el.style.transform='translateX(30px)'; setTimeout(()=>el.remove(),400); }, 3200);
+}
+
+/* ============================================================
+   FORMATTING
+   ============================================================ */
+function fmt(n, opts){
+  opts = opts||{};
+  n = Math.round(n);
+  const neg = n<0; n = Math.abs(n);
+  let str;
+  if(S.currency==='₹'){
+    // Indian numbering (lakh/crore) grouping
+    let s = n.toString();
+    let last3 = s.slice(-3);
+    let rest = s.slice(0,-3);
+    if(rest!=='') last3 = ','+last3;
+    let formatted = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + last3;
+    str = formatted;
+  } else {
+    str = n.toLocaleString('en-US');
+  }
+  return (neg?'-':'')+S.currency+str+(opts.suffix||'');
+}
+function fmtCompact(n){
+  const abs = Math.abs(n);
+  if(S.currency==='₹'){
+    if(abs>=10000000) return (n/10000000).toFixed(2)+' Cr';
+    if(abs>=100000) return (n/100000).toFixed(2)+' L';
+    if(abs>=1000) return (n/1000).toFixed(1)+' K';
+    return Math.round(n).toString();
+  } else {
+    if(abs>=1000000) return (n/1000000).toFixed(2)+'M';
+    if(abs>=1000) return (n/1000).toFixed(1)+'K';
+    return Math.round(n).toString();
+  }
+}
+
+/* ============================================================
+   CORE SIMULATION ENGINE
+   Projects year-by-year income, expenses, savings, investment
+   corpus and net worth from startAge to lifeEndAge (60).
+   ============================================================ */
+function runSimulation(){
+  const rows = [];
+  let salary = S.startSalaryAnnual;
+  let expensesBase = salary * (1 - S.savingsRate/100);
+  let investCorpus = 0;
+  let cashCorpus = 0; // emergency fund / liquid
+  const monthlyReturn = Math.pow(1+S.expectedReturn/100, 1/12)-1;
+  const currentYear = 2026;
+
+  for(let age=S.age; age<=S.lifeEndAge; age++){
+    let income=0, expenses=0, savings=0;
+    const isWorking = age>=S.startAge;
+    if(isWorking){
+      const yearsWorked = age - S.startAge;
+      income = S.startSalaryAnnual * Math.pow(1+S.salaryGrowth/100, yearsWorked);
+      expenses = expensesBase * Math.pow(1+S.inflation/100, yearsWorked);
+      if(expenses>income*0.95) expenses = income*0.95; // floor sanity
+      savings = income-expenses;
+      // annual SIP contribution grows with income proportionally, floor at configured sipMonthly*12 scaled by growth
+      const sipAnnual = (S.sipMonthly*12) * Math.pow(1+S.salaryGrowth/100, yearsWorked);
+      // grow existing corpus monthly, add SIP monthly
+      for(let m=0;m<12;m++){
+        investCorpus = investCorpus*(1+monthlyReturn) + (sipAnnual/12);
+      }
+      const leftoverSavings = Math.max(0, savings - sipAnnual);
+      cashCorpus += leftoverSavings*0.5; // half of leftover into emergency/cash buffer
+      investCorpus += leftoverSavings*0.5*0; // rest assumed spent on lifestyle/goals
+    }
+    const netWorth = investCorpus + cashCorpus;
+    rows.push({
+      age, year: currentYear + (age - S.age),
+      income: Math.round(income), expenses: Math.round(expenses), savings: Math.round(savings),
+      investCorpus: Math.round(investCorpus), cashCorpus: Math.round(cashCorpus), netWorth: Math.round(netWorth)
+    });
+  }
+  return rows;
+}
+
+function findFIAge(rows){
+  // FI = net worth generates >= 4% withdrawal covering current annual expenses (25x rule)
+  for(const r of rows){
+    if(r.age < S.startAge) continue;
+    const requiredCorpus = r.expenses * 25;
+    if(r.netWorth >= requiredCorpus) return r.age;
+  }
+  return null;
+}
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const ICONS = {
+  income:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+  expense:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  savings:'<circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>',
+  invest:'<path d="M3 21h18M6 21V10M12 21V4M18 21v-7"/>',
+  networth:'<path d="M3 17l6-6 4 4 8-10"/><path d="M14 5h7v7"/>',
+  cashflow:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  health:'<path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/><path d="M9 21h6M10 18h4"/>',
+  budget:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  debt:'<path d="M9 2h6l3 4v14a2 2 0 01-2 2H8a2 2 0 01-2-2V6l3-4z"/>',
+  fund:'<path d="M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8"/><circle cx="12" cy="12" r="4"/>',
+  home:'<path d="M3 10.5L12 3l9 7.5V21H3z"/>',
+  food:'<path d="M6 2v8M10 2v8M6 6h4M8 10v12M15 2c-2 0-3 3-3 6s1 4 3 4 3-1 3-4-1-6-3-6zM18 12v10"/>',
+  transport:'<rect x="3" y="9" width="18" height="8" rx="2"/><circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  utility:'<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+  sub:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/>',
+  fun:'<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+  misc:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'
+};
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const TITLES = {
+  overview:['Executive Overview','Your lifetime financial trajectory, from first paycheck to financial independence'],
+  whatif:['What-If Simulator','Adjust assumptions and see your entire journey recompute instantly'],
+  insights:['Insights Center','Rule-based recommendations generated from your simulation'],
+  income:['Income & Career Projector','Model your salary trajectory'],
+  budget:['Budget Planner','A framework for your future income'],
+  savings:['Emergency Fund Builder','Build your financial safety net'],
+  invest:['Investment Portfolio','SIP compounding and diversification'],
+  tax:['Tax Planner','Estimated annual tax liability'],
+  retire:['Retirement & FI Planner','Your path to financial independence'],
+  goals:['Goal Tracker','Milestones on your financial journey'],
+  networth:['Net Worth Timeline','Your full balance sheet growth'],
+  reports:['Reports','Print-ready plan summaries'],
+  settings:['Settings','Personalize your dashboard']
+};
+/* ============================================================
+   SCREEN CAROUSEL — turns each tab's stacked content into
+   swipeable / arrow-navigable / keyboard-navigable screens
+   instead of one long vertical scroll.
+   ============================================================ */
+function paginateAllViews(){
+  document.querySelectorAll('.view').forEach(view=>buildCarousel(view));
+  syncFabPosition();
+}
+
+function syncFabPosition(){
+  const active = document.querySelector('.view.active');
+  const hasNav = !!(active && active.querySelector(':scope > .screen-nav'));
+  document.body.classList.toggle('has-carousel', hasNav);
+}
+
+function teardownCarousel(view){
+  if(view.dataset.paginated!=='1') return;
+  const viewport = view.querySelector(':scope > .carousel-viewport');
+  const nav = view.querySelector(':scope > .screen-nav');
+  const wrapperClass = view.dataset.gridWrapperClass || '';
+  if(viewport){
+    const frag = document.createDocumentFragment();
+    viewport.querySelectorAll('.screen').forEach(screen=>{
+      Array.from(screen.children).forEach(node=>{
+        // if a screen-group wrapper (regrouped grid) was synthesized, unwrap it back to individual units
+        if(node.classList && node.classList.contains('__screen-group')){
+          Array.from(node.children).forEach(c=>frag.appendChild(c));
+        } else {
+          frag.appendChild(node);
+        }
+      });
+    });
+    if(view.dataset.unwrappedGrid==='1'){
+      // re-wrap the loose units back into the original grid container
+      const gridWrap = document.createElement('div');
+      gridWrap.className = wrapperClass;
+      Array.from(frag.children).forEach(c=>gridWrap.appendChild(c));
+      view.appendChild(gridWrap);
+    } else {
+      view.appendChild(frag);
+    }
+    viewport.remove();
+  }
+  if(nav) nav.remove();
+  view.dataset.paginated='';
+  view.dataset.unwrappedGrid='';
+  view.dataset.gridWrapperClass='';
+  delete view.__screenNav;
+}
+
+function rebuildAllCarousels(){
+  document.querySelectorAll('.view').forEach(teardownCarousel);
+  paginateAllViews();
+}
+
+/* Measure heights without disturbing live canvases/charts: clone the view
+   off-screen (rather than toggling the real view's visibility), so charts
+   already rendered in the real DOM are never touched or resized mid-measure. */
+function measureUnitHeights(view, units){
+  if(view.classList.contains('active')){
+    return units.map(u=>u.getBoundingClientRect().height);
+  }
+  const refWidth = (document.querySelector('.view.active')||document.querySelector('.content'))
+    .getBoundingClientRect().width;
+  const clone = view.cloneNode(true);
+  clone.classList.add('active');
+  clone.removeAttribute('id');
+  clone.style.position='absolute';
+  clone.style.visibility='hidden';
+  clone.style.left='-99999px';
+  clone.style.top='0';
+  clone.style.width = refWidth+'px';
+  document.body.appendChild(clone);
+  const head = clone.querySelector(':scope > .view-head');
+  let cloneUnits = Array.from(clone.children).filter(c=>c!==head);
+  if(cloneUnits.length===1 && /\bgrid\b/i.test(cloneUnits[0].className) && cloneUnits[0].children.length>1){
+    cloneUnits = Array.from(cloneUnits[0].children);
+  }
+  const heights = cloneUnits.map(u=>u.getBoundingClientRect().height);
+  clone.remove();
+  return heights.length===units.length ? heights : units.map(()=>200);
+}
+
+const SINGLE_SCREEN_VIEWS = ['view-income','view-budget','view-savings','view-invest','view-retire','view-goals','view-networth','view-tax','view-whatif'];
+function buildCarousel(view){
+  if(view.dataset.paginated==='1') return;
+  if(SINGLE_SCREEN_VIEWS.includes(view.id)){ view.dataset.paginated='1'; return; }
+  const head = view.querySelector(':scope > .view-head');
+  let units = Array.from(view.children).filter(c=>c!==head);
+  let wrapperClass = '';
+  let unwrappedGrid = false;
+
+  /* If a tab's whole body is a single grid/grid-2/grid-3/module-grid/whatif-grid
+     wrapper, dive into its children so the tab can actually be split into
+     multiple screens instead of staying as one dense block. */
+  if(units.length===1 && /\bgrid\b/i.test(units[0].className) && units[0].children.length>1){
+    wrapperClass = units[0].className;
+    units = Array.from(units[0].children);
+    unwrappedGrid = true;
+  }
+
+  if(units.length<=1){ view.dataset.paginated='1'; return; }
+
+  const heights = measureUnitHeights(view, units);
+  const topbar = document.querySelector('.topbar');
+  const headH = head ? head.getBoundingClientRect().height + 20 : 0;
+  const reserved = (topbar? topbar.getBoundingClientRect().height : 60) + headH + 110;
+  const budget = Math.max(320, window.innerHeight - reserved);
+  const GAP = 16;
+
+  let groups=[], cur=[], curH=0;
+  units.forEach((unit,i)=>{
+    const h = heights[i] || 200;
+    if(cur.length && (curH + GAP + h) > budget){
+      groups.push(cur); cur=[]; curH=0;
+    }
+    curH += (cur.length ? GAP : 0) + h;
+    cur.push(unit);
+  });
+  if(cur.length) groups.push(cur);
+
+  if(groups.length<=1){ view.dataset.paginated='1'; return; }
+
+  units.forEach(u=>u.remove());
+
+  const viewport = document.createElement('div'); viewport.className='carousel-viewport';
+  const track = document.createElement('div'); track.className='screen-track';
+  groups.forEach(group=>{
+    const screen = document.createElement('div'); screen.className='screen';
+    if(group.length>1 && unwrappedGrid){
+      const groupWrap = document.createElement('div');
+      groupWrap.className = wrapperClass+' __screen-group';
+      group.forEach(c=>groupWrap.appendChild(c));
+      screen.appendChild(groupWrap);
+    } else {
+      group.forEach(c=>screen.appendChild(c));
+    }
+    track.appendChild(screen);
+  });
+  viewport.appendChild(track);
+
+  const nav = document.createElement('div'); nav.className='screen-nav';
+  nav.innerHTML = `<button class="screen-arrow" data-dir="-1" aria-label="Previous screen">‹</button>
+    <div class="screen-dots"></div>
+    <button class="screen-arrow" data-dir="1" aria-label="Next screen">›</button>
+    <span class="screen-count"></span>`;
+  const dotsWrap = nav.querySelector('.screen-dots');
+  groups.forEach((_,i)=>{
+    const dot = document.createElement('button');
+    dot.className='screen-dot'+(i===0?' active':'');
+    dot.type='button'; dot.dataset.idx=i;
+    dot.setAttribute('aria-label','Go to screen '+(i+1));
+    dotsWrap.appendChild(dot);
+  });
+
+  view.appendChild(viewport);
+  view.appendChild(nav);
+  view.dataset.paginated='1';
+  view.dataset.unwrappedGrid = unwrappedGrid ? '1' : '';
+  view.dataset.gridWrapperClass = wrapperClass;
+
+  let idx=0;
+  const total = groups.length;
+  const screenEls = Array.from(track.children);
+  const countEl = nav.querySelector('.screen-count');
+  const prevBtn = nav.querySelector('[data-dir="-1"]');
+  const nextBtn = nav.querySelector('[data-dir="1"]');
+
+  function applyHeight(){
+    let h = screenEls[idx].getBoundingClientRect().height;
+    if(view.id==='view-overview'){
+      const contentEl = document.querySelector('.content');
+      if(contentEl){
+        const cs = getComputedStyle(contentEl);
+        const avail = contentEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        if(avail>0) h = Math.max(h, avail);
+      }
+    }
+    if(h>0) viewport.style.height = h+'px';
+    if(view.id==='view-overview') requestAnimationFrame(fitOverviewCharts);
+  }
+  function update(){
+    track.style.transform = `translateX(-${idx*100}%)`;
+    dotsWrap.querySelectorAll('.screen-dot').forEach((d,i)=>d.classList.toggle('active', i===idx));
+    prevBtn.disabled = idx===0;
+    nextBtn.disabled = idx===total-1;
+    countEl.textContent = (idx+1)+' / '+total;
+    applyHeight();
+    if(view.classList.contains('active')) syncFabPosition();
+  }
+  function goTo(n){
+    idx = Math.max(0, Math.min(total-1, n));
+    update();
+  }
+
+  prevBtn.addEventListener('click', ()=>goTo(idx-1));
+  nextBtn.addEventListener('click', ()=>goTo(idx+1));
+  dotsWrap.querySelectorAll('.screen-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>goTo(parseInt(dot.dataset.idx)));
+  });
+
+  view.__screenNav = { goTo, next: ()=>goTo(idx+1), prev: ()=>goTo(idx-1) };
+
+  /* swipe (touch) */
+  let touchX=0, touchY=0, touchDragging=false, touchDX=0;
+  viewport.addEventListener('touchstart', e=>{
+    touchX=e.touches[0].clientX; touchY=e.touches[0].clientY; touchDragging=true;
+    track.style.transition='none';
+  }, {passive:true});
+  viewport.addEventListener('touchmove', e=>{
+    if(!touchDragging) return;
+    touchDX = e.touches[0].clientX - touchX;
+    const dy = e.touches[0].clientY - touchY;
+    if(Math.abs(touchDX) > Math.abs(dy)){
+      track.style.transform = `translateX(calc(-${idx*100}% + ${touchDX}px))`;
+    }
+  }, {passive:true});
+  viewport.addEventListener('touchend', ()=>{
+    touchDragging=false; track.style.transition='';
+    if(Math.abs(touchDX) > 60){ touchDX<0 ? goTo(idx+1) : goTo(idx-1); } else { update(); }
+    touchDX=0;
+  });
+
+  /* drag (mouse / trackpad) */
+  let mDown=false, mStartX=0, mDX=0;
+  viewport.addEventListener('mousedown', e=>{
+    mDown=true; mStartX=e.clientX; track.style.transition='none'; e.preventDefault();
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!mDown) return;
+    mDX = e.clientX - mStartX;
+    track.style.transform = `translateX(calc(-${idx*100}% + ${mDX}px))`;
+  });
+  window.addEventListener('mouseup', ()=>{
+    if(!mDown) return;
+    mDown=false; track.style.transition='';
+    if(Math.abs(mDX) > 60){ mDX<0 ? goTo(idx+1) : goTo(idx-1); } else { update(); }
+    mDX=0;
+  });
+
+  update();
+}
+
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById('view-'+view);
+  target.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.toggle('active', i.dataset.view===view));
+  document.getElementById('topbarTitle').textContent = TITLES[view][0];
+  document.getElementById('topbarSub').textContent = TITLES[view][1];
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  if(target.__screenNav) target.__screenNav.goTo(0, true);
+  syncFabPosition();
+  requestAnimationFrame(render);
+  const contentEl = document.querySelector('.content');
+  if(contentEl) contentEl.scrollTo({top:0,behavior: S.reducedMotion?'auto':'smooth'});
+}
+document.querySelectorAll('.sb-item[data-view]').forEach(item=>{
+  item.addEventListener('click', ()=>switchView(item.dataset.view));
+});
+document.getElementById('fabMenu').querySelectorAll('button[data-view]').forEach(b=>{
+  b.addEventListener('click', ()=>{ switchView(b.dataset.view); document.getElementById('fabMenu').classList.remove('open'); });
+});
+
+/* Sidebar collapse */
+const sidebar = document.getElementById('sidebar');
+document.getElementById('collapseBtn').addEventListener('click', ()=>{
+  sidebar.classList.toggle('collapsed');
+});
+document.getElementById('mobileNavBtn').addEventListener('click', ()=> sidebar.classList.toggle('mobile-open'));
+
+/* FAB */
+const fabBtn = document.getElementById('fabBtn'), fabMenu = document.getElementById('fabMenu');
+fabBtn.addEventListener('click', ()=> fabMenu.classList.toggle('open'));
+document.getElementById('fabPrint').addEventListener('click', ()=>{ window.print(); fabMenu.classList.remove('open'); });
+document.getElementById('fabReset').addEventListener('click', ()=>{ resetAll(); fabMenu.classList.remove('open'); });
+document.getElementById('fabAddGoal').addEventListener('click', ()=>{ addGoal(); fabMenu.classList.remove('open'); switchView('goals'); });
+
+/* Keyboard shortcuts */
+let gPressed=false;
+document.addEventListener('keydown', (e)=>{
+  if(e.target.tagName==='INPUT' || e.target.tagName==='SELECT') return;
+  if(e.key==='/'){ e.preventDefault(); document.getElementById('globalSearch').focus(); }
+  else if(e.key.toLowerCase()==='t'){ document.getElementById('themeToggle').click(); }
+  else if(e.key==='['){ sidebar.classList.toggle('collapsed'); }
+  else if(e.key.toLowerCase()==='g'){ gPressed=true; setTimeout(()=>gPressed=false,900); }
+  else if(gPressed && e.key.toLowerCase()==='o'){ switchView('overview'); }
+  else if(gPressed && e.key.toLowerCase()==='w'){ switchView('whatif'); }
+  else if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+    const activeView = document.querySelector('.view.active');
+    if(activeView && activeView.__screenNav){
+      e.preventDefault();
+      if(e.key==='ArrowRight') activeView.__screenNav.next(); else activeView.__screenNav.prev();
+    }
+  }
+});
+
+/* Global search (simple module search) */
+document.getElementById('globalSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase().trim();
+  if(!q) return;
+  const items = document.querySelectorAll('.sb-item[data-view]');
+  for(const item of items){
+    if(item.textContent.toLowerCase().includes(q)){ item.style.outline='1px solid var(--teal)'; }
+    else{ item.style.outline='none'; }
+  }
+});
+
+/* Print */
+document.getElementById('printReportBtn').addEventListener('click', ()=>{
+  document.body.classList.add('printing-report');
+  window.print();
+});
+window.addEventListener('afterprint', ()=>document.body.classList.remove('printing-report'));
+
+/* ============================================================
+   CANVAS HELPERS
+   ============================================================ */
+function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function setupHiDPI(canvas, cssHeight){
+  const dpr = window.devicePixelRatio||1;
+  const parent = canvas.parentElement;
+  const cs = getComputedStyle(parent);
+  const padX = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+  const w = Math.max(0, parent.clientWidth - padX);
+  const h = cssHeight || canvas.height;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return ctx;
+}
+
+function drawLineArea(canvas, series, opts){
+  const h = opts.height||230;
+  const ctx = setupHiDPI(canvas, h);
+  const w = canvas.clientWidth;
+  const padL=48, padR=16, padT=16, padB=28;
+  const plotW = w-padL-padR, plotH = h-padT-padB;
+  ctx.clearRect(0,0,w,h);
+
+  let allVals = [];
+  series.forEach(s=>s.data.forEach(v=>allVals.push(v)));
+  let maxV = Math.max(...allVals, 1), minV = Math.min(0, Math.min(...allVals));
+  maxV = maxV*1.12;
+
+  // grid
+  ctx.strokeStyle = css('--border'); ctx.lineWidth=1; ctx.font='10px '+css('--font-body'); ctx.fillStyle=css('--text-2');
+  const gridLines=4;
+  for(let i=0;i<=gridLines;i++){
+    const y = padT + plotH - (plotH*i/gridLines);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    const val = minV + (maxV-minV)*i/gridLines;
+    ctx.fillText(fmtCompact(val), 4, y+3);
+  }
+  const n = series[0].data.length;
+  const stepX = plotW/(n-1||1);
+  // x labels (sparse)
+  if(opts.labels){
+    ctx.fillStyle = css('--text-2');
+    const labelEvery = Math.ceil(n/8);
+    opts.labels.forEach((lab,i)=>{
+      if(i%labelEvery===0){
+        const x = padL + stepX*i;
+        ctx.fillText(lab, x-8, h-8);
+      }
+    });
+  }
+
+  series.forEach(s=>{
+    ctx.beginPath();
+    s.data.forEach((v,i)=>{
+      const x = padL + stepX*i;
+      const y = padT + plotH - ((v-minV)/(maxV-minV))*plotH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    if(s.fill){
+      const grad = ctx.createLinearGradient(0,padT,0,padT+plotH);
+      grad.addColorStop(0, s.color+'55'); grad.addColorStop(1, s.color+'02');
+      ctx.lineTo(padL+stepX*(n-1), padT+plotH); ctx.lineTo(padL, padT+plotH); ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath();
+      s.data.forEach((v,i)=>{
+        const x = padL + stepX*i;
+        const y = padT + plotH - ((v-minV)/(maxV-minV))*plotH;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+    }
+    ctx.strokeStyle = s.color; ctx.lineWidth=2.4; ctx.lineJoin='round'; ctx.stroke();
+  });
+
+  if(opts.hoverIndex!=null && opts.hoverIndex>=0 && opts.hoverIndex<n){
+    const i = opts.hoverIndex;
+    const x = padL + stepX*i;
+    ctx.save();
+    ctx.strokeStyle = css('--border-strong'); ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke();
+    ctx.restore();
+    series.forEach(s=>{
+      const v = s.data[i];
+      const y = padT + plotH - ((v-minV)/(maxV-minV))*plotH;
+      ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2);
+      ctx.fillStyle = s.color; ctx.fill();
+      ctx.lineWidth=1.5; ctx.strokeStyle = css('--bg-1')||'#0A0E14'; ctx.stroke();
+    });
+  }
+}
+
+function drawDonut(canvas, segments){
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const size=130;
+  canvas.width=size*dpr; canvas.height=size*dpr; canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,size,size);
+  const cx=size/2, cy=size/2, rOuter=58, rInner=38;
+  let start=-Math.PI/2;
+  const total = segments.reduce((a,s)=>a+s.value,0)||1;
+  segments.forEach(s=>{
+    const angle = (s.value/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,rOuter,start,start+angle);
+    ctx.arc(cx,cy,rInner,start+angle,start,true);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    start += angle;
+  });
+  ctx.fillStyle = css('--text-0'); ctx.font='700 15px '+css('--font-mono'); ctx.textAlign='center';
+  ctx.fillText(segments.length+' assets', cx, cy+5);
+  ctx.textAlign='left';
+}
+
+function drawGauge(canvas, score){
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const w=380,h=240;
+  const displayW=w/2, displayH=h/2; // matches .gauge-wrap (190x120) so the canvas fits its container exactly
+  canvas.width=displayW*dpr; canvas.height=displayH*dpr; canvas.style.width=displayW+'px'; canvas.style.height=displayH+'px';
+  ctx.setTransform(dpr*0.5,0,0,dpr*0.5,0,0);
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h-30, r=140;
+  // background arc
+  ctx.lineWidth=20; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,0); ctx.strokeStyle=css('--border'); ctx.stroke();
+  // colored segments
+  const segs=[{c:'#E1667C',from:0,to:.4},{c:'#E0A339',from:.4,to:.7},{c:'#3FD08A',from:.7,to:1}];
+  segs.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,Math.PI+s.from*Math.PI, Math.PI+s.to*Math.PI);
+    ctx.strokeStyle=s.c+'33'; ctx.stroke();
+  });
+  // value arc
+  const pct = Math.max(0,Math.min(100,score))/100;
+  const grad = ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+  grad.addColorStop(0,'#E1667C'); grad.addColorStop(.5,'#E0A339'); grad.addColorStop(1,'#3FD08A');
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,Math.PI+pct*Math.PI); ctx.strokeStyle=grad; ctx.stroke();
+  // needle
+  const ang = Math.PI + pct*Math.PI;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*(r-26), cy+Math.sin(ang)*(r-26));
+  ctx.strokeStyle=css('--text-0'); ctx.lineWidth=3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fillStyle=css('--text-0'); ctx.fill();
+}
+
+function ringSVG(pct, color, size){
+  size = size||56;
+  const r=(size-8)/2, c=2*Math.PI*r, offset = c*(1-Math.max(0,Math.min(1,pct)));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${css('--border')}" stroke-width="6"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" transform="rotate(-90 ${size/2} ${size/2})"/>
+  </svg>`;
+}
+
+/* Animated counters */
+function animateNumber(el, to, opts){
+  opts = opts||{};
+  if(S.reducedMotion){ el.textContent = opts.format? opts.format(to) : fmt(to); return; }
+  const from = 0, dur = 900, start = performance.now();
+  function step(t){
+    const p = Math.min(1,(t-start)/dur);
+    const eased = 1-Math.pow(1-p,3);
+    const val = from + (to-from)*eased;
+    el.textContent = opts.format ? opts.format(val) : fmt(val);
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ============================================================
+   RENDER: OVERVIEW
+   ============================================================ */
+let SIM = [];
+function render(){
+  SIM = runSimulation();
+  renderSpine();
+  renderKPIs();
+  renderCashflowChart(15);
+  renderGauge();
+  renderAllocDonut();
+  renderEFStatus();
+  renderBudgetUtil();
+  renderExpenseBreakdown();
+  renderInsights();
+  renderIncomeModule();
+  renderBudgetModule();
+  renderEFModule();
+  renderInvestModule();
+  renderTaxModule();
+  renderRetireModule();
+  renderGoals();
+  renderNetworthView();
+  renderReport();
+  renderEndOfDashboard();
+  renderWhatIfControls();
+  renderWhatIfChart();
+  renderScenarioTable();
+}
+
+function fitOverviewCharts(){
+  const spineWrap = document.querySelector('#view-overview .spine-canvas-wrap');
+  if(spineWrap){
+    const h = spineWrap.clientHeight;
+    if(h>60) renderSpine(h);
+  }
+  const cfBody = document.querySelector('#view-overview .chart-card .card-body');
+  if(cfBody){
+    const h = cfBody.clientHeight;
+    if(h>60){
+      const activeBtn = document.querySelector('#cfToggle button.active');
+      const years = activeBtn ? parseInt(activeBtn.dataset.r,10) : 15;
+      renderCashflowChart(years, h);
+    }
+  }
+}
+function renderSpine(hOverride){
+  const canvas = document.getElementById('spineCanvas');
+  drawLineArea(canvas, [
+    {data:SIM.map(r=>r.netWorth), color:css('--teal').trim()||'#12B8AA', fill:true},
+    {data:SIM.map(r=>r.income), color:css('--gold').trim()||'#D4AF37'},
+    {data:SIM.map(r=>r.expenses), color:css('--violet').trim()||'#8B7FD6'}
+  ], {height:hOverride||220, labels:SIM.map(r=>r.age)});
+  const fiAge = findFIAge(SIM);
+  document.getElementById('spineFI').textContent = fiAge? fiAge : '42+';
+  document.getElementById('spineNW60').textContent = fmtCompact(SIM[SIM.length-1].netWorth);
+  const peak = Math.max(...SIM.map(r=>r.savings));
+  document.getElementById('spinePeak').textContent = fmtCompact(peak);
+}
+
+function renderKPIs(){
+  const latestWorking = SIM.filter(r=>r.age>=S.startAge)[0] || SIM[SIM.length-1];
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const last = SIM[SIM.length-1];
+  const savingsRatePct = S.savingsRate;
+  const debtRatio = S.hasLoan? 25: 0;
+  const efMonths = computeEFMonths();
+  const health = computeHealthScore();
+  const budgetUtil = Math.min(100, Math.round((100-S.budgetSavings)));
+
+  const kpis = [
+    {label:'Projected Annual Income', value: fmt(nowRow.income), sub:'At career start, age '+S.startAge, icon:ICONS.income, color:'var(--gold)', trend:'up', trendVal:S.salaryGrowth+'%/yr'},
+    {label:'Projected Annual Expenses', value: fmt(nowRow.expenses), sub:'Inflation-adjusted', icon:ICONS.expense, color:'var(--rose)', trend:'flat', trendVal:S.inflation+'%/yr'},
+    {label:'Annual Savings', value: fmt(nowRow.savings), sub:savingsRatePct+'% savings rate', icon:ICONS.savings, color:'var(--teal)', trend:'up', trendVal:savingsRatePct+'%'},
+    {label:'Investment Corpus (Age 60)', value: fmt(last.investCorpus), sub:'@ '+S.expectedReturn+'% expected return', icon:ICONS.invest, color:'var(--violet)', trend:'up', trendVal:'compounding'},
+    {label:'Net Worth (Age 60)', value: fmt(last.netWorth), sub:'Full lifetime simulation', icon:ICONS.networth, color:'var(--teal)', trend:'up', trendVal:'42yr sim'},
+    {label:'Cash Flow (Year 1)', value: fmt(nowRow.savings), sub: nowRow.savings>=0?'Positive':'Negative', icon:ICONS.cashflow, color: nowRow.savings>=0?'var(--teal)':'var(--rose)', trend: nowRow.savings>=0?'up':'down', trendVal: nowRow.savings>=0?'Healthy':'Deficit'},
+    {label:'Financial Health Score', value: health.score+' / 100', sub:health.category, icon:ICONS.health, color: health.color, trend: health.score>=70?'up':(health.score>=45?'flat':'down'), trendVal:health.category},
+    {label:'Budget Utilization', value: budgetUtil+'%', sub:S.budgetSavings+'% allocated to savings', icon:ICONS.budget, color:'var(--amber)', trend:'flat', trendVal:'on-track'},
+    {label:'Debt-to-Income Ratio', value: debtRatio+'%', sub: S.hasLoan?'Manageable':'Debt-free start', icon:ICONS.debt, color: debtRatio>40?'var(--rose)':'var(--teal)', trend: debtRatio>40?'down':'up', trendVal: S.hasLoan?'loan active':'no loans'},
+    {label:'Emergency Fund Status', value: efMonths.toFixed(1)+' / '+S.emergencyMonths+' mo', sub: efMonths>=S.emergencyMonths? 'Fully funded':'Building up', icon:ICONS.fund, color: efMonths>=S.emergencyMonths?'var(--teal)':'var(--amber)', trend: efMonths>=S.emergencyMonths?'up':'flat', trendVal: Math.round(efMonths/S.emergencyMonths*100)+'%'}
+  ];
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = kpis.map(k=>`
+    <div class="card kpi" style="--glow-color:${k.color}">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="background:${k.color}22; color:${k.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${k.icon}</svg></div>
+        <div class="trend ${k.trend}">${k.trend==='up'?'▲':k.trend==='down'?'▼':'●'} ${k.trendVal}</div>
+      </div>
+      <div class="kpi-label" data-tip="${k.sub}">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderCashflowChart(years, hOverride){
+  const rows = SIM.filter(r=>r.age>=S.startAge).slice(0,years);
+  drawLineArea(document.getElementById('cashflowChart'), [
+    {data:rows.map(r=>r.income), color:css('--gold')||'#D4AF37'},
+    {data:rows.map(r=>r.expenses), color:css('--rose')||'#E1667C'},
+    {data:rows.map(r=>r.savings), color:css('--teal')||'#12B8AA', fill:true}
+  ], {height:hOverride||230, labels:rows.map(r=>r.age)});
+}
+document.querySelectorAll('#cfToggle button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#cfToggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const cfBody = document.querySelector('#view-overview .chart-card .card-body');
+    const h = cfBody ? cfBody.clientHeight : 0;
+    renderCashflowChart(parseInt(b.dataset.r,10), h>60?h:undefined);
+  });
+});
+
+function computeEFMonths(){
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const monthlyExpense = nowRow.expenses/12;
+  // approximate emergency fund built so far = cashCorpus at start+1 or a modeled small buffer
+  const efRow = SIM.find(r=>r.age===S.startAge+1);
+  const cash = efRow? efRow.cashCorpus : 0;
+  return monthlyExpense>0 ? cash/monthlyExpense : 0;
+}
+
+function computeHealthScore(){
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const savingsScore = Math.min(100, (S.savingsRate/30)*100); // 30% considered excellent
+  const efMonths = computeEFMonths();
+  const efScore = Math.min(100, (efMonths/S.emergencyMonths)*100);
+  const debtScore = S.hasLoan? 60 : 100;
+  const diversScore = (S.equityAllocation>=30 && S.equityAllocation<=80) ? 100 : 60;
+  const cashflowScore = nowRow.savings>=0 ? 100 : 20;
+  const goalScore = goalPaceScore();
+  const score = Math.round(
+    savingsScore*0.25 + efScore*0.20 + debtScore*0.15 + diversScore*0.15 + cashflowScore*0.15 + goalScore*0.10
+  );
+  let category, color;
+  if(score>=80){category='Excellent'; color='#3FD08A';}
+  else if(score>=65){category='Good'; color='#12B8AA';}
+  else if(score>=45){category='Fair'; color='#E0A339';}
+  else {category='Poor'; color='#E1667C';}
+  return {score, category, color, breakdown:{savingsScore,efScore,debtScore,diversScore,cashflowScore,goalScore}};
+}
+function goalPaceScore(){
+  if(!S.goals.length) return 80;
+  let onPace=0;
+  S.goals.forEach(g=>{
+    const yearsLeft = Math.max(0.1, g.byAge - S.age);
+    const needed = (g.target-g.current)/yearsLeft;
+    if(needed <= (S.startSalaryAnnual*S.savingsRate/100)) onPace++;
+  });
+  return Math.round((onPace/S.goals.length)*100);
+}
+
+function renderGauge(){
+  const h = computeHealthScore();
+  drawGauge(document.getElementById('gaugeCanvas'), h.score);
+  const numEl = document.getElementById('healthScoreNum');
+  animateNumber(numEl, h.score, {format:v=>Math.round(v)});
+  const cat = document.getElementById('healthCat');
+  cat.textContent = h.category;
+  cat.style.background = h.color+'22'; cat.style.color = h.color;
+  const plan = document.getElementById('healthPlan');
+  const items = [];
+  if(h.breakdown.savingsScore<80) items.push('<li><b>Boost savings rate</b> — aim for 30%+ of income once earning to accelerate compounding.</li>');
+  if(h.breakdown.efScore<100) items.push('<li><b>Build your emergency fund</b> — target '+S.emergencyMonths+' months of expenses before aggressive investing.</li>');
+  if(h.breakdown.debtScore<100) items.push('<li><b>Manage debt carefully</b> — keep EMIs under 35-40% of take-home pay.</li>');
+  if(h.breakdown.diversScore<100) items.push('<li><b>Diversify allocation</b> — a 30-80% equity mix balances growth and stability.</li>');
+  if(h.breakdown.cashflowScore<100) items.push('<li><b>Fix negative cash flow</b> — expenses are projected to exceed income in early years.</li>');
+  if(!items.length) items.push('<li><b>You are on track</b> — maintain discipline and revisit assumptions yearly.</li>');
+  plan.innerHTML = items.join('');
+}
+
+function renderAllocDonut(){
+  const eq = S.equityAllocation, debt=100-S.equityAllocation;
+  drawDonut(document.getElementById('allocDonut'), [
+    {value:eq, color:css('--teal')||'#12B8AA'},
+    {value:debt, color:css('--gold')||'#D4AF37'}
+  ]);
+  document.getElementById('allocLegend').innerHTML = `
+    <div class="dl-row"><span class="dot" style="background:${css('--teal')}"></span><span class="name">Equity / Growth</span><span class="val">${eq}%</span></div>
+    <div class="dl-row"><span class="dot" style="background:${css('--gold')}"></span><span class="name">Debt / Stable</span><span class="val">${debt}%</span></div>
+    <div class="dl-row" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--border);"><span class="name muted">Rebalances automatically as you approach retirement age in the simulation.</span></div>
+  `;
+}
+
+function renderEFStatus(){
+  const months = computeEFMonths();
+  const pct = Math.min(1, months/S.emergencyMonths);
+  const color = pct>=1? '#3FD08A' : pct>=0.5? '#E0A339' : '#E1667C';
+  document.getElementById('efStatusBody').innerHTML = `
+    <div class="donut-wrap">
+      <div class="mini-ring">${ringSVG(pct,color,64)}<span>${Math.round(pct*100)}%</span></div>
+      <div class="donut-legend">
+        <div class="dl-row"><span class="name">Months covered</span><span class="val">${months.toFixed(1)} / ${S.emergencyMonths}</span></div>
+        <div class="dl-row"><span class="name muted" style="font-size:11px;">${pct>=1?'Fully funded — safe to invest aggressively':'Prioritize building this before extra SIP increases'}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderBudgetUtil(){
+  const rows = [
+    {label:'Needs', pct:S.budgetNeeds, color:css('--rose')},
+    {label:'Wants', pct:S.budgetWants, color:css('--amber')},
+    {label:'Savings', pct:S.budgetSavings, color:css('--teal')}
+  ];
+  document.getElementById('budgetUtilBody').innerHTML = rows.map(r=>`
+    <div class="budget-row" style="padding:8px 0;">
+      <div class="budget-info">
+        <div class="top"><span class="cat">${r.label}</span><span class="amt">${r.pct}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${r.pct}%; background:${r.color};"></div></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderExpenseBreakdown(){
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const monthlyExp = nowRow.expenses/12;
+  const body = document.getElementById('expenseBreakdownBody');
+  const colors = ['var(--teal)','var(--gold)','var(--violet)','var(--rose)','var(--amber)','#5FA8D3','#9FD68C','var(--text-2)'];
+  body.innerHTML = S.expenseCategories.map((c,i)=>{
+    const amt = monthlyExp*(c.pct/100);
+    return `<div class="budget-row">
+      <div class="bi" style="background:${colors[i%colors.length]}22; color:${colors[i%colors.length]}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS[c.icon]||ICONS.misc}</svg></div>
+      <div class="budget-info">
+        <div class="top"><span class="cat">${c.name}</span><span class="amt">${fmt(amt)} /mo</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${c.pct}%; background:${colors[i%colors.length]};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   RULE-BASED INSIGHTS ENGINE
+   ============================================================ */
+function renderInsights(){
+  const list = [];
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const efMonths = computeEFMonths();
+  const health = computeHealthScore();
+  const debtRatio = S.hasLoan?25:0;
+  const housingPct = S.expenseCategories.find(c=>c.name.includes('Housing'))?.pct||0;
+  const subPct = S.expenseCategories.find(c=>c.name.includes('Subscriptions'))?.pct||0;
+
+  if(S.savingsRate<20){
+    list.push({tag:'Savings',color:'var(--rose)',icon:ICONS.savings,title:'Savings rate below the healthy threshold',
+      body:`Your projected savings rate is ${S.savingsRate}%, below the commonly recommended 20% minimum. Consider trimming discretionary categories like Entertainment and Subscriptions, which together are projected at ${(S.expenseCategories.find(c=>c.name.includes('Entertainment'))?.pct||0)+subPct}% of spend.`});
+  } else {
+    list.push({tag:'Savings',color:'var(--teal)',icon:ICONS.savings,title:'Savings rate is on track',
+      body:`At a ${S.savingsRate}% savings rate, you're compounding effectively. Small increases of even 2-3% per year, timed with salary hikes, can meaningfully pull forward your financial independence age.`});
+  }
+
+  if(debtRatio>40){
+    list.push({tag:'Debt',color:'var(--rose)',icon:ICONS.debt,title:'High debt burden warning',
+      body:`A debt-to-income ratio above 40% strains monthly cash flow. Prioritize paying off higher-interest loans first, and avoid taking on additional EMIs until this ratio falls below 30%.`});
+  } else {
+    list.push({tag:'Debt',color:'var(--teal)',icon:ICONS.debt,title:'Starting career debt-free',
+      body:`With no education loan or existing debt, you have a significant head start. Every rupee saved from EMI payments others make can instead compound in your investment portfolio from day one.`});
+  }
+
+  if(efMonths<S.emergencyMonths){
+    list.push({tag:'Emergency Fund',color:'var(--amber)',icon:ICONS.fund,title:'Build your emergency reserve first',
+      body:`Your simulated emergency fund covers ${efMonths.toFixed(1)} of the recommended ${S.emergencyMonths} months of expenses. Prioritize this liquid buffer in a savings account or liquid fund before increasing equity SIP contributions.`});
+  } else {
+    list.push({tag:'Emergency Fund',color:'var(--teal)',icon:ICONS.fund,title:'Emergency fund target met',
+      body:`Your reserve comfortably covers ${S.emergencyMonths} months of expenses. You're well-positioned to direct additional savings toward long-term, growth-oriented investments.`});
+  }
+
+  if(housingPct>35){
+    list.push({tag:'Affordability',color:'var(--rose)',icon:ICONS.home,title:'Housing costs may strain affordability',
+      body:`Housing is projected at ${housingPct}% of income, above the commonly cited 30-35% affordability guideline. Consider a more modest rent bracket or a shared-living arrangement in your early career years.`});
+  }
+
+  if(subPct>0 && (nowRow.expenses*(subPct/100))/12 > 1500){
+    list.push({tag:'Subscriptions',color:'var(--amber)',icon:ICONS.sub,title:'Review recurring subscriptions',
+      body:`Projected subscription spend exceeds a reasonable threshold. Audit overlapping OTT, music, and app subscriptions annually — a simple review often reclaims 20-30% of this category.`});
+  }
+
+  if(S.equityAllocation>=90 || S.equityAllocation<=10){
+    list.push({tag:'Diversification',color:'var(--amber)',icon:ICONS.invest,title:'Portfolio concentration risk',
+      body:`Your allocation is heavily skewed (${S.equityAllocation}% equity). For a conservative-leaning investor, a 40-70% equity range with the remainder in debt instruments typically balances growth with stability.`});
+  }
+
+  if(nowRow.expenses > nowRow.income){
+    list.push({tag:'Cash Flow',color:'var(--rose)',icon:ICONS.cashflow,title:'Negative cash flow projected',
+      body:`In this scenario, projected expenses exceed income in early career years. Revisit the savings rate assumption or delay major discretionary purchases until income grows.`});
+  } else {
+    list.push({tag:'Cash Flow',color:'var(--teal)',icon:ICONS.cashflow,title:'Consistently positive cash flow',
+      body:`Your simulation shows sustained positive cash flow. This is the ideal foundation for a long-term investing strategy — consider automating SIP increases alongside every salary increment.`});
+  }
+
+  S.goals.forEach(g=>{
+    const yearsLeft = Math.max(0.1, g.byAge-S.age);
+    const neededMonthly = (g.target-g.current)/(yearsLeft*12);
+    const affordableMonthly = (S.startSalaryAnnual*S.savingsRate/100)/12;
+    if(g.current<g.target && neededMonthly>affordableMonthly*1.3){
+      list.push({tag:'Goal Pace',color:'var(--rose)',icon:ICONS.savings,title:`"${g.name}" is behind schedule`,
+        body:`To reach ${fmt(g.target)} by age ${g.byAge}, you'd need to contribute roughly ${fmt(neededMonthly)}/month — above your current projected capacity. Consider extending the timeline or increasing contribution.`});
+    }
+  });
+
+  if(health.score>=80){
+    list.push({tag:'Milestone',color:'var(--gold)',icon:ICONS.health,title:'Strong overall financial health',
+      body:`Your Financial Health Score of ${health.score} reflects disciplined assumptions across savings, emergency planning, and diversification. Keep reviewing annually as real numbers replace projections.`});
+  }
+
+  list.push({tag:'Strategy',color:'var(--violet)',icon:ICONS.invest,title:'Long-term investing recommendation',
+    body:`Given a conservative-to-balanced risk profile with a ${S.sipMonthly>0?fmt(S.sipMonthly):'flexible'} monthly SIP budget, a mix of index funds and high-quality debt instruments (like PPF/EPF) is a reasonable core, adjusted as income and risk appetite grow.`});
+
+  const container = document.getElementById('insightsList');
+  container.innerHTML = list.map(it=>`
+    <div class="card insight-card">
+      <div class="insight-icon" style="background:${it.color}22; color:${it.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${it.icon}</svg></div>
+      <div class="insight-body">
+        <span class="insight-tag" style="background:${it.color}22; color:${it.color}">${it.tag}</span>
+        <h4>${it.title}</h4>
+        <p>${it.body}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   MODULE: INCOME & CAREER
+   ============================================================ */
+function fieldHTML(id,label,val,opts){
+  opts=opts||{};
+  const showVal = opts.type==='range' ? `<b>${opts.display?opts.display(val):val}</b>` : '';
+  return `<div class="field">
+    <label for="${id}">${label}${showVal}</label>
+    ${opts.type==='select' ? `<select id="${id}">${opts.options.map(o=>`<option value="${o.v}" ${o.v==val?'selected':''}>${o.l}</option>`).join('')}</select>`
+      : `<input type="${opts.type||'number'}" id="${id}" value="${val}" ${opts.min!==undefined?`min="${opts.min}"`:''} ${opts.max!==undefined?`max="${opts.max}"`:''} ${opts.step?`step="${opts.step}"`:''}>`}
+  </div>`;
+}
+function bindNumber(id, cb){ document.getElementById(id).addEventListener('input', e=>{ cb(parseFloat(e.target.value)||0); render(); saveState(); }); }
+function bindRange(id, labelUpdater, cb){
+  const el = document.getElementById(id);
+  el.addEventListener('input', e=>{ const v=parseFloat(e.target.value); cb(v); labelUpdater(v); render(); saveState(); });
+}
+
+function renderIncomeModule(){
+  const body = document.getElementById('incomeInputs');
+  body.innerHTML = `
+    <div class="field-row">
+      ${fieldHTML('inStartSalary','Starting Annual Salary',S.startSalaryAnnual,{min:100000,step:10000})}
+      ${fieldHTML('inStartAge','Career Start Age',S.startAge,{min:18,max:30})}
+    </div>
+    <div class="field-row">
+      ${fieldHTML('inGrowth','Annual Salary Growth %',S.salaryGrowth,{min:0,max:25,step:0.5})}
+      ${fieldHTML('inSavingsRate','Target Savings Rate %',S.savingsRate,{min:0,max:70})}
+    </div>
+    <div class="result-strip">
+      <div class="result-chip"><span>Year 5 Salary</span><b id="incY5">—</b></div>
+      <div class="result-chip"><span>Year 10 Salary</span><b id="incY10">—</b></div>
+      <div class="result-chip"><span>Year 20 Salary</span><b id="incY20">—</b></div>
+    </div>
+  `;
+  bindNumber('inStartSalary', v=>S.startSalaryAnnual=v);
+  bindNumber('inStartAge', v=>S.startAge=Math.max(16,Math.min(35,v)));
+  bindNumber('inGrowth', v=>S.salaryGrowth=v);
+  bindNumber('inSavingsRate', v=>S.savingsRate=v);
+
+  const y5 = S.startSalaryAnnual*Math.pow(1+S.salaryGrowth/100,5);
+  const y10 = S.startSalaryAnnual*Math.pow(1+S.salaryGrowth/100,10);
+  const y20 = S.startSalaryAnnual*Math.pow(1+S.salaryGrowth/100,20);
+  document.getElementById('incY5').textContent = fmt(y5);
+  document.getElementById('incY10').textContent = fmt(y10);
+  document.getElementById('incY20').textContent = fmt(y20);
+
+  const rows = SIM.filter(r=>r.age>=S.startAge);
+  drawLineArea(document.getElementById('salaryChart'), [{data:rows.map(r=>r.income), color:css('--gold')||'#D4AF37', fill:true}], {height:340, labels:rows.map(r=>r.age)});
+}
+
+/* ============================================================
+   MODULE: BUDGET
+   ============================================================ */
+const EXPENSE_GROUP_FALLBACK = {
+  'Housing/Rent':'needs','Food & Groceries':'needs','Transport':'needs','Utilities & Phone':'needs','Health & Fitness':'needs',
+  'Subscriptions':'wants','Entertainment':'wants','Miscellaneous':'wants'
+};
+function catGroup(c){ return c.group || EXPENSE_GROUP_FALLBACK[c.name] || 'needs'; }
+
+// Rescale every category inside a group so the group's percentages sum to targetPct,
+// preserving each category's relative share within the group.
+function redistributeGroup(group, targetPct){
+  const cats = S.expenseCategories.filter(c=>catGroup(c)===group);
+  if(!cats.length) return;
+  const currentSum = cats.reduce((s,c)=>s+c.pct,0);
+  if(currentSum<=0){
+    const even = targetPct/cats.length;
+    cats.forEach(c=>c.pct=Math.max(1,Math.round(even)));
+  } else {
+    const factor = targetPct/currentSum;
+    cats.forEach(c=>{ c.pct = Math.max(1, Math.round(c.pct*factor)); });
+  }
+}
+
+// When an individual expense-category slider moves, roll its group's new total
+// back up into the corresponding Needs/Wants dial, then pull proportionally
+// from the other bucket + savings so Needs + Wants + Savings stays ~100%.
+function syncBudgetFromCategories(group){
+  const sum = S.expenseCategories.filter(c=>catGroup(c)===group).reduce((s,c)=>s+c.pct,0);
+  const changedKey = group==='needs' ? 'budgetNeeds' : 'budgetWants';
+  const otherGroupKey = group==='needs' ? 'budgetWants' : 'budgetNeeds';
+  S[changedKey] = sum;
+  const remaining = 100 - sum;
+  const oldOtherSum = S[otherGroupKey] + S.budgetSavings;
+  if(oldOtherSum<=0){
+    S[otherGroupKey] = Math.round(remaining/2);
+    S.budgetSavings = remaining - S[otherGroupKey];
+  } else {
+    const factor = remaining/oldOtherSum;
+    S[otherGroupKey] = Math.max(5, Math.round(S[otherGroupKey]*factor));
+    S.budgetSavings = Math.max(5, Math.round(S.budgetSavings*factor));
+  }
+  redistributeGroup(group==='needs'?'wants':'needs', S[otherGroupKey]);
+  S.savingsRate = S.budgetSavings;
+}
+
+// Real-life budgeting is zero-sum: Needs + Wants + Savings ~= 100%.
+// Moving one dial pulls proportionally from the other two, then the
+// expense-category sliders underneath Needs/Wants reshape to match.
+function rebalanceBudget(changedKey, newVal){
+  const keys = ['budgetNeeds','budgetWants','budgetSavings'];
+  const others = keys.filter(k=>k!==changedKey);
+  S[changedKey] = newVal;
+  const remaining = 100 - newVal;
+  const oldOtherSum = others.reduce((s,k)=>s+S[k],0);
+  if(oldOtherSum<=0){
+    others.forEach(k=>S[k]=Math.round(remaining/others.length));
+  } else {
+    const factor = remaining/oldOtherSum;
+    others.forEach(k=>{ S[k] = Math.max(5, Math.round(S[k]*factor)); });
+  }
+  if(catGroup) {
+    if(others.includes('budgetNeeds') || changedKey==='budgetNeeds') redistributeGroup('needs', S.budgetNeeds);
+    if(others.includes('budgetWants') || changedKey==='budgetWants') redistributeGroup('wants', S.budgetWants);
+  }
+  S.savingsRate = S.budgetSavings;
+}
+
+function renderBudgetModule(){
+  const allocBody = document.getElementById('budgetAllocBody');
+  allocBody.innerHTML = `
+    <div class="slider-row"><div class="lbl"><span>Needs</span><b id="lblNeeds">${S.budgetNeeds}%</b></div><input type="range" id="rngNeeds" min="20" max="70" value="${S.budgetNeeds}"></div>
+    <div class="slider-row"><div class="lbl"><span>Wants</span><b id="lblWants">${S.budgetWants}%</b></div><input type="range" id="rngWants" min="5" max="50" value="${S.budgetWants}"></div>
+    <div class="slider-row"><div class="lbl"><span>Savings &amp; Investing</span><b id="lblSave">${S.budgetSavings}%</b></div><input type="range" id="rngSave" min="5" max="60" value="${S.budgetSavings}"></div>
+    <p class="muted" style="font-size:11.5px;">Adjusting Needs/Wants reshapes the expense categories on the left proportionally. Total should sum near 100%.</p>
+  `;
+  document.getElementById('rngNeeds').addEventListener('input', e=>{
+    rebalanceBudget('budgetNeeds', parseInt(e.target.value)); render(); saveState();
+  });
+  document.getElementById('rngWants').addEventListener('input', e=>{
+    rebalanceBudget('budgetWants', parseInt(e.target.value)); render(); saveState();
+  });
+  document.getElementById('rngSave').addEventListener('input', e=>{
+    rebalanceBudget('budgetSavings', parseInt(e.target.value)); render(); saveState();
+  });
+
+  const editor = document.getElementById('budgetInputs');
+  editor.innerHTML = S.expenseCategories.map((c,i)=>`
+    <div class="slider-row" style="margin-bottom:10px;"><div class="lbl"><span>${c.name}</span><b>${c.pct}%</b></div><input type="range" data-idx="${i}" class="catRange" min="1" max="40" value="${c.pct}"></div>
+  `).join('');
+  editor.querySelectorAll('.catRange').forEach(r=>{
+    r.addEventListener('input', e=>{
+      const idx = e.target.dataset.idx;
+      const group = catGroup(S.expenseCategories[idx]);
+      S.expenseCategories[idx].pct = parseInt(e.target.value);
+      syncBudgetFromCategories(group);
+      render(); saveState();
+    });
+  });
+
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const monthlyExp = nowRow.expenses/12;
+  const canvas = document.getElementById('budgetBarChart');
+  const ctx = setupHiDPI(canvas, 190);
+  const w = canvas.clientWidth, h=190, padL=40, padB=34, padT=18;
+  ctx.clearRect(0,0,w,h);
+  const cats = S.expenseCategories;
+  const maxPct = Math.max(...cats.map(c=>c.pct))*1.2;
+  const barW = (w-padL-20)/cats.length - 10;
+  const colors = ['var(--teal)','var(--gold)','var(--violet)','var(--rose)','var(--amber)','#5FA8D3','#9FD68C','var(--text-2)'];
+  cats.forEach((c,i)=>{
+    const x = padL + i*((w-padL-20)/cats.length) + 5;
+    const barH = ((h-padT-padB)*(c.pct/maxPct));
+    const y = h-padB-barH;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(colors[i%colors.length].replace('var(','').replace(')',''))||colors[i%colors.length];
+    ctx.fillStyle = css(colors[i%colors.length].slice(4,-1)) || '#12B8AA';
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x,y,barW,barH,5) : ctx.rect(x,y,barW,barH);
+    ctx.fill();
+    ctx.fillStyle = css('--text-2'); ctx.font='10px '+css('--font-body'); ctx.textAlign='center';
+    ctx.fillText(c.name.split(' ')[0], x+barW/2, h-padB+14);
+    ctx.fillText(c.pct+'%', x+barW/2, y-6);
+  });
+  ctx.textAlign='left';
+}
+function syncSavingsFromBudget(){ S.savingsRate = S.budgetSavings; }
+
+/* ============================================================
+   MODULE: EMERGENCY FUND
+   ============================================================ */
+function renderEFModule(){
+  const body = document.getElementById('efInputs');
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  const monthlyExpense = nowRow.expenses/12;
+  const targetAmount = monthlyExpense*S.emergencyMonths;
+  body.innerHTML = `
+    <div class="field-row">
+      ${fieldHTML('efMonths','Target Coverage (months)',S.emergencyMonths,{min:3,max:12})}
+      ${fieldHTML('efMonthlyExp','Est. Monthly Essential Expense',Math.round(monthlyExpense),{step:500})}
+    </div>
+    <div class="result-strip">
+      <div class="result-chip"><span>Target Fund Size</span><b>${fmt(targetAmount)}</b></div>
+      <div class="result-chip"><span>Months Covered Today</span><b>${computeEFMonths().toFixed(1)}</b></div>
+      <div class="result-chip"><span>Recommended Instrument</span><b style="font-size:12px;">Liquid Fund / HYSA</b></div>
+    </div>
+  `;
+  bindNumber('efMonths', v=>S.emergencyMonths=Math.max(1,v));
+  document.getElementById('efMonthlyExp').addEventListener('input', ()=>{}); // display only, derived from sim
+
+  const rows = SIM.filter(r=>r.age>=S.startAge).slice(0,10);
+  drawLineArea(document.getElementById('efChart'), [{data:rows.map(r=>r.cashCorpus), color:css('--amber')||'#E0A339', fill:true}], {height:340, labels:rows.map(r=>r.age)});
+}
+
+/* ============================================================
+   MODULE: INVESTMENTS
+   ============================================================ */
+function renderInvestModule(){
+  const body = document.getElementById('investInputs');
+  body.innerHTML = `
+    <div class="field-row">
+      ${fieldHTML('invSip','Monthly SIP Budget',S.sipMonthly,{min:0,step:500})}
+      ${fieldHTML('invReturn','Expected Annual Return %',S.expectedReturn,{min:2,max:18,step:0.5})}
+    </div>
+    <div class="slider-row"><div class="lbl"><span>Equity Allocation</span><b id="lblEquity">${S.equityAllocation}%</b></div><input type="range" id="rngEquity" min="0" max="100" value="${S.equityAllocation}"></div>
+    <div class="result-strip">
+      <div class="result-chip"><span>Corpus in 10 yrs</span><b id="invY10">—</b></div>
+      <div class="result-chip"><span>Corpus in 20 yrs</span><b id="invY20">—</b></div>
+      <div class="result-chip"><span>Corpus at 60</span><b id="invY60">—</b></div>
+    </div>
+  `;
+  bindNumber('invSip', v=>S.sipMonthly=Math.max(0,v));
+  bindNumber('invReturn', v=>S.expectedReturn=Math.max(1,v));
+  document.getElementById('rngEquity').addEventListener('input', e=>{ S.equityAllocation=parseInt(e.target.value); document.getElementById('lblEquity').textContent=S.equityAllocation+'%'; render(); saveState(); });
+
+  const rows = SIM.filter(r=>r.age>=S.startAge);
+  const r10 = rows.find(r=>r.age===S.startAge+10), r20=rows.find(r=>r.age===S.startAge+20), r60=SIM[SIM.length-1];
+  document.getElementById('invY10').textContent = r10? fmt(r10.investCorpus):'—';
+  document.getElementById('invY20').textContent = r20? fmt(r20.investCorpus):'—';
+  document.getElementById('invY60').textContent = fmt(r60.investCorpus);
+  drawLineArea(document.getElementById('sipChart'), [{data:rows.map(r=>r.investCorpus), color:css('--violet')||'#8B7FD6', fill:true}], {height:150, labels:rows.map(r=>r.age)});
+
+  const div = document.getElementById('diversificationBody');
+  const eq=S.equityAllocation, debt=100-eq;
+  const balanced = eq>=30 && eq<=80;
+  div.innerHTML = `
+    <div class="grid-3">
+      <div class="result-chip"><span>Equity</span><b>${eq}%</b></div>
+      <div class="result-chip"><span>Debt / Fixed Income</span><b>${debt}%</b></div>
+      <div class="result-chip"><span>Concentration Risk</span><b style="color:${balanced?'#3FD08A':'var(--rose)'}">${balanced?'Balanced':'Concentrated'}</b></div>
+    </div>
+    <p class="muted mt-16" style="font-size:12.5px; line-height:1.6;">${balanced? 'Your allocation sits within a commonly recommended range for a conservative-to-balanced investor, spreading risk across growth and stability instruments.' : 'This allocation is concentrated at one extreme. Consider rebalancing toward a 40-70% equity range to reduce volatility while preserving long-term growth potential.'}</p>
+  `;
+}
+
+/* ============================================================
+   MODULE: TAX PLANNER (Simplified India new regime)
+   ============================================================ */
+function computeTax(income){
+  const slabs = [
+    {upto:300000, rate:0}, {upto:600000, rate:0.05}, {upto:900000, rate:0.10},
+    {upto:1200000, rate:0.15}, {upto:1500000, rate:0.20}, {upto:Infinity, rate:0.30}
+  ];
+  let tax=0, prev=0; const breakdown=[];
+  for(const s of slabs){
+    if(income>prev){
+      const taxable = Math.min(income,s.upto)-prev;
+      const t = taxable*s.rate;
+      tax += t;
+      if(taxable>0) breakdown.push({range:`${fmtCompact(prev)} - ${s.upto===Infinity?'∞':fmtCompact(s.upto)}`, rate:(s.rate*100)+'%', taxable, tax:t});
+      prev = s.upto;
+    }
+  }
+  // standard deduction + rebate approx (87A) if income <= 700000 -> tax = 0 (simplified)
+  if(income<=700000) { tax = 0; }
+  return {tax, effectiveRate: income>0? (tax/income*100):0, breakdown};
+}
+function renderTaxModule(){
+  const body = document.getElementById('taxInputs');
+  const nowRow = SIM.find(r=>r.age===S.startAge) || SIM[0];
+  body.innerHTML = `
+    <div class="field-row">${fieldHTML('taxIncome','Annual Gross Income',Math.round(nowRow.income),{step:10000})}${fieldHTML('taxYearsAhead','Preview Years Ahead',5,{min:0,max:30})}</div>
+    <div class="result-strip">
+      <div class="result-chip"><span>Estimated Tax</span><b id="taxAmt">—</b></div>
+      <div class="result-chip"><span>Effective Rate</span><b id="taxRate">—</b></div>
+      <div class="result-chip"><span>In-hand (Annual)</span><b id="taxInHand">—</b></div>
+    </div>
+    <p class="muted mt-10" style="font-size:11px;">Simplified estimate under new-regime style slabs. Excludes cesses, HRA and other exemptions. Not tax advice.</p>
+  `;
+  let income = parseFloat(document.getElementById('taxIncome').value)||nowRow.income;
+  const yrsAhead = parseInt(document.getElementById('taxYearsAhead').value)||0;
+  document.getElementById('taxIncome').addEventListener('input', e=>{ updateTaxResult(parseFloat(e.target.value)||0); });
+  document.getElementById('taxYearsAhead').addEventListener('input', e=>{ const yrs=parseInt(e.target.value)||0; const projected = nowRow.income*Math.pow(1+S.salaryGrowth/100,yrs); document.getElementById('taxIncome').value=Math.round(projected); updateTaxResult(projected); });
+  function updateTaxResult(inc){
+    const r = computeTax(inc);
+    document.getElementById('taxAmt').textContent = fmt(r.tax);
+    document.getElementById('taxRate').textContent = r.effectiveRate.toFixed(1)+'%';
+    document.getElementById('taxInHand').textContent = fmt(inc-r.tax);
+    renderTaxBreakdown(r);
+  }
+  updateTaxResult(income);
+}
+function renderTaxBreakdown(r){
+  const el = document.getElementById('taxBreakdownBody');
+  if(!r.breakdown.length){
+    el.innerHTML = `<p class="muted" style="font-size:12.5px;">No taxable income in any slab.</p>`;
+    return;
+  }
+  const rebateNote = r.tax===0 ? `<p class="muted" style="font-size:11.5px; margin-bottom:10px;">Income qualifies for the Section 87A rebate, so net tax payable is ₹0 — here's how it breaks down slab-by-slab before the rebate is applied:</p>` : '';
+  el.innerHTML = `${rebateNote}<div class="scroll-table"><table class="data-table"><thead><tr><th>Slab</th><th>Rate</th><th>Taxable in Slab</th><th>Tax</th></tr></thead><tbody>
+    ${r.breakdown.map(b=>`<tr><td>${b.range}</td><td>${b.rate}</td><td>${fmt(b.taxable)}</td><td>${fmt(b.tax)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* ============================================================
+   MODULE: RETIREMENT & FI
+   ============================================================ */
+function renderRetireModule(){
+  const body = document.getElementById('retireInputs');
+  body.innerHTML = `
+    <div class="field-row">
+      ${fieldHTML('retAge','Target Retirement Age',S.retireAge,{min:S.startAge+5,max:70})}
+      ${fieldHTML('retWithdraw','Safe Withdrawal Rate %',4,{min:2,max:6,step:0.25})}
+    </div>
+    <div class="result-strip">
+      <div class="result-chip"><span>Required Corpus</span><b id="retReq">—</b></div>
+      <div class="result-chip"><span>Projected Corpus</span><b id="retProj">—</b></div>
+      <div class="result-chip"><span>Financial Independence</span><b id="retFI">—</b></div>
+    </div>
+  `;
+  bindNumber('retAge', v=>S.retireAge=Math.max(S.startAge+1,v));
+  const withdrawEl = document.getElementById('retWithdraw');
+  function update(){
+    const rate = parseFloat(withdrawEl.value)||4;
+    const retRow = SIM.find(r=>r.age===S.retireAge) || SIM[SIM.length-1];
+    const requiredCorpus = retRow.expenses/(rate/100);
+    document.getElementById('retReq').textContent = fmt(requiredCorpus);
+    document.getElementById('retProj').textContent = fmt(retRow.netWorth);
+    const fiAge = findFIAge(SIM);
+    document.getElementById('retFI').textContent = fiAge? ('Age '+fiAge) : 'Beyond 60';
+    drawLineArea(document.getElementById('retireChart'), [
+      {data:SIM.filter(r=>r.age>=S.startAge).map(r=>r.netWorth), color:css('--teal')||'#12B8AA', fill:true},
+      {data:SIM.filter(r=>r.age>=S.startAge).map(r=>r.expenses*25), color:css('--rose')||'#E1667C'}
+    ], {height:340, labels:SIM.filter(r=>r.age>=S.startAge).map(r=>r.age)});
+  }
+  withdrawEl.addEventListener('input', update);
+  update();
+}
+
+/* ============================================================
+   MODULE: GOALS
+   ============================================================ */
+function addGoal(){
+  const id = Date.now();
+  S.goals.push({id, name:'New Goal', target:100000, current:0, byAge:S.age+3});
+  saveState(); render();
+  toast('Goal added — customize it below');
+}
+document.getElementById('addGoalBtn').addEventListener('click', addGoal);
+function renderGoals(){
+  const grid = document.getElementById('goalsGrid');
+  grid.innerHTML = S.goals.map(g=>{
+    const pct = Math.min(1, g.current/g.target);
+    const yearsLeft = Math.max(0.1, g.byAge-S.age);
+    const neededMonthly = Math.max(0,(g.target-g.current)/(yearsLeft*12));
+    return `<div class="card" style="padding:18px;">
+      <div class="flex-between" style="margin-bottom:12px;">
+        <input type="text" value="${g.name}" data-id="${g.id}" class="goalName" style="background:none; border:none; font-size:15px; font-weight:700; color:var(--text-0); outline:none; width:70%;">
+        <button class="btn" data-id="${g.id}" style="padding:5px 9px;" onclick="window.__removeGoal(${g.id})">✕</button>
+      </div>
+      <div class="donut-wrap">
+        <div class="mini-ring" style="width:64px;height:64px;">${ringSVG(pct, pct>=1?'#3FD08A':'var(--teal)',64)}<span>${Math.round(pct*100)}%</span></div>
+        <div class="donut-legend">
+          <div class="dl-row"><span class="name">Target</span><span class="val">${fmt(g.target)}</span></div>
+          <div class="dl-row"><span class="name">Saved</span><span class="val">${fmt(g.current)}</span></div>
+          <div class="dl-row"><span class="name">By Age</span><span class="val">${g.byAge}</span></div>
+        </div>
+      </div>
+      <div class="field-row mt-16">
+        <div class="field"><label>Target Amount</label><input type="number" class="goalTarget" data-id="${g.id}" value="${g.target}"></div>
+        <div class="field"><label>Current Saved</label><input type="number" class="goalCurrent" data-id="${g.id}" value="${g.current}"></div>
+      </div>
+      <div class="field"><label>Target Age <b>${g.byAge}</b></label><input type="range" class="goalAge" data-id="${g.id}" min="${S.age+1}" max="60" value="${g.byAge}"></div>
+      <p class="muted mt-10" style="font-size:11.5px;">Needs ~${fmt(neededMonthly)}/month to hit target.</p>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.goalName').forEach(i=>i.addEventListener('change', e=>{ const g=S.goals.find(x=>x.id==e.target.dataset.id); g.name=e.target.value; saveState(); render(); }));
+  grid.querySelectorAll('.goalTarget').forEach(i=>i.addEventListener('input', e=>{ const g=S.goals.find(x=>x.id==e.target.dataset.id); g.target=parseFloat(e.target.value)||0; saveState(); render(); }));
+  grid.querySelectorAll('.goalCurrent').forEach(i=>i.addEventListener('input', e=>{ const g=S.goals.find(x=>x.id==e.target.dataset.id); g.current=parseFloat(e.target.value)||0; saveState(); render(); }));
+  grid.querySelectorAll('.goalAge').forEach(i=>i.addEventListener('input', e=>{ const g=S.goals.find(x=>x.id==e.target.dataset.id); g.byAge=parseInt(e.target.value); saveState(); render(); }));
+}
+window.__removeGoal = function(id){ S.goals = S.goals.filter(g=>g.id!==id); saveState(); render(); toast('Goal removed'); };
+
+/* ============================================================
+   NET WORTH TIMELINE VIEW
+   ============================================================ */
+function renderNetworthView(){
+  const canvas = document.getElementById('networthFullChart');
+  const series = [
+    {data:SIM.map(r=>r.netWorth), color:css('--teal')||'#12B8AA', fill:true},
+    {data:SIM.map(r=>r.investCorpus), color:css('--violet')||'#8B7FD6'}
+  ];
+  const labels = SIM.map(r=>r.age);
+  canvas.__series = series; canvas.__labels = labels; canvas.__height = 300;
+  drawLineArea(canvas, series, {height:300, labels});
+
+  const tbody = document.querySelector('#networthTable tbody');
+  tbody.innerHTML = SIM.map((r,i)=>`<tr data-idx="${i}"><td>${r.age}</td><td>${r.year}</td><td>${fmt(r.income)}</td><td>${fmt(r.expenses)}</td><td>${fmt(r.savings)}</td><td>${fmt(r.investCorpus)}</td><td>${fmt(r.netWorth)}</td></tr>`).join('');
+
+  function clearHover(){
+    canvas.__hoverIdx = null;
+    drawLineArea(canvas, canvas.__series, {height:canvas.__height, labels:canvas.__labels});
+    tbody.querySelectorAll('tr.row-hover').forEach(tr=>tr.classList.remove('row-hover'));
+  }
+  function setHover(idx){
+    if(idx===canvas.__hoverIdx) return;
+    canvas.__hoverIdx = idx;
+    drawLineArea(canvas, canvas.__series, {height:canvas.__height, labels:canvas.__labels, hoverIndex:idx});
+    tbody.querySelectorAll('tr.row-hover').forEach(tr=>tr.classList.remove('row-hover'));
+    const row = tbody.querySelector(`tr[data-idx="${idx}"]`);
+    if(row){ row.classList.add('row-hover'); row.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+  }
+  // Chart hover -> highlight ledger row
+  if(!canvas.dataset.hoverBound){
+    canvas.dataset.hoverBound='1';
+    canvas.addEventListener('mousemove', e=>{
+      const rect = canvas.getBoundingClientRect();
+      const padL=48, padR=16;
+      const plotW = rect.width-padL-padR;
+      const n = canvas.__series[0].data.length;
+      const x = e.clientX-rect.left;
+      let idx = Math.round(((x-padL)/plotW)*(n-1));
+      idx = Math.max(0, Math.min(n-1, idx));
+      setHover(idx);
+    });
+    canvas.addEventListener('mouseleave', clearHover);
+  }
+  // Ledger row hover -> highlight point on chart
+  if(!tbody.dataset.hoverBound){
+    tbody.dataset.hoverBound='1';
+    tbody.addEventListener('mouseover', e=>{
+      const tr = e.target.closest('tr[data-idx]');
+      if(!tr) return;
+      canvas.__hoverIdx = null;
+      drawLineArea(canvas, canvas.__series, {height:canvas.__height, labels:canvas.__labels, hoverIndex:parseInt(tr.dataset.idx)});
+      tbody.querySelectorAll('tr.row-hover').forEach(x=>x.classList.remove('row-hover'));
+      tr.classList.add('row-hover');
+    });
+    tbody.addEventListener('mouseleave', clearHover);
+  }
+}
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+function renderReport(){
+  const health = computeHealthScore();
+  const last = SIM[SIM.length-1];
+  const fiAge = findFIAge(SIM);
+  const el = document.getElementById('reportBody');
+  el.innerHTML = `
+    <h3 style="font-family:var(--font-display); font-size:20px; margin-bottom:6px;">Lifetime Financial Plan Summary</h3>
+    <p class="muted" style="margin-bottom:18px;">Generated by Meridian · Profile: Student preparing for financial independence · Currency: ${S.currency}</p>
+    <div class="grid-3">
+      <div class="result-chip"><span>Financial Health Score</span><b>${health.score}/100 — ${health.category}</b></div>
+      <div class="result-chip"><span>Projected Net Worth @ 60</span><b>${fmt(last.netWorth)}</b></div>
+      <div class="result-chip"><span>Financial Independence Age</span><b>${fiAge||'Beyond 60'}</b></div>
+    </div>
+    <h4 class="mt-20" style="margin-bottom:8px;">Key Assumptions</h4>
+    <div class="grid-4">
+      <div class="result-chip"><span>Career Start</span><b>Age ${S.startAge}</b></div>
+      <div class="result-chip"><span>Starting Salary</span><b>${fmt(S.startSalaryAnnual)}</b></div>
+      <div class="result-chip"><span>Salary Growth</span><b>${S.salaryGrowth}%/yr</b></div>
+      <div class="result-chip"><span>Inflation</span><b>${S.inflation}%/yr</b></div>
+      <div class="result-chip"><span>Expected Return</span><b>${S.expectedReturn}%/yr</b></div>
+      <div class="result-chip"><span>Savings Rate</span><b>${S.savingsRate}%</b></div>
+      <div class="result-chip"><span>Monthly SIP</span><b>${fmt(S.sipMonthly)}</b></div>
+      <div class="result-chip"><span>Equity Allocation</span><b>${S.equityAllocation}%</b></div>
+    </div>
+    <h4 class="mt-20" style="margin-bottom:8px;">Goals Snapshot</h4>
+    <div class="scroll-table"><table class="data-table"><thead><tr><th>Goal</th><th>Target</th><th>Saved</th><th>Progress</th><th>Target Age</th></tr></thead><tbody>
+    ${S.goals.map(g=>`<tr><td>${g.name}</td><td>${fmt(g.target)}</td><td>${fmt(g.current)}</td><td>${Math.round(g.current/g.target*100)}%</td><td>${g.byAge}</td></tr>`).join('')}
+    </tbody></table></div>
+  `;
+}
+
+/* ============================================================
+   END OF DASHBOARD SUMMARY
+   ============================================================ */
+function renderEndOfDashboard(){
+  const health = computeHealthScore();
+  const el = document.getElementById('endOfDashboard');
+  const strengths = [];
+  const improve = [];
+  if(!S.hasLoan) strengths.push('Starting career completely debt-free');
+  if(S.savingsRate>=25) strengths.push('Strong planned savings rate of '+S.savingsRate+'%');
+  if(S.equityAllocation>=30 && S.equityAllocation<=80) strengths.push('Balanced, diversified investment allocation');
+  if(!strengths.length) strengths.push('Proactively planning finances years before first paycheck — a rare and valuable habit');
+  if(computeEFMonths()<S.emergencyMonths) improve.push('Emergency fund needs to reach '+S.emergencyMonths+' months of coverage');
+  if(S.savingsRate<20) improve.push('Savings rate below the recommended 20% baseline');
+  if(!improve.length) improve.push('Revisit assumptions yearly as real income and expenses replace projections');
+
+  el.innerHTML = `
+    <h2 style="font-family:var(--font-display); font-size:24px; margin-bottom:6px;">Your Personalized Financial Summary</h2>
+    <p class="muted" style="max-width:720px; margin-bottom:24px;">You're planning your complete financial journey years before your first salary — modeling income growth, taxes, inflation, investments and retirement together. That foresight alone puts you ahead of most first-time earners.</p>
+    <div class="grid-2">
+      <div>
+        <h4 style="margin-bottom:10px; color:#3FD08A;">✓ Strengths</h4>
+        <ul style="padding-left:18px; color:var(--text-1); font-size:13px; line-height:1.9;">${strengths.map(s=>`<li>${s}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <h4 style="margin-bottom:10px; color:var(--amber);">△ Areas to Improve</h4>
+        <ul style="padding-left:18px; color:var(--text-1); font-size:13px; line-height:1.9;">${improve.map(s=>`<li>${s}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <h4 class="mt-20" style="margin-bottom:10px;">Financial Checklist Before Your First Job</h4>
+    <div class="checklist" id="checklistBody"></div>
+    <h4 class="mt-20" style="margin-bottom:10px;">Common Financial Mistakes to Avoid</h4>
+    <ul style="padding-left:18px; color:var(--text-1); font-size:13px; line-height:1.9;">
+      <li>Matching every salary hike with equivalent lifestyle inflation instead of saving the difference</li>
+      <li>Delaying investing until "later" — early years benefit most from compounding</li>
+      <li>Skipping insurance while young and healthy, when premiums are lowest</li>
+      <li>Taking on EMIs/credit card debt for depreciating assets or lifestyle purchases</li>
+      <li>Not tracking expenses, leading to lifestyle creep going unnoticed</li>
+    </ul>
+    <h4 class="mt-20" style="margin-bottom:10px;">Financial Literacy Tips</h4>
+    <ul style="padding-left:18px; color:var(--text-1); font-size:13px; line-height:1.9;">
+      <li>The Rule of 72: divide 72 by your return rate to estimate years to double your money</li>
+      <li>Emergency fund first, then high-interest debt payoff, then long-term investing</li>
+      <li>Diversify across asset classes — don't rely on a single stock, sector, or instrument</li>
+      <li>Automate savings and SIPs so good habits don't depend on willpower each month</li>
+    </ul>
+    <h4 class="mt-20" style="margin-bottom:10px;">Useful Resources</h4>
+    <ul style="padding-left:18px; color:var(--text-1); font-size:13px; line-height:1.9;">
+      <li>RBI &amp; SEBI investor education portals for regulated, unbiased financial literacy content</li>
+      <li>Index fund fact sheets from AMFI-registered mutual fund houses</li>
+      <li>Official ITR filing portal (incometax.gov.in) for tax filing guidance</li>
+    </ul>
+    <h4 class="mt-20" style="margin-bottom:10px;">Prompts to Continue Planning with Claude or ChatGPT</h4>
+    <div class="scroll-table" style="max-height:220px;"><table class="data-table"><tbody>
+      <tr><td>"Review my emergency fund strategy and suggest 3 liquid instruments suited for a student in India."</td></tr>
+      <tr><td>"Explain the difference between old and new tax regimes in India for a ₹6L salary."</td></tr>
+      <tr><td>"Help me build a 12-month plan to go from ₹0 to a fully funded emergency fund."</td></tr>
+      <tr><td>"Compare index fund vs actively managed fund investing for a long-term conservative investor."</td></tr>
+      <tr><td>"Simulate how a 2% higher salary growth rate changes my net worth by age 40."</td></tr>
+    </tbody></table></div>
+  `;
+  const cl = document.getElementById('checklistBody');
+  cl.innerHTML = S.checklist.map(c=>`<div class="check-item ${c.done?'done':''}" data-id="${c.id}"><div class="box">${c.done?'<svg viewBox="0 0 24 24" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>':''}</div><span>${c.text}</span></div>`).join('');
+  cl.querySelectorAll('.check-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const c = S.checklist.find(x=>x.id==item.dataset.id);
+      c.done = !c.done; saveState();
+      item.classList.toggle('done', c.done);
+      item.querySelector('.box').innerHTML = c.done? '<svg viewBox="0 0 24 24" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>':'';
+      if(c.done) toast('Checklist item completed 🎉');
+    });
+  });
+}
+
+/* ============================================================
+   WHAT-IF SIMULATOR
+   ============================================================ */
+function renderWhatIfControls(){
+  const el = document.getElementById('whatifControls');
+  const controls = [
+    {id:'wiGrowth', label:'Annual Salary Growth', val:S.salaryGrowth, min:0,max:20,step:0.5,suffix:'%', key:'salaryGrowth'},
+    {id:'wiInflation', label:'Inflation Rate', val:S.inflation, min:0,max:12,step:0.5,suffix:'%', key:'inflation'},
+    {id:'wiReturn', label:'Expected Investment Return', val:S.expectedReturn, min:2,max:18,step:0.5,suffix:'%', key:'expectedReturn'},
+    {id:'wiSavings', label:'Savings Rate', val:S.savingsRate, min:0,max:70,step:1,suffix:'%', key:'savingsRate'},
+    {id:'wiSip', label:'Monthly SIP Budget', val:S.sipMonthly, min:0,max:20000,step:500,suffix:'', key:'sipMonthly', isCurrency:true},
+    {id:'wiRetire', label:'Retirement Age', val:S.retireAge, min:S.startAge+5,max:70,step:1,suffix:'', key:'retireAge'}
+  ];
+  el.innerHTML = controls.map(c=>`
+    <div class="slider-row">
+      <div class="lbl"><span>${c.label}</span><b id="${c.id}Val">${c.isCurrency?fmt(c.val):c.val+c.suffix}</b></div>
+      <input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.val}">
+    </div>
+  `).join('') + `
+    <label class="wi-toggle">
+      <input type="checkbox" id="wiJobLoss">
+      <span><b>Simulate: Job Loss</b> — 12-month income gap at year 3</span>
+    </label>
+    <label class="wi-toggle">
+      <input type="checkbox" id="wiShock">
+      <span><b>Simulate: Unexpected Expense</b> — one-time ₹1,00,000 shock at year 5</span>
+    </label>
+  `;
+  controls.forEach(c=>{
+    document.getElementById(c.id).addEventListener('input', e=>{
+      const v = parseFloat(e.target.value);
+      S[c.key] = v;
+      document.getElementById(c.id+'Val').textContent = c.isCurrency? fmt(v) : v+c.suffix;
+      render(); saveState();
+    });
+  });
+  document.getElementById('wiJobLoss').addEventListener('change', renderWhatIfChart);
+  document.getElementById('wiShock').addEventListener('change', renderWhatIfChart);
+}
+document.getElementById('resetWhatIf').addEventListener('click', ()=>{
+  ['salaryGrowth','inflation','expectedReturn','savingsRate','sipMonthly','retireAge'].forEach(k=>S[k]=DEFAULTS[k]);
+  render(); saveState(); toast('What-If levers reset to defaults');
+});
+
+function renderWhatIfChart(){
+  let rows = SIM.filter(r=>r.age>=S.startAge).map(r=>({...r}));
+  const jobLoss = document.getElementById('wiJobLoss')?.checked;
+  const shock = document.getElementById('wiShock')?.checked;
+  if(jobLoss && rows[2]){ rows[2] = {...rows[2], income:0, savings:rows[2].expenses*-1, netWorth: rows[2].netWorth - rows[2].expenses}; }
+  if(shock && rows[4]){ rows[4] = {...rows[4], netWorth: rows[4].netWorth - 100000}; }
+  drawLineArea(document.getElementById('whatifChart'), [
+    {data:rows.map(r=>r.netWorth), color:css('--teal')||'#12B8AA', fill:true}
+  ], {height:160, labels:rows.map(r=>r.age)});
+  const last = SIM[SIM.length-1];
+  const fiAge = findFIAge(SIM);
+  document.getElementById('whatifResults').innerHTML = `
+    <div class="result-chip"><span>Net Worth @ Retirement</span><b>${fmt((SIM.find(r=>r.age===S.retireAge)||last).netWorth)}</b></div>
+    <div class="result-chip"><span>Net Worth @ 60</span><b>${fmt(last.netWorth)}</b></div>
+    <div class="result-chip"><span>FI Age</span><b>${fiAge||'Beyond 60'}</b></div>
+  `;
+}
+
+/* Scenario save/compare */
+document.getElementById('saveScenarioBtn').addEventListener('click', ()=>{
+  if(S.scenarios.length>=3){ toast('Maximum 3 scenarios — clear one first','warn'); return; }
+  const last = SIM[SIM.length-1];
+  const retRow = SIM.find(r=>r.age===S.retireAge)||last;
+  S.scenarios.push({
+    name:'Scenario '+(S.scenarios.length+1), salaryGrowth:S.salaryGrowth, inflation:S.inflation,
+    expectedReturn:S.expectedReturn, sipMonthly:S.sipMonthly, retireAge:S.retireAge,
+    netWorthAtRetire:retRow.netWorth, fiAge: findFIAge(SIM)
+  });
+  saveState(); renderScenarioTable();
+  toast('Scenario saved for comparison');
+});
+document.getElementById('clearScenariosBtn').addEventListener('click', ()=>{ S.scenarios=[]; saveState(); renderScenarioTable(); toast('Scenarios cleared'); });
+function renderScenarioTable(){
+  const tbody = document.querySelector('#scenarioTable tbody');
+  if(!S.scenarios.length){ tbody.innerHTML = '<tr><td colspan="8" class="muted">No saved scenarios yet — adjust the levers above and click "Save Current Scenario".</td></tr>'; return; }
+  tbody.innerHTML = S.scenarios.map(s=>`<tr><td>${s.name}</td><td>${s.salaryGrowth}%</td><td>${s.inflation}%</td><td>${s.expectedReturn}%</td><td>${fmt(s.sipMonthly)}</td><td>${s.retireAge}</td><td>${fmt(s.netWorthAtRetire)}</td><td>${s.fiAge||'60+'}</td></tr>`).join('');
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+document.getElementById('settingsThemeSwitch').addEventListener('click', ()=> document.getElementById('themeToggle').click());
+document.getElementById('currencySelect').value = S.currency;
+document.getElementById('currencySelect').addEventListener('change', e=>{ S.currency=e.target.value; render(); saveState(); toast('Currency updated'); });
+document.getElementById('settingsCollapseSwitch').classList.toggle('on', S.sidebarCollapsed);
+document.getElementById('settingsCollapseSwitch').addEventListener('click', function(){
+  S.sidebarCollapsed = !S.sidebarCollapsed;
+  this.classList.toggle('on', S.sidebarCollapsed);
+  sidebar.classList.toggle('collapsed', S.sidebarCollapsed);
+  saveState();
+});
+document.getElementById('settingsMotionSwitch').classList.toggle('on', S.reducedMotion);
+document.getElementById('settingsMotionSwitch').addEventListener('click', function(){
+  S.reducedMotion = !S.reducedMotion;
+  this.classList.toggle('on', S.reducedMotion);
+  saveState();
+  toast('Reduced motion '+(S.reducedMotion?'enabled':'disabled'));
+});
+document.getElementById('exportDataBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='meridian-financial-data.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Data exported as JSON');
+});
+document.getElementById('resetAllBtn').addEventListener('click', resetAll);
+function resetAll(){
+  if(!confirm('Reset all dashboard data to defaults? This cannot be undone.')) return;
+  S = JSON.parse(JSON.stringify(DEFAULTS));
+  saveState(); applyTheme(); sidebar.classList.remove('collapsed');
+  render();
+  toast('Dashboard reset to defaults','warn');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+applyTheme();
+if(S.sidebarCollapsed) sidebar.classList.add('collapsed');
+render();
+paginateAllViews();
+requestAnimationFrame(()=>requestAnimationFrame(fitOverviewCharts));
+window.addEventListener('resize', ()=>{
+  clearTimeout(window.__rz); window.__rz=setTimeout(render, 180);
+  clearTimeout(window.__rzc); window.__rzc=setTimeout(()=>{ rebuildAllCarousels(); requestAnimationFrame(fitOverviewCharts); }, 260);
+});
+
+toast('Welcome — your lifetime financial simulation is ready');
+})();
+</script>
+</body>
+</html>
