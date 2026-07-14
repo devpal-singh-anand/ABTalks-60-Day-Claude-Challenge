@@ -1,0 +1,3300 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LinkedIn Profile Optimizer AI</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- TailwindCSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Space Grotesk', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
+
+<style>
+  :root {
+    --bg: #07080d;
+    --bg-2: #0b0d15;
+    --panel: rgba(255,255,255,0.035);
+    --panel-2: rgba(255,255,255,0.06);
+    --panel-3: rgba(255,255,255,0.09);
+    --line: rgba(255,255,255,0.08);
+    --line-2: rgba(255,255,255,0.14);
+    --text: #F1F5F9;
+    --text-2: #94A3B8;
+    --text-3: #64748B;
+    --accent: #10b981;
+    --accent-2: #06b6d4;
+    --accent-3: #a78bfa;
+    --warn: #f43f5e;
+    --gold: #f59e0b;
+    --li: #0A66C2;
+  }
+
+  * { -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(1200px 600px at 12% -8%, rgba(16,185,129,0.10), transparent 55%),
+      radial-gradient(1000px 500px at 92% 0%, rgba(6,182,212,0.08), transparent 55%),
+      radial-gradient(800px 400px at 50% 110%, rgba(167,139,250,0.07), transparent 55%),
+      var(--bg);
+    min-height: 100vh;
+  }
+
+  /* Glass panels */
+  .glass {
+    background: var(--panel);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--line);
+  }
+  .glass-strong {
+    background: var(--panel-2);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--line-2);
+  }
+
+  .gradient-text {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2) 55%, var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.6), rgba(6,182,212,0.3), rgba(167,139,250,0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bubbleIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 0 12px rgba(16,185,129,0); } }
+  @keyframes shimmer { 0% { background-position: -800px 0; } 100% { background-position: 800px 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+  @keyframes ringFill { from { stroke-dashoffset: var(--from); } to { stroke-dashoffset: var(--to); } }
+  @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  .fade-in { animation: fadeIn .4s ease both; }
+  .slide-up { animation: slideUp .45s cubic-bezier(.2,.7,.2,1) both; }
+  .bubble-in { animation: bubbleIn .4s cubic-bezier(.2,.7,.2,1) both; }
+  .scale-in { animation: scaleIn .35s cubic-bezier(.2,.7,.2,1) both; }
+  .float { animation: float 4s ease-in-out infinite; }
+  .pulse-glow { animation: pulseGlow 2s ease-out infinite; }
+
+  /* Typing dots */
+  .typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+  .typing-dots span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-2);
+    animation: blink 1.2s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: .2s; }
+  .typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+  /* Chat bubbles */
+  .bubble-ai {
+    background: linear-gradient(135deg, rgba(16,185,129,0.10), rgba(6,182,212,0.06));
+    border: 1px solid rgba(16,185,129,0.18);
+    border-radius: 18px 18px 18px 4px;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, rgba(167,139,250,0.16), rgba(6,182,212,0.10));
+    border: 1px solid rgba(167,139,250,0.22);
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  /* Caret blink for typing */
+  .caret::after {
+    content: '▍';
+    color: var(--accent-2);
+    animation: blink 1s infinite;
+    margin-left: 1px;
+  }
+
+  /* Score ring */
+  .score-ring { transform: rotate(-90deg); }
+  .score-ring circle { transition: stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1); }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #04110d;
+    font-weight: 700;
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    box-shadow: 0 8px 24px -8px rgba(16,185,129,0.5);
+  }
+  .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 12px 30px -8px rgba(16,185,129,0.65); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+    color: var(--text);
+    transition: all .15s ease;
+  }
+  .btn-ghost:hover { background: var(--panel-3); border-color: rgba(255,255,255,0.22); }
+
+  /* Inputs */
+  .field {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line-2);
+    color: var(--text);
+    border-radius: 12px;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .field:focus {
+    outline: none;
+    border-color: rgba(16,185,129,0.6);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    background: rgba(0,0,0,0.35);
+  }
+  .field::placeholder { color: var(--text-3); }
+
+  /* Tabs */
+  .tab-btn {
+    position: relative;
+    transition: all .2s ease;
+  }
+  .tab-btn[data-active="true"] {
+    color: var(--text);
+  }
+  .tab-btn[data-active="true"]::after {
+    content: '';
+    position: absolute;
+    left: 12px; right: 12px; bottom: -1px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 2px;
+  }
+
+  /* Collapsible */
+  .collapsible-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .4s cubic-bezier(.2,.7,.2,1);
+  }
+  .collapsible.open .collapsible-body { max-height: 1200px; }
+  .collapsible.open .chev { transform: rotate(180deg); }
+  .chev { transition: transform .3s ease; }
+
+  /* Toast */
+  .toast {
+    animation: slideUp .35s cubic-bezier(.2,.7,.2,1) both;
+  }
+
+  /* LinkedIn preview */
+  .li-banner {
+    background: linear-gradient(120deg, #0A66C2, #004182 60%, #003955);
+  }
+  .li-avatar {
+    background: linear-gradient(135deg, #0A66C2, #4a8ed6);
+    border: 3px solid var(--bg);
+  }
+  .li-tag {
+    background: rgba(10,102,194,0.14);
+    border: 1px solid rgba(10,102,194,0.30);
+    color: #7eb8ff;
+  }
+
+  /* Skill chips in chat input */
+  .chip {
+    background: rgba(16,185,129,0.14);
+    border: 1px solid rgba(16,185,129,0.30);
+    color: #6ee7b8;
+  }
+
+  /* Shimmer placeholder */
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.6s infinite linear;
+  }
+
+  /* Animated gradient text for hero */
+  .hero-gradient {
+    background: linear-gradient(90deg, #10b981, #06b6d4, #a78bfa, #06b6d4, #10b981);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  /* Progress dots */
+  .pdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all .3s ease; }
+  .pdot.active { background: var(--accent); width: 24px; border-radius: 6px; }
+  .pdot.done { background: var(--accent-2); }
+
+  /* Analysis task row */
+  .task-row { transition: all .3s ease; }
+  .task-row.done .task-icon { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); }
+  .task-row.active .task-icon { background: rgba(6,182,212,0.18); border-color: rgba(6,182,212,0.4); }
+
+  /* Card hover */
+  .card-hover { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+  .card-hover:hover { transform: translateY(-2px); border-color: rgba(16,185,129,0.3); }
+
+  /* Mobile split */
+  @media (max-width: 1024px) {
+    .split-grid { grid-template-columns: 1fr !important; }
+    .preview-col { position: static !important; max-height: none !important; }
+  }
+
+  /* Print friendly for summary card */
+  @media print {
+    body { background: white; }
+    .no-print { display: none !important; }
+  }
+
+  /* Hide scrollbar utility for tab bar */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Empty state dashed */
+  .dashed-empty {
+    border: 1px dashed var(--line-2);
+    background: rgba(255,255,255,0.015);
+  }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<!-- ============ WELCOME SCREEN ============ -->
+<div id="welcomeScreen" class="fixed inset-0 z-50 flex items-center justify-center p-6">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute -top-20 -left-20 w-96 h-96 rounded-full" style="background: radial-gradient(circle, rgba(16,185,129,0.18), transparent 70%); filter: blur(40px);"></div>
+    <div class="absolute -bottom-20 -right-20 w-[28rem] h-[28rem] rounded-full" style="background: radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%); filter: blur(40px);"></div>
+    <div class="absolute top-1/3 right-1/4 w-72 h-72 rounded-full float" style="background: radial-gradient(circle, rgba(6,182,212,0.14), transparent 70%); filter: blur(50px);"></div>
+  </div>
+
+  <div class="relative max-w-3xl w-full text-center slide-up">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-medium mb-8" style="color: var(--accent-2);">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-glow"></span>
+      AI-Powered LinkedIn Coaching
+    </div>
+
+    <div class="mb-6 flex justify-center">
+      <div class="w-20 h-20 rounded-2xl glass-strong gradient-border flex items-center justify-center float" style="background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(6,182,212,0.12));">
+        <i data-lucide="sparkles" class="w-10 h-10" style="color: var(--accent);"></i>
+      </div>
+    </div>
+
+    <h1 class="font-display font-extrabold leading-[1.05] mb-5" style="font-size: clamp(2.5rem, 6vw, 4.5rem);">
+      <span class="hero-gradient">LinkedIn Profile</span><br>
+      <span class="text-white">Optimizer AI</span>
+    </h1>
+
+    <p class="text-lg md:text-xl mb-2" style="color: var(--text-2);">
+      Turn your LinkedIn into a <span class="text-white font-semibold">Recruiter Magnet</span>.
+    </p>
+    <p class="text-sm md:text-base mb-10 max-w-xl mx-auto" style="color: var(--text-3);">
+      A conversational AI that reviews your real profile, roasts what's broken, rebuilds it for ATS,
+      and hands you a 7-day growth plan. No demo data. No fake people. Just your profile, upgraded.
+    </p>
+
+    <button id="startBtn" class="btn-primary inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base">
+      <i data-lucide="play" class="w-5 h-5"></i>
+      Start Analysis
+    </button>
+
+    <div class="mt-12 grid grid-cols-3 gap-3 max-w-lg mx-auto">
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xl font-bold gradient-text">6</div>
+        <div class="text-[11px]" style="color: var(--text-3);">Questions</div>
+      </div>
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xl font-bold gradient-text">6</div>
+        <div class="text-[11px]" style="color: var(--text-3);">Result Tabs</div>
+      </div>
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xl font-bold gradient-text">7-Day</div>
+        <div class="text-[11px]" style="color: var(--text-3);">Action Plan</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ MAIN APP ============ -->
+<div id="mainApp" class="hidden min-h-screen flex flex-col">
+
+  <!-- Top bar -->
+  <header class="sticky top-0 z-30 glass-strong border-b" style="border-color: var(--line);">
+    <div class="px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, var(--accent), var(--accent-2));">
+          <i data-lucide="sparkles" class="w-5 h-5 text-black"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="font-display font-bold text-sm md:text-base leading-tight truncate">LinkedIn Profile Optimizer <span class="gradient-text">AI</span></div>
+          <div class="text-[11px] hidden sm:block" style="color: var(--text-3);">Conversational profile coaching</div>
+        </div>
+      </div>
+
+      <div id="topProgress" class="hidden md:flex items-center gap-2">
+        <span class="text-xs" style="color: var(--text-3);">Progress</span>
+        <div id="progressDots" class="flex items-center gap-1.5"></div>
+        <span id="progressLabel" class="text-xs font-semibold ml-1" style="color: var(--accent-2);">0/6</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="restartBtn" class="btn-ghost px-3 py-2 rounded-lg text-xs flex items-center gap-1.5" title="Start over">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Restart</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Split layout -->
+  <main class="flex-1 grid split-grid" style="grid-template-columns: minmax(0,1fr) minmax(0,1fr);">
+
+    <!-- LEFT: AI Conversation -->
+    <section class="flex flex-col min-h-0 border-r" style="border-color: var(--line);">
+      <div id="chatScroll" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-4" style="max-height: calc(100vh - 4rem);">
+        <!-- Messages injected here -->
+      </div>
+
+      <!-- Input dock -->
+      <div class="border-t px-4 md:px-6 py-4 glass" style="border-color: var(--line);">
+        <div id="inputArea">
+          <!-- Dynamic input per question -->
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: LinkedIn Preview -->
+    <section class="preview-col flex flex-col min-h-0" style="position: sticky; top: 4rem; max-height: calc(100vh - 4rem);">
+      <div class="px-4 md:px-6 py-3 border-b flex items-center justify-between glass" style="border-color: var(--line);">
+        <div class="flex items-center gap-2">
+          <i data-lucide="eye" class="w-4 h-4" style="color: var(--accent-2);"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-2);">Live LinkedIn Preview</span>
+        </div>
+        <span class="text-[11px] flex items-center gap-1.5" style="color: var(--text-3);">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Updates in real-time
+        </span>
+      </div>
+      <div id="previewScroll" class="flex-1 overflow-y-auto px-4 md:px-6 py-6">
+        <div id="linkedInPreview"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+
+<!-- ============ RESULTS VIEW ============ -->
+<div id="resultsView" class="hidden min-h-screen flex flex-col">
+  <header class="sticky top-0 z-30 glass-strong border-b" style="border-color: var(--line);">
+    <div class="px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, var(--accent), var(--accent-2));">
+          <i data-lucide="check-check" class="w-5 h-5 text-black"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="font-display font-bold text-sm md:text-base leading-tight">Analysis Complete</div>
+          <div class="text-[11px]" style="color: var(--text-3);">Your LinkedIn optimization report</div>
+        </div>
+      </div>
+      <button id="backToChatBtn" class="btn-ghost px-3 py-2 rounded-lg text-xs flex items-center gap-1.5">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Edit Profile</span>
+      </button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="px-2 md:px-4 flex items-center gap-1 overflow-x-auto no-scrollbar border-t" style="border-color: var(--line);">
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="report" data-active="true">
+        <i data-lucide="award" class="w-4 h-4"></i>Recruiter Report Card
+      </button>
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="roast" style="color: var(--text-3);">
+        <i data-lucide="flame" class="w-4 h-4"></i>Profile Roast
+      </button>
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="rebuild" style="color: var(--text-3);">
+        <i data-lucide="wand-sparkles" class="w-4 h-4"></i>Profile Rebuild
+      </button>
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="compare" style="color: var(--text-3);">
+        <i data-lucide="git-compare" class="w-4 h-4"></i>Before vs After
+      </button>
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="plan" style="color: var(--text-3);">
+        <i data-lucide="calendar-check" class="w-4 h-4"></i>7-Day Action Plan
+      </button>
+      <button class="tab-btn whitespace-nowrap px-3 py-3 text-sm font-medium flex items-center gap-2" data-tab="summary" style="color: var(--text-3);">
+        <i data-lucide="image" class="w-4 h-4"></i>Summary Card
+      </button>
+    </div>
+  </header>
+
+  <main id="resultsContent" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-10">
+    <!-- Tab content injected here -->
+  </main>
+</div>
+
+
+<!-- ============ TOASTS ============ -->
+<div id="toastContainer" class="fixed bottom-6 right-6 z-[60] space-y-2"></div>
+
+
+<script>
+/* =====================================================================
+   LINKEDIN PROFILE OPTIMIZER AI
+   Single-file vanilla JS application.
+   ===================================================================== */
+
+/* ---------- State ---------- */
+const state = {
+  step: 'welcome',          // welcome | chatting | analyzing | results
+  currentQuestion: 0,
+  answers: {
+    headline: '',
+    about: '',
+    experience: { title: '', company: '', duration: '', description: '' },
+    skills: [],
+    projects: [],
+    goal: '',
+  },
+  analysis: null,           // computed analysis object
+  activeTab: 'report',
+  chatBusy: false,
+};
+
+/* ---------- Questions config ---------- */
+const QUESTIONS = [
+  {
+    id: 'headline',
+    label: 'Current Headline',
+    icon: 'type',
+    aiPrompt: "Let's start with the first thing recruiters see — your headline.\n\nWhat does your LinkedIn headline say right now? Paste it exactly as it appears.",
+    placeholder: 'e.g. Senior Software Engineer | Building scalable backend systems',
+    type: 'text',
+    field: 'headline',
+  },
+  {
+    id: 'about',
+    label: 'About Section',
+    icon: 'file-text',
+    aiPrompt: "Got it. Now your About section — this is where recruiters decide if you're worth a call.\n\nPaste your current LinkedIn About text. All of it.",
+    placeholder: 'Paste your full About section here...',
+    type: 'textarea',
+    field: 'about',
+  },
+  {
+    id: 'experience',
+    label: 'Most Recent Experience',
+    icon: 'briefcase',
+    aiPrompt: "Now your most recent role. I need four things:\n\n• Job title\n• Company\n• How long you've been there\n• What you actually do (2-4 sentences is fine)",
+    type: 'experience',
+    field: 'experience',
+  },
+  {
+    id: 'skills',
+    label: 'Top Skills',
+    icon: 'list-checks',
+    aiPrompt: "List your top skills. Type each one and press Enter (or comma). Aim for the ones you'd want a recruiter to find you for.",
+    type: 'skills',
+    field: 'skills',
+  },
+  {
+    id: 'projects',
+    label: 'Top Projects (Very Important)',
+    icon: 'folder-git-2',
+    aiPrompt: "Tell me about your best 3–5 projects. These will help me generate a much stronger LinkedIn profile, recruiter analysis, ATS keywords, and experience section.\n\nFor each one I'll need: project name, a one-line description, the technologies used, your role, and your biggest achievement or impact (if there isn't one yet, just say \"None\" — I won't make one up).",
+    type: 'projects',
+    field: 'projects',
+  },
+  {
+    id: 'goal',
+    label: 'Target Goal',
+    icon: 'target',
+    aiPrompt: "Last question. What is your primary goal on LinkedIn right now?\n\nExamples: Software Development Internship · AI Engineering Internship · Full-Stack Developer · Backend Developer · Machine Learning Engineer · Freelance Clients · Thought Leadership · Personal Branding · Network Growth.\n\nBe as specific as you can — the more specific, the sharper my analysis.",
+    placeholder: 'e.g. Land a Senior Frontend Engineer role at a fintech company',
+    type: 'text',
+    field: 'goal',
+  },
+];
+
+/* ---------- Keyword libraries for analysis & rebuild ---------- */
+const ROLE_KEYWORDS = {
+  'software engineer': ['JavaScript','TypeScript','Python','React','Node.js','AWS','Docker','Kubernetes','CI/CD','REST API','GraphQL','System Design','Microservices','PostgreSQL','Git','Agile','Scrum','Unit Testing'],
+  'frontend': ['React','TypeScript','JavaScript','Next.js','Vue','Angular','CSS','Tailwind','Accessibility','Web Performance','Redux','Webpack','Vite','Jest','Responsive Design','Figma'],
+  'backend': ['Node.js','Python','Java','Go','PostgreSQL','MongoDB','Redis','Docker','Kubernetes','Microservices','REST','GraphQL','AWS','GCP','Kafka','CI/CD','System Design'],
+  'full stack': ['React','Node.js','TypeScript','PostgreSQL','AWS','Docker','REST API','GraphQL','CI/CD','System Design','Tailwind','Redis','Git'],
+  'data scientist': ['Python','SQL','Machine Learning','TensorFlow','PyTorch','Statistics','Pandas','NumPy','Scikit-learn','Data Visualization','Tableau','Power BI','A/B Testing','ETL','Spark','Experimentation'],
+  'data analyst': ['SQL','Python','Excel','Tableau','Power BI','Data Visualization','Statistics','A/B Testing','Google Analytics','ETL','Pandas','Reporting','Dashboards'],
+  'product manager': ['Product Strategy','Roadmapping','User Research','Agile','Scrum','KPIs','OKRs','Stakeholder Management','Go-to-Market','Analytics','PRDs','Prioritization','User Stories','A/B Testing','Jira'],
+  'designer': ['Figma','Sketch','UI/UX','Prototyping','User Research','Design Systems','Wireframing','Adobe XD','Interaction Design','Accessibility','Responsive Design','Design Tokens','Usability Testing'],
+  'ux': ['Figma','User Research','Wireframing','Prototyping','Usability Testing','Journey Mapping','Personas','Accessibility','Interaction Design','Design Systems','Adobe XD'],
+  'marketing': ['SEO','SEM','Content Marketing','Google Analytics','Social Media','Email Marketing','Campaign Management','HubSpot','Marketing Automation','PPC','Conversion Optimization','Copywriting','A/B Testing'],
+  'growth': ['Growth Strategy','A/B Testing','Funnel Optimization','Analytics','SEO','Lifecycle Marketing','Retention','Acquisition','SQL','Mixpanel','Amplitude','Experimentation'],
+  'sales': ['CRM','Salesforce','Lead Generation','B2B','B2C','Pipeline Management','Negotiation','Cold Calling','Account Management','Forecasting','Sales Cycle','HubSpot','Outbound','Inbound'],
+  'consultant': ['Strategy','Stakeholder Management','Data Analysis','PowerPoint','Excel','Frameworks','Change Management','Process Improvement','MBA','MBB','Operations','Financial Modeling'],
+  'finance': ['Financial Modeling','Excel','Valuation','DCF','Bloomberg','SQL','Python','Risk Analysis','FP&A','Reporting','Accounting','GAAP','Power BI'],
+  'devops': ['Docker','Kubernetes','AWS','Terraform','CI/CD','Jenkins','Linux','Ansible','Prometheus','Grafana','Git','Bash','CloudFormation','Microservices'],
+  'security': ['Security','Penetration Testing','OWASP','Cryptography','SIEM','Incident Response','Python','Linux','Network Security','Compliance','ISO 27001','Risk Assessment'],
+  'project manager': ['Agile','Scrum','Kanban','Jira','PMP','Stakeholder Management','Risk Management','Roadmapping','MS Project','Confluence','Budgeting','Resource Planning'],
+  'data engineer': ['Python','SQL','Spark','Airflow','ETL','AWS','Snowflake','dbt','Kafka','Hadoop','PostgreSQL','Data Warehousing','Docker','BigQuery'],
+  'machine learning': ['Python','TensorFlow','PyTorch','Machine Learning','Deep Learning','NLP','Computer Vision','Scikit-learn','MLOps','Statistics','Pandas','NumPy','Transformers'],
+};
+
+const ACTION_VERBS = ['Led','Built','Created','Launched','Increased','Reduced','Managed','Developed','Designed','Implemented','Drove','Scaled','Optimized','Established','Spearheaded','Orchestrated','Delivered','Achieved','Generated','Transformed','Architected','Shipped','Automated','Streamlined','Mentored','Pioneered','Engineered','Executed','Owned','Accelerated'];
+
+const WEAK_PHRASES = ['responsible for','in charge of','duties included','worked on','helped with','tasked with','involved in','participated in','assisted with'];
+
+const GENERIC_HEADLINE_PHRASES = ['student at','looking for','seeking opportunities','open to work','graduate','hardworking','team player','self-motivated','results-driven'];
+
+/* Additional role buckets for AI / student / intern / mobile detection */
+Object.assign(ROLE_KEYWORDS, {
+  'ai engineer': ['Python','TensorFlow','PyTorch','LangChain','LLMs','Prompt Engineering','RAG','Vector Databases','OpenAI','Hugging Face','NLP','Machine Learning','Deep Learning','Transformers','Fine-tuning','Embeddings','Pinecone','Weaviate','ChromaDB','LlamaIndex','CrewAI','AutoGen','Streamlit','Gradio','FastAPI'],
+  'ai developer': ['Python','LangChain','LLMs','Prompt Engineering','RAG','Vector Databases','OpenAI','Hugging Face','TensorFlow','PyTorch','NLP','Machine Learning','Transformers','Embeddings','Streamlit','Gradio','FastAPI','AI Applications','Generative AI'],
+  'full-stack developer': ['React','Node.js','TypeScript','JavaScript','Next.js','PostgreSQL','MongoDB','Tailwind','REST API','GraphQL','AWS','Docker','Git','CI/CD','Express','Prisma','Vite','Redux','HTML','CSS'],
+  'mobile developer': ['Flutter','Dart','React Native','Swift','Kotlin','iOS','Android','Firebase','Xcode','Android Studio','State Management','Mobile UI'],
+  'intern': ['Python','JavaScript','HTML','CSS','Git','GitHub','SQL','React','Node.js','REST APIs','Docker','CI/CD','Data Structures','Algorithms'],
+  'student': ['Python','JavaScript','HTML','CSS','Git','GitHub','SQL','React','Node.js','REST APIs','Data Structures','Algorithms','Communication','Teamwork'],
+});
+
+/* Demo profile — real user-provided data, auto-loaded on first open so the
+   app opens directly on the completed report. The user can still edit any
+   field via the "Edit Profile" button. Nothing here is fabricated. */
+const DEMO_PROFILE = {
+  headline: 'AI & Full-Stack Developer | Building 60 AI Projects in Public | BCA @ Amity University Online | MCA @ Amrita Vishwa Vidyapeetham',
+  about: `I'm a passionate Computer Science student exploring Artificial Intelligence, Full-Stack Development, Cloud Computing, and Workflow Automation.
+
+Currently pursuing a BCA from Amity University Online while simultaneously completing an MCA at Amrita Vishwa Vidyapeetham.
+
+I enjoy building practical AI applications, automation tools, dashboards, and developer utilities that solve real-world problems.
+
+Currently documenting my learning journey by building 60 AI-powered projects in 60 days while sharing everything publicly on GitHub and LinkedIn.
+
+Always open to learning, collaboration, internships, and opportunities in AI and Software Development.`,
+  experience: {
+    title: 'AI Projects Developer (Self-Learning Challenge)',
+    company: 'Personal Projects',
+    duration: 'June 2026 – Present',
+    description: `• Built AI-powered web applications as part of a public 60-day learning challenge focused on solving real-world problems.
+• Designed responsive dashboards, automation tools, and productivity applications using HTML, JavaScript, and modern UI/UX principles.
+• Documented every project on GitHub while sharing technical insights and learning progress on LinkedIn.
+• Continuously improved prompt engineering, frontend development, and AI application design through hands-on project development.`,
+  },
+  skills: ['Artificial Intelligence','Prompt Engineering','JavaScript','HTML','CSS','Flutter','Python','Git','GitHub','UI/UX Design'],
+  goal: 'Secure Software Development or AI Engineering internships and full-time opportunities while building a strong personal brand on LinkedIn and showcasing practical AI projects.',
+};
+
+/* ---------- Experience-level detection ---------- */
+const STUDENT_SIGNALS = ['student','pursuing','bca','mca','b.tech','m.tech','b.e','m.e','bachelor','master','b.sc','m.sc','university','college','campus','internship','self-learning','learning challenge','studying','final year','sophomore','freshman','junior year','senior year'];
+
+function detectExperienceLevel(ans) {
+  const text = [ans.about, ans.headline, ans.experience?.title, ans.experience?.company, ans.experience?.description, ans.goal].filter(Boolean).join(' ').toLowerCase();
+  const matched = STUDENT_SIGNALS.filter(s => text.includes(s));
+  const isStudent = matched.length >= 1;
+
+  // detect education credentials (e.g. "BCA @ Amity University Online")
+  let education = '';
+  const eduRegex = /((?:bca|mca|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|bachelor(?:'s)?|master(?:'s)?)\s+(?:@|at|from)\s+[A-Za-z][^|,\n]{2,60})/gi;
+  const STOP_CLAUSE = /\s+(while|and|currently|simultaneously|during|whilst|also)\b.*$/i;
+  const eduMatches = [];
+  let em;
+  while ((em = eduRegex.exec(text)) !== null) {
+    let cap = em[1].replace(/\s+/g, ' ').trim();
+    cap = cap.replace(STOP_CLAUSE, '').trim();   // stop before it bleeds into the next clause
+    cap = cap.replace(/[.,;:]+$/, '').trim();     // drop trailing punctuation
+    if (cap) eduMatches.push(cap);
+  }
+  // also try the headline pipe-separated form "BCA @ Amity University Online"
+  if (eduMatches.length === 0 && ans.headline) {
+    const pipeEdu = (ans.headline.match(/((?:BCA|MCA|B\.?\s?Tech|M\.?\s?Tech|B\.?\s?Sc|M\.?\s?Sc)\s*@\s*[A-Za-z][^|]+)/g) || []).map(s => s.trim().replace(/[.,;:]+$/, ''));
+    eduMatches.push(...pipeEdu);
+  }
+  if (eduMatches.length) education = eduMatches.slice(0, 2).join(' | ');
+
+  // detect "X projects in Y days" challenge
+  let projectChallenge = '';
+  const projMatch = text.match(/(\d+)\s*(?:ai[- ]?)?projects?[^.]*?(\d+)\s*days?/);
+  if (projMatch) projectChallenge = `Building ${projMatch[1]} AI Projects in ${projMatch[2]} Days`;
+  else if (/60.*project.*60.*day/.test(text)) projectChallenge = 'Building 60 AI Projects in 60 Days';
+  else if (/building.*ai.*project.*public/.test(text)) projectChallenge = 'Building AI Projects in Public';
+
+  return { isStudent, education, projectChallenge, signals: matched };
+}
+
+/* ---------- Career stage detection (Student / Entry / Mid / Senior / Founder / Freelancer) ---------- */
+const FOUNDER_SIGNALS = ['founder','co-founder','cofounder','started my own','my own startup','my own company','building my startup','ceo of my'];
+const FREELANCE_SIGNALS = ['freelance','freelancer','independent contractor','self-employed','consulting independently','contract-based'];
+const SENIOR_SIGNALS = ['senior','staff engineer','principal','director','head of','vice president',' vp ','engineering manager','chief ','lead engineer','lead designer'];
+
+function detectCareerStage(ans) {
+  const text = [ans.about, ans.headline, ans.experience?.title, ans.experience?.company, ans.experience?.description, ans.goal]
+    .filter(Boolean).join(' ').toLowerCase();
+
+  if (FOUNDER_SIGNALS.some(s => text.includes(s))) return 'founder';
+  if (FREELANCE_SIGNALS.some(s => text.includes(s))) return 'freelancer';
+
+  const level = detectExperienceLevel(ans);
+  if (level.isStudent) return 'student';
+
+  if (SENIOR_SIGNALS.some(s => text.includes(s))) return 'senior';
+
+  // Estimate years of experience from duration text or explicit "X years"
+  let years = 0;
+  const durText = `${ans.experience?.duration || ''} ${text}`;
+  const explicitYears = durText.match(/(\d+)\+?\s*years?/);
+  if (explicitYears) {
+    years = parseInt(explicitYears[1], 10);
+  } else {
+    const range = durText.match(/(20\d{2})\s*[-–—]\s*(present|20\d{2})/i);
+    if (range) {
+      const start = parseInt(range[1], 10);
+      const end = /present/i.test(range[2]) ? new Date().getFullYear() : parseInt(range[2], 10);
+      years = Math.max(0, end - start);
+    }
+  }
+
+  if (years >= 6) return 'senior';
+  if (years >= 2) return 'mid';
+  return 'entry';
+}
+
+/* ---------- Current identity — derived from Current Role/Skills/Credibility, NEVER from Target Goal ---------- */
+const SKILL_DOMAINS = [
+  { test: s => /artificial intelligence|machine learning|prompt engineering|tensorflow|pytorch|\bnlp\b|deep learning/i.test(s), label: 'AI Developer' },
+  { test: s => /react|node|javascript|typescript|full.?stack|frontend|backend|html|css/i.test(s), label: 'Full-Stack Developer' },
+  { test: s => /figma|sketch|ui\/ux|wireframing|design system/i.test(s), label: 'Product Designer' },
+  { test: s => /\bsql\b|tableau|power bi|data visualization|excel|pandas/i.test(s), label: 'Data Analyst' },
+  { test: s => /product strategy|roadmap|okrs|prds|stakeholder management/i.test(s), label: 'Product Manager' },
+  { test: s => /seo|sem|content marketing|social media|email marketing/i.test(s), label: 'Marketer' },
+  { test: s => /devops|terraform|kubernetes|ci\/cd|jenkins/i.test(s), label: 'DevOps Engineer' },
+];
+
+function deriveCurrentIdentity(ans) {
+  const exp = ans.experience;
+  const stage = detectCareerStage(ans);
+
+  // 1. Current Role (most authoritative signal)
+  if (exp && exp.title) {
+    const cleanTitle = exp.title.replace(/\s*\([^)]*\)\s*/g, '').trim();
+    if (cleanTitle) return cleanTitle;
+  }
+
+  // 2. Current Skills / Current Identity (about + skills text)
+  const skillsText = (ans.skills || []).join(' ');
+  const domain = SKILL_DOMAINS.find(d => d.test(skillsText) || d.test(ans.about || '') || d.test(ans.headline || ''));
+
+  if (stage === 'student') {
+    return domain ? `${domain.label} in Training` : 'Student';
+  }
+  if (domain) return domain.label;
+
+  // 3. Fallback
+  return 'Professional';
+}
+
+/* ---------- Gerund → past-tense converter for experience bullets ---------- */
+const GERUND_TO_PAST = {
+  'building':'Built','designing':'Designed','documenting':'Documented','developing':'Developed',
+  'creating':'Created','implementing':'Implemented','leading':'Led','managing':'Managed',
+  'writing':'Wrote','coding':'Coded','testing':'Tested','deploying':'Deployed',
+  'optimizing':'Optimized','automating':'Automated','integrating':'Integrated','researching':'Researched',
+  'analyzing':'Analyzed','launching':'Launched','shipping':'Shipped','improving':'Improved',
+  'working':'Worked','collaborating':'Collaborated','driving':'Drove','scaling':'Scaled',
+  'architecting':'Architected','engineering':'Engineered','delivering':'Delivered',
+  'streamlining':'Streamlined','mentoring':'Mentored','pioneering':'Pioneered',
+  'maintaining':'Maintained','supporting':'Supported','spearheading':'Spearheaded',
+  'orchestrating':'Orchestrated','building':'Built','continuously improving':'Continuously improved',
+  'driving':'Drove','producing':'Produced','establishing':'Established','executing':'Executed',
+};
+
+const LEADING_ADVERBS = ['continuously','also','additionally','furthermore','moreover','regularly','consistently','currently','previously','successfully'];
+
+/* Convert a single experience bullet line to natural past-tense form.
+   - Strips bullet markers (•, -, *, 1.)
+   - Converts a leading gerund to past tense (Building → Built)
+   - Leaves already-past-tense or adverb-led bullets alone
+   - Returns null for empty lines. */
+function convertGerundBullet(line) {
+  let s = String(line || '').replace(/^\s*[•\-\*\u2022▪◦]\s*/, '').replace(/^\s*\d+[.)]\s*/, '').trim();
+  if (!s) return null;
+  const lower = s.toLowerCase();
+
+  // Adverb + action verb (e.g. "Continuously improved ...") → keep as-is
+  const firstWord = lower.split(/\s+/)[0];
+  const secondWord = lower.split(/\s+/)[1] || '';
+  if (LEADING_ADVERBS.includes(firstWord) && ACTION_VERBS.some(v => secondWord && v.toLowerCase() === secondWord)) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // Already starts with a known past-tense action verb → keep
+  if (ACTION_VERBS.some(v => new RegExp('^' + v + '\\b', 'i').test(s))) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // Multi-word gerund phrase (e.g. "Continuously improving") → dictionary
+  for (const [ger, past] of Object.entries(GERUND_TO_PAST)) {
+    if (ger.includes(' ') && lower.startsWith(ger)) {
+      return past + s.slice(ger.length);
+    }
+  }
+
+  // Single-word gerund → dictionary, then generic -ing rule
+  for (const [ger, past] of Object.entries(GERUND_TO_PAST)) {
+    if (!ger.includes(' ') && lower.startsWith(ger + ' ')) {
+      return past + s.slice(ger.length);
+    }
+  }
+
+  // Generic -ing conversion for regular verbs (testing → tested, deploying → deployed)
+  const ingMatch = s.match(/^([A-Za-z]+)ing\b\s*(.*)/);
+  if (ingMatch) {
+    const stem = ingMatch[1].toLowerCase();
+    const rest = ingMatch[2];
+    let past;
+    if (stem.endsWith('e')) past = stem.charAt(0).toUpperCase() + stem.slice(1) + 'ed';
+    else if (/[^aeiou]y$/.test(stem)) past = stem.charAt(0).toUpperCase() + stem.slice(1, -1) + 'ied';
+    else past = stem.charAt(0).toUpperCase() + stem + 'ed';
+    return past + (rest ? ' ' + rest : '');
+  }
+
+  // Fallback: capitalize first letter, keep as-is
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ---------- Skills parser — supports comma / newline / bullet / numbered / mixed ---------- */
+function parseSkillsInput(raw) {
+  if (!raw) return [];
+  // Split on: newlines, commas, semicolons, bullet chars, "• - * ▪", numbered list "1. "
+  const parts = String(raw)
+    .split(/[\n\r;]+|[•\-\*\u2022▪◦]|\d+[.)]\s|\s*,\s*|\s+and\s+/i)
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && s.length <= 60);
+  // Dedupe case-insensitively, preserve order
+  const seen = new Set();
+  const out = [];
+  for (const p of parts) {
+    const key = p.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(p); }
+  }
+  return out;
+}
+
+/* ---------- Project helpers ---------- */
+// Flatten + dedupe every technology mentioned across all projects (case-insensitive, order preserved).
+function projectTechList(ans) {
+  const projects = (ans && ans.projects) || [];
+  const seen = new Set();
+  const out = [];
+  projects.forEach(p => {
+    parseSkillsInput(p.technologies || '').forEach(t => {
+      const key = t.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); out.push(t); }
+    });
+  });
+  return out;
+}
+
+// A project counts as having a real (non-fabricated) impact statement only if
+// the user actually wrote one and didn't just say "None" / leave it blank.
+function projectHasRealImpact(p) {
+  const v = (p.impact || '').trim();
+  if (!v) return false;
+  return !/^none$/i.test(v) && !/^n\/a$/i.test(v) && !/^no(t| )?(applicable)?$/i.test(v);
+}
+
+// Pick the strongest projects to reference — ones with a real impact statement first.
+function bestProjects(ans, n=2) {
+  const projects = (ans && ans.projects) || [];
+  const withImpact = projects.filter(projectHasRealImpact);
+  const rest = projects.filter(p => !projectHasRealImpact(p));
+  return [...withImpact, ...rest].slice(0, n);
+}
+
+/* ---------- Utilities ---------- */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function toast(message, type='success') {
+  const container = $('#toastContainer');
+  const el = document.createElement('div');
+  const color = type === 'success' ? 'var(--accent)' : type === 'error' ? 'var(--warn)' : 'var(--accent-3)';
+  const icon = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-circle' : 'info';
+  el.className = 'toast glass-strong rounded-xl px-4 py-3 flex items-center gap-2.5 text-sm shadow-2xl';
+  el.style.maxWidth = '320px';
+  el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4" style="color:${color}"></i><span>${escapeHtml(message)}</span>`;
+  container.appendChild(el);
+  refreshIcons();
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(() => el.remove(), 300);
+  }, 2400);
+}
+
+async function copyText(text, label='Copied to clipboard') {
+  if (!text || text.trim() === '') { toast('Nothing to copy yet', 'error'); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(label);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast(label); } catch (_) { toast('Copy failed', 'error'); }
+    ta.remove();
+  }
+}
+
+/* ---------- Auto scroll chat ---------- */
+function scrollChatToBottom(smooth=true) {
+  const el = $('#chatScroll');
+  el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+/* =====================================================================
+   WELCOME -> CHAT TRANSITION
+   ===================================================================== */
+$('#startBtn').addEventListener('click', async () => {
+  $('#welcomeScreen').style.transition = 'opacity .4s ease, transform .4s ease';
+  $('#welcomeScreen').style.opacity = '0';
+  $('#welcomeScreen').style.transform = 'scale(0.98)';
+  await sleep(400);
+  $('#welcomeScreen').classList.add('hidden');
+  $('#mainApp').classList.remove('hidden');
+  state.step = 'chatting';
+  refreshIcons();
+  renderProgressDots();
+  await beginConversation();
+});
+
+$('#restartBtn').addEventListener('click', () => {
+  if (!confirm('Restart? Your current answers will be cleared.')) return;
+  location.reload();
+});
+
+$('#backToChatBtn').addEventListener('click', () => {
+  $('#resultsView').classList.add('hidden');
+  $('#mainApp').classList.remove('hidden');
+  state.step = 'chatting';
+  refreshIcons();
+  scrollChatToBottom(false);
+});
+
+/* =====================================================================
+   PROGRESS DOTS
+   ===================================================================== */
+function renderProgressDots() {
+  const wrap = $('#progressDots');
+  wrap.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const dot = document.createElement('div');
+    let cls = 'pdot';
+    if (i < state.currentQuestion) cls += ' done';
+    else if (i === state.currentQuestion) cls += ' active';
+    dot.className = cls;
+    wrap.appendChild(dot);
+  });
+  const done = Math.min(state.currentQuestion, QUESTIONS.length);
+  $('#progressLabel').textContent = `${done}/${QUESTIONS.length}`;
+  $('#topProgress').classList.remove('hidden');
+}
+
+/* =====================================================================
+   CHAT CONTROLLER
+   ===================================================================== */
+async function beginConversation() {
+  await aiSay("Hi! I'm your LinkedIn Profile Optimizer. I'll review your real profile, roast what's broken, rebuild it for recruiters, and hand you a 7-day growth plan.", { delay: 0 });
+  await sleep(300);
+  await askQuestion(0);
+}
+
+async function aiSay(text, opts={}) {
+  const { delay = 250, typing = true } = opts;
+  state.chatBusy = true;
+  await sleep(delay);
+
+  const wrap = $('#chatScroll');
+  const bubble = document.createElement('div');
+  bubble.className = 'flex gap-3 bubble-in';
+  bubble.innerHTML = `
+    <div class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent), var(--accent-2));">
+      <i data-lucide="sparkles" class="w-4 h-4 text-black"></i>
+    </div>
+    <div class="bubble-ai px-4 py-3 max-w-[85%] text-sm leading-relaxed" style="color: var(--text);">
+      <span class="ai-text"></span>
+    </div>
+  `;
+  wrap.appendChild(bubble);
+  refreshIcons();
+  scrollChatToBottom();
+
+  const target = bubble.querySelector('.ai-text');
+  if (typing) {
+    target.classList.add('caret');
+    const lines = text.split('\n');
+    for (let li = 0; li < lines.length; li++) {
+      const line = lines[li];
+      for (let i = 0; i < line.length; i++) {
+        target.textContent += line[i];
+        if (i % 2 === 0) scrollChatToBottom(false);
+        await sleep(8 + Math.random() * 14);
+      }
+      if (li < lines.length - 1) {
+        target.innerHTML += '<br>';
+      }
+    }
+    target.classList.remove('caret');
+  } else {
+    target.textContent = text;
+  }
+  state.chatBusy = false;
+}
+
+function userSay(html) {
+  const wrap = $('#chatScroll');
+  const bubble = document.createElement('div');
+  bubble.className = 'flex justify-end bubble-in';
+  bubble.innerHTML = `
+    <div class="bubble-user px-4 py-3 max-w-[85%] text-sm leading-relaxed" style="color: var(--text);">
+      ${html}
+    </div>
+  `;
+  wrap.appendChild(bubble);
+  scrollChatToBottom();
+}
+
+async function askQuestion(index) {
+  if (index >= QUESTIONS.length) {
+    await finishQuestions();
+    return;
+  }
+  state.currentQuestion = index;
+  renderProgressDots();
+  const q = QUESTIONS[index];
+  await aiSay(q.aiPrompt, { delay: 350 });
+  await sleep(200);
+  renderInput(q);
+}
+
+function renderInput(q) {
+  const area = $('#inputArea');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'slide-up';
+
+  if (q.type === 'text') {
+    wrap.innerHTML = `
+      <div class="flex items-end gap-2">
+        <div class="flex-1">
+          <label class="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style="color: var(--text-3);">${escapeHtml(q.label)}</label>
+          <input id="qInput" type="text" class="field w-full px-4 py-3 text-sm" placeholder="${escapeHtml(q.placeholder || '')}" autocomplete="off" />
+        </div>
+        <button id="qSubmit" class="btn-primary px-5 py-3 rounded-xl text-sm flex items-center gap-1.5 shrink-0">
+          <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Send</span>
+        </button>
+      </div>
+    `;
+    area.appendChild(wrap);
+    refreshIcons();
+    const input = $('#qInput');
+    input.focus();
+    const submit = () => {
+      const v = input.value.trim();
+      if (!v) { input.focus(); toast('Please enter a response', 'error'); return; }
+      handleSubmitText(q, v);
+    };
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    $('#qSubmit').addEventListener('click', submit);
+  }
+
+  else if (q.type === 'textarea') {
+    wrap.innerHTML = `
+      <div>
+        <label class="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style="color: var(--text-3);">${escapeHtml(q.label)}</label>
+        <div class="flex items-end gap-2">
+          <textarea id="qInput" rows="4" class="field w-full px-4 py-3 text-sm resize-y" placeholder="${escapeHtml(q.placeholder || '')}"></textarea>
+          <button id="qSubmit" class="btn-primary px-5 py-3 rounded-xl text-sm flex items-center gap-1.5 shrink-0 self-stretch">
+            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Send</span>
+          </button>
+        </div>
+      </div>
+    `;
+    area.appendChild(wrap);
+    refreshIcons();
+    const input = $('#qInput');
+    input.focus();
+    const submit = () => {
+      const v = input.value.trim();
+      if (!v) { input.focus(); toast('Please enter a response', 'error'); return; }
+      handleSubmitText(q, v);
+    };
+    $('#qSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(); });
+  }
+
+  else if (q.type === 'experience') {
+    wrap.innerHTML = `
+      <div class="space-y-3">
+        <label class="text-[11px] uppercase tracking-wider font-semibold block" style="color: var(--text-3);">${escapeHtml(q.label)}</label>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="expTitle" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="Job title" autocomplete="off" />
+          <input id="expCompany" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="Company" autocomplete="off" />
+          <input id="expDuration" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="Duration (e.g. 2 years, Jan 2022 – Present)" autocomplete="off" />
+          <div class="col-span-2 sm:col-span-1"></div>
+          <textarea id="expDescription" rows="3" class="field w-full px-3 py-2.5 text-sm resize-y col-span-2" placeholder="What you actually do (2-4 sentences)"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button id="qSubmit" class="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-1.5">
+            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    `;
+    area.appendChild(wrap);
+    refreshIcons();
+    const submit = () => {
+      const data = {
+        title: $('#expTitle').value.trim(),
+        company: $('#expCompany').value.trim(),
+        duration: $('#expDuration').value.trim(),
+        description: $('#expDescription').value.trim(),
+      };
+      if (!data.title && !data.company && !data.description) {
+        toast('Please fill in at least your role', 'error'); return;
+      }
+      handleSubmitExperience(q, data);
+    };
+    $('#qSubmit').addEventListener('click', submit);
+    $('#expTitle').focus();
+  }
+
+  else if (q.type === 'skills') {
+    wrap.innerHTML = `
+      <div>
+        <label class="text-[11px] uppercase tracking-wider font-semibold block mb-1.5" style="color: var(--text-3);">${escapeHtml(q.label)}</label>
+        <div id="skillsBox" class="field px-3 py-2.5 min-h-[48px] flex flex-wrap gap-2 items-center cursor-text">
+          <div id="skillsChips" class="contents"></div>
+          <input id="skillsInput" type="text" class="bg-transparent border-0 outline-none text-sm flex-1 min-w-[120px]" placeholder="Type a skill + Enter" autocomplete="off" />
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <span id="skillsCount" class="text-[11px]" style="color: var(--text-3);">0 skills added</span>
+          <button id="qSubmit" class="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-1.5">
+            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    `;
+    area.appendChild(wrap);
+    refreshIcons();
+    const input = $('#skillsInput');
+    const chipsBox = $('#skillsChips');
+    const count = $('#skillsCount');
+    input.focus();
+
+    const addSkill = (raw) => {
+      // Robust parser: handles comma, newline, bullet, numbered, and mixed input.
+      // A user pasting "AI, Prompt Engineering\nJavaScript\n1. HTML" gets 4 skills.
+      const parsed = parseSkillsInput(raw);
+      for (const v of parsed) {
+        if (!state.answers.skills.some(s => s.toLowerCase() === v.toLowerCase())) {
+          state.answers.skills.push(v);
+        }
+      }
+      renderSkillsChips();
+      input.value = '';
+      updatePreview();
+    };
+    const renderSkillsChips = () => {
+      chipsBox.innerHTML = '';
+      state.answers.skills.forEach((s, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5';
+        chip.innerHTML = `${escapeHtml(s)} <button data-i="${i}" class="opacity-70 hover:opacity-100"><i data-lucide="x" class="w-3 h-3"></i></button>`;
+        chipsBox.appendChild(chip);
+      });
+      refreshIcons();
+      count.textContent = `${state.answers.skills.length} skill${state.answers.skills.length===1?'':'s'} added`;
+    };
+    chipsBox.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-i]');
+      if (!btn) return;
+      const i = parseInt(btn.dataset.i);
+      state.answers.skills.splice(i, 1);
+      renderSkillsChips();
+      updatePreview();
+    });
+    $('#skillsBox').addEventListener('click', () => input.focus());
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkill(input.value); }
+      else if (e.key === 'Backspace' && !input.value && state.answers.skills.length) {
+        state.answers.skills.pop(); renderSkillsChips(); updatePreview();
+      }
+    });
+    // Paste handler — split multi-line / comma / bullet lists into individual skills
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      addSkill(text);
+    });
+    $('#qSubmit').addEventListener('click', () => {
+      if (input.value.trim()) addSkill(input.value);
+      if (state.answers.skills.length === 0) { toast('Add at least one skill', 'error'); return; }
+      handleSubmitSkills(q);
+    });
+  }
+
+  else if (q.type === 'projects') {
+    wrap.innerHTML = `
+      <div class="space-y-3">
+        <label class="text-[11px] uppercase tracking-wider font-semibold block" style="color: var(--text-3);">${escapeHtml(q.label)}</label>
+        <div id="projectsList" class="space-y-2"></div>
+        <div class="rounded-xl p-3 space-y-2" style="border: 1px dashed var(--line-2);">
+          <div class="grid grid-cols-2 gap-2">
+            <input id="projName" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="Project name" autocomplete="off" />
+            <input id="projDesc" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="One-line description" autocomplete="off" />
+            <input id="projTech" type="text" class="field px-3 py-2.5 text-sm col-span-2" placeholder="Technologies used (comma separated)" autocomplete="off" />
+            <textarea id="projRole" rows="2" class="field w-full px-3 py-2.5 text-sm resize-y col-span-2" placeholder="Your role and what you built"></textarea>
+            <input id="projImpact" type="text" class="field px-3 py-2.5 text-sm col-span-2" placeholder="Biggest achievement or impact (or type 'None')" autocomplete="off" />
+            <input id="projGithub" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="GitHub repository (optional)" autocomplete="off" />
+            <input id="projDemo" type="text" class="field px-3 py-2.5 text-sm col-span-2 sm:col-span-1" placeholder="Live demo (optional)" autocomplete="off" />
+          </div>
+          <div class="flex justify-end">
+            <button id="addProjectBtn" class="btn-ghost px-4 py-2 rounded-lg text-xs flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              Add Project
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span id="projectsCount" class="text-[11px]" style="color: var(--text-3);">0 of 3–5 projects added</span>
+          <button id="qSubmit" class="btn-primary px-5 py-2.5 rounded-xl text-sm flex items-center gap-1.5">
+            <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+            <span>Continue</span>
+          </button>
+        </div>
+      </div>
+    `;
+    area.appendChild(wrap);
+    refreshIcons();
+
+    const listEl = $('#projectsList');
+    const countEl = $('#projectsCount');
+    const addBtn = $('#addProjectBtn');
+
+    const renderProjectsList = () => {
+      listEl.innerHTML = '';
+      state.answers.projects.forEach((p, i) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-lg px-3 py-2 flex items-start gap-2 text-xs';
+        card.style.background = 'rgba(255,255,255,0.04)';
+        card.style.border = '1px solid var(--line)';
+        card.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold" style="color: var(--text);">${escapeHtml(p.name || 'Untitled project')}</div>
+            ${p.description ? `<div style="color: var(--text-3);">${escapeHtml(p.description)}</div>` : ''}
+            ${p.technologies ? `<div class="mt-1" style="color: var(--accent-2);">${escapeHtml(p.technologies)}</div>` : ''}
+          </div>
+          <button data-i="${i}" class="removeProjectBtn opacity-70 hover:opacity-100 shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+        `;
+        listEl.appendChild(card);
+      });
+      refreshIcons();
+      const n = state.answers.projects.length;
+      countEl.textContent = n >= 3 ? `${n} project${n===1?'':'s'} added — nice, that\'s plenty` : `${n} of 3–5 projects added`;
+      addBtn.disabled = n >= 5;
+      addBtn.style.opacity = n >= 5 ? '0.5' : '1';
+      listEl.querySelectorAll('.removeProjectBtn').forEach(b => {
+        b.addEventListener('click', () => {
+          state.answers.projects.splice(parseInt(b.dataset.i), 1);
+          renderProjectsList();
+          updatePreview();
+        });
+      });
+    };
+
+    addBtn.addEventListener('click', () => {
+      if (state.answers.projects.length >= 5) { toast('Maximum 5 projects', 'error'); return; }
+      const name = $('#projName').value.trim();
+      const description = $('#projDesc').value.trim();
+      const technologies = $('#projTech').value.trim();
+      const role = $('#projRole').value.trim();
+      const impact = $('#projImpact').value.trim();
+      const github = $('#projGithub').value.trim();
+      const demo = $('#projDemo').value.trim();
+      if (!name || !description) { toast('Add at least a project name and description', 'error'); return; }
+      state.answers.projects.push({ name, description, technologies, role, impact, github, demo });
+      ['projName','projDesc','projTech','projRole','projImpact','projGithub','projDemo'].forEach(id => { $('#'+id).value = ''; });
+      renderProjectsList();
+      updatePreview();
+      $('#projName').focus();
+    });
+
+    $('#qSubmit').addEventListener('click', () => {
+      if (state.answers.projects.length === 0) { toast('Add at least one project', 'error'); return; }
+      handleSubmitProjects(q);
+    });
+
+    renderProjectsList();
+  }
+}
+
+async function handleSubmitText(q, value) {
+  state.answers[q.field] = value;
+  userSay(escapeHtml(value));
+  $('#inputArea').innerHTML = '';
+  updatePreview();
+  await sleep(450);
+  await askQuestion(state.currentQuestion + 1);
+}
+
+async function handleSubmitExperience(q, data) {
+  state.answers.experience = data;
+  const summary = [
+    data.title && data.company ? `<strong>${escapeHtml(data.title)}</strong> @ ${escapeHtml(data.company)}` : escapeHtml(data.title || data.company || ''),
+    data.duration ? `<span class="text-xs" style="color: var(--text-3);">${escapeHtml(data.duration)}</span>` : '',
+    data.description ? `<div class="mt-1 text-xs" style="color: var(--text-2);">${escapeHtml(data.description)}</div>` : '',
+  ].filter(Boolean).join('<br>');
+  userSay(summary);
+  $('#inputArea').innerHTML = '';
+  updatePreview();
+  await sleep(450);
+  await askQuestion(state.currentQuestion + 1);
+}
+
+async function handleSubmitSkills(q) {
+  const html = state.answers.skills.map(s => `<span class="chip px-2 py-0.5 rounded-full text-[11px]">${escapeHtml(s)}</span>`).join(' ');
+  userSay(`<div class="flex flex-wrap gap-1.5">${html}</div>`);
+  $('#inputArea').innerHTML = '';
+  updatePreview();
+  await sleep(450);
+  await askQuestion(state.currentQuestion + 1);
+}
+
+async function handleSubmitProjects(q) {
+  const html = state.answers.projects.map(p => `
+    <div class="mb-1.5 last:mb-0">
+      <strong>${escapeHtml(p.name)}</strong>${p.description ? ' — ' + escapeHtml(p.description) : ''}
+      ${p.technologies ? `<div class="text-xs mt-0.5" style="color: var(--text-3);">${escapeHtml(p.technologies)}</div>` : ''}
+    </div>
+  `).join('');
+  userSay(html);
+  $('#inputArea').innerHTML = '';
+  updatePreview();
+  await sleep(450);
+  await askQuestion(state.currentQuestion + 1);
+}
+
+async function finishQuestions() {
+  renderProgressDots();
+  await aiSay("Perfect — I have everything I need. Whenever you're ready, hit Analyze Profile and I'll run a full recruiter-grade review.", { delay: 300 });
+
+  const area = $('#inputArea');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'slide-up flex flex-col items-center gap-3';
+  wrap.innerHTML = `
+    <button id="analyzeBtn" class="btn-primary px-8 py-4 rounded-xl text-base flex items-center gap-2 pulse-glow">
+      <i data-lucide="scan-search" class="w-5 h-5"></i>
+      Analyze Profile
+    </button>
+    <p class="text-[11px]" style="color: var(--text-3);">This takes ~10 seconds. Watch the AI work.</p>
+  `;
+  area.appendChild(wrap);
+  refreshIcons();
+  $('#analyzeBtn').addEventListener('click', startAnalysis);
+}
+
+/* =====================================================================
+   ANALYSIS ANIMATION
+   ===================================================================== */
+async function startAnalysis() {
+  state.step = 'analyzing';
+  $('#inputArea').innerHTML = '';
+  const wrap = $('#chatScroll');
+
+  const card = document.createElement('div');
+  card.className = 'glass-strong rounded-2xl p-5 bubble-in';
+  card.innerHTML = `
+    <div class="flex items-center gap-2 mb-4">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent-3), var(--accent-2));">
+        <i data-lucide="cpu" class="w-4 h-4 text-black"></i>
+      </div>
+      <span class="font-semibold text-sm">AI is analyzing your profile</span>
+    </div>
+    <div id="taskList" class="space-y-2.5"></div>
+  `;
+  wrap.appendChild(card);
+  refreshIcons();
+  scrollChatToBottom();
+
+  const tasks = [
+    { label: 'Scanning recruiter keywords', icon: 'search' },
+    { label: 'Checking ATS compatibility', icon: 'file-check-2' },
+    { label: 'Analyzing personal branding', icon: 'palette' },
+    { label: 'Reviewing experience impact', icon: 'briefcase' },
+    { label: 'Calculating recruiter score', icon: 'gauge' },
+    { label: 'Building recommendations', icon: 'lightbulb' },
+  ];
+
+  const list = $('#taskList');
+  for (let i = 0; i < tasks.length; i++) {
+    const t = tasks[i];
+    const row = document.createElement('div');
+    row.className = 'task-row active flex items-center gap-3 p-2 rounded-lg';
+    row.innerHTML = `
+      <div class="task-icon w-7 h-7 rounded-full border flex items-center justify-center shrink-0" style="border-color: var(--line-2);">
+        <i data-lucide="loader" class="w-3.5 h-3.5 spin" style="animation: spin 1s linear infinite; color: var(--accent-2);"></i>
+      </div>
+      <span class="text-sm" style="color: var(--text-2);">${escapeHtml(t.label)}...</span>
+    `;
+    list.appendChild(row);
+    refreshIcons();
+    scrollChatToBottom();
+    await sleep(700 + Math.random() * 500);
+
+    row.classList.remove('active');
+    row.classList.add('done');
+    row.querySelector('.task-icon').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5" style="color: var(--accent);"></i>`;
+    row.querySelector('span').style.color = 'var(--text)';
+    row.querySelector('span').textContent = t.label;
+    refreshIcons();
+  }
+
+  await sleep(500);
+  // Compute analysis
+  state.analysis = runAnalysis(state.answers);
+
+  await aiSay("Done. I've scored every section, roasted the weak spots, and rebuilt stronger versions. Tap through the tabs to see everything — start with the Report Card.", { delay: 200, typing: true });
+  await sleep(800);
+
+  // Show results
+  $('#mainApp').classList.add('hidden');
+  $('#resultsView').classList.remove('hidden');
+  state.step = 'results';
+  refreshIcons();
+  renderResults();
+}
+
+/* =====================================================================
+   LIVE LINKEDIN PREVIEW
+   ===================================================================== */
+function updatePreview() {
+  const a = state.answers;
+  const el = $('#linkedInPreview');
+  const headline = a.headline || '';
+  const about = a.about || '';
+  const exp = a.experience;
+  const skills = a.skills || [];
+  const projects = a.projects || [];
+
+  const skillsHtml = skills.length
+    ? skills.slice(0, 12).map(s => `<span class="li-tag px-2.5 py-1 rounded-full text-xs font-medium">${escapeHtml(s)}</span>`).join('')
+    : `<span class="text-xs" style="color: var(--text-3);">No skills added yet</span>`;
+
+  const extraSkills = skills.length > 12 ? `<span class="li-tag px-2.5 py-1 rounded-full text-xs font-medium">+${skills.length - 12}</span>` : '';
+
+  const featuredHtml = projects.length
+    ? projects.slice(0, 4).map(p => `
+        <div class="flex gap-3">
+          <div class="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center" style="background: rgba(10,102,194,0.15); border: 1px solid rgba(10,102,194,0.3);">
+            <i data-lucide="folder-git-2" class="w-4 h-4" style="color: #7eb8ff;"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm font-semibold" style="color: var(--text);">${escapeHtml(p.name || 'Untitled project')}</div>
+            ${p.description ? `<div class="text-xs" style="color: var(--text-2);">${escapeHtml(p.description)}</div>` : ''}
+            ${p.technologies ? `<div class="text-[11px] mt-0.5" style="color: var(--text-3);">${escapeHtml(p.technologies)}</div>` : ''}
+          </div>
+        </div>`).join('')
+    : '';
+
+  el.innerHTML = `
+    <div class="glass rounded-2xl overflow-hidden card-hover">
+      <!-- Banner -->
+      <div class="li-banner h-24 md:h-28 relative">
+        <div class="absolute inset-0" style="background: linear-gradient(120deg, rgba(10,102,194,0.85), rgba(0,72,130,0.7) 60%, rgba(0,57,85,0.85));"></div>
+      </div>
+
+      <!-- Avatar + identity -->
+      <div class="px-5 pb-5 -mt-12 relative">
+        <div class="li-avatar w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white">Y</div>
+
+        <div class="mt-3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold" style="color: var(--text);">Your Name</h3>
+            <span class="text-xs px-1.5 py-0.5 rounded" style="background: rgba(10,102,194,0.2); color: #7eb8ff;">• 1st</span>
+          </div>
+          <div class="text-sm mt-0.5" style="color: ${headline ? 'var(--text-2)' : 'var(--text-3)'};">
+            ${headline ? escapeHtml(headline) : 'Your headline will appear here'}
+          </div>
+          ${exp.duration ? `<div class="text-xs mt-1 flex items-center gap-1.5" style="color: var(--text-3);"><i data-lucide="clock" class="w-3 h-3"></i>${escapeHtml(exp.duration)}</div>` : ''}
+          ${a.goal ? `<div class="text-xs mt-1.5 flex items-center gap-1.5" style="color: var(--accent-2);"><i data-lucide="target" class="w-3 h-3"></i>Target: ${escapeHtml(a.goal)}</div>` : ''}
+        </div>
+
+        <!-- About -->
+        <div class="mt-5">
+          <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: var(--text-3);">About</div>
+          ${about
+            ? `<p class="text-sm leading-relaxed whitespace-pre-wrap" style="color: var(--text-2);">${escapeHtml(about)}</p>`
+            : `<div class="dashed-empty rounded-lg h-16 flex items-center justify-center text-xs" style="color: var(--text-3);">Your About section will appear here</div>`
+          }
+        </div>
+
+        <!-- Experience -->
+        <div class="mt-5">
+          <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: var(--text-3);">Experience</div>
+          ${exp.title || exp.company || exp.description
+            ? `<div class="flex gap-3">
+                <div class="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center" style="background: rgba(10,102,194,0.15); border: 1px solid rgba(10,102,194,0.3);">
+                  <i data-lucide="building-2" class="w-4 h-4" style="color: #7eb8ff;"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold" style="color: var(--text);">${escapeHtml(exp.title || 'Role')}</div>
+                  <div class="text-xs" style="color: var(--text-2);">${escapeHtml(exp.company || 'Company')}${exp.duration ? ' · ' + escapeHtml(exp.duration) : ''}</div>
+                  ${exp.description ? `<p class="text-xs mt-1 leading-relaxed" style="color: var(--text-3);">${escapeHtml(exp.description)}</p>` : ''}
+                </div>
+              </div>`
+            : `<div class="dashed-empty rounded-lg h-16 flex items-center justify-center text-xs" style="color: var(--text-3);">Your experience will appear here</div>`
+          }
+        </div>
+
+        <!-- Featured (Projects) -->
+        ${projects.length ? `
+        <div class="mt-5">
+          <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: var(--text-3);">Featured · Projects</div>
+          <div class="space-y-3">${featuredHtml}</div>
+        </div>` : ''}
+
+        <!-- Skills -->
+        <div class="mt-5">
+          <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: var(--text-3);">Skills</div>
+          <div class="flex flex-wrap gap-1.5">${skillsHtml}${extraSkills}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 text-center text-[11px]" style="color: var(--text-3);">
+      <i data-lucide="info" class="w-3 h-3 inline-block"></i>
+      Preview reflects your real inputs — no demo data is used.
+    </div>
+  `;
+  refreshIcons();
+}
+
+/* =====================================================================
+   ANALYSIS ENGINE
+   ===================================================================== */
+function runAnalysis(answers) {
+  const goal = (answers.goal || '').toLowerCase();
+  const roleKeywords = matchRoleKeywords(goal);
+
+  const headlineResult = analyzeHeadline(answers.headline, goal, roleKeywords);
+  const aboutResult = analyzeAbout(answers.about, goal, roleKeywords);
+  const aboutHookResult = analyzeAboutHook(answers.about, goal);
+  const experienceResult = analyzeExperience(answers.experience, goal, roleKeywords);
+  const skillsResult = analyzeSkills(answers.skills, goal, roleKeywords);
+  const keywordsResult = analyzeKeywords(answers, roleKeywords);
+
+  const scores = {
+    headline: headlineResult.score,
+    aboutHook: aboutHookResult.score,
+    about: aboutResult.score,
+    experience: experienceResult.score,
+    skills: skillsResult.score,
+    keywords: keywordsResult.score,
+  };
+
+  const overall = Math.round(
+    scores.headline * 0.22 +
+    scores.aboutHook * 0.10 +
+    scores.about * 0.16 +
+    scores.experience * 0.22 +
+    scores.skills * 0.15 +
+    scores.keywords * 0.15
+  );
+
+  return {
+    scores,
+    overall,
+    headline: headlineResult,
+    aboutHook: aboutHookResult,
+    about: aboutResult,
+    experience: experienceResult,
+    skills: skillsResult,
+    keywords: keywordsResult,
+    roleKeywords,
+    answers,
+  };
+}
+
+function matchRoleKeywords(goal) {
+  // Build a rich search text from the WHOLE profile so role detection is
+  // based on who the user actually is, not just their stated goal.
+  const a = state.answers || {};
+  const searchText = [
+    goal || a.goal,
+    a.about,
+    a.headline,
+    a.experience && a.experience.title,
+    a.experience && a.experience.description,
+    (a.skills || []).join(' '),
+    (a.projects || []).map(p => [p.name, p.description, p.technologies, p.role].filter(Boolean).join(' ')).join(' '),
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  if (!searchText.trim()) return null;
+
+  // Score every role bucket by keyword overlap with the profile text.
+  let best = null, bestScore = 0, bestMatched = [];
+  const ranked = [];
+  for (const [role, kws] of Object.entries(ROLE_KEYWORDS)) {
+    const matched = kws.filter(k => searchText.includes(k.toLowerCase()));
+    const score = matched.length;
+    ranked.push({ role, score, matched });
+    if (score > bestScore) { bestScore = score; best = role; bestMatched = matched; }
+  }
+
+  if (bestScore === 0) {
+    return { role: 'general', keywords: [], matched: [] };
+  }
+  return { role: best, keywords: ROLE_KEYWORDS[best], matched: bestMatched };
+}
+
+function hasMetrics(text) {
+  return /(\$\s?\d|\d+\s?%|\d{2,}\+?|\d+x\b|\b\d{4,}\b)/i.test(text);
+}
+
+function countActionVerbs(text) {
+  const lower = ' ' + text.toLowerCase() + ' ';
+  return ACTION_VERBS.filter(v => lower.includes(' ' + v.toLowerCase() + ' ')).length;
+}
+
+function countWeakPhrases(text) {
+  const lower = text.toLowerCase();
+  return WEAK_PHRASES.filter(p => lower.includes(p)).length;
+}
+
+function analyzeHeadline(headline, goal, roleKw) {
+  const h = (headline || '').trim();
+  if (!h) {
+    return missingResult('Headline', 'Your headline is the single most important field recruiters scan. Without it, you don\'t appear in their search results at all.');
+  }
+  let score = 45;
+  const issues = [];
+  const quote = `"${truncate(h, 80)}"`;
+
+  const len = h.length;
+  if (len < 30) { score -= 18; issues.push(`Your headline is only ${len} characters — too short for recruiters to understand what you do.`); }
+  else if (len < 60) { score -= 8; issues.push('Could be more descriptive — add a specialty or credibility marker.'); }
+  else if (len <= 140) { score += 22; }
+  else if (len <= 220) { score += 8; }
+  else { score -= 12; issues.push(`At ${len} characters this is likely truncated on mobile (LinkedIn cuts at ~220).`); }
+
+  const lower = h.toLowerCase();
+  const genericFound = GENERIC_HEADLINE_PHRASES.filter(p => lower.includes(p));
+  if (genericFound.length) { score -= 16; issues.push(`Contains generic phrasing "${genericFound[0]}" — recruiters skim past these.`); }
+
+  const hasSeparator = /[|•@—–]/.test(h);
+  if (hasSeparator) score += 10;
+
+  // Numbers add credibility (e.g. "Building 60 AI Projects")
+  if (/\d/.test(h)) score += 10;
+
+  // Role keyword alignment (against the whole profile, not just goal)
+  if (roleKw && roleKw.matched && roleKw.matched.length) {
+    const inHeadline = roleKw.matched.filter(k => lower.includes(k.toLowerCase()));
+    if (inHeadline.length >= 2) score += 10;
+    else if (inHeadline.length >= 1) score += 4;
+  }
+
+  // Check the headline describes WHO the user is, not just what they want
+  const goalishPhrases = ['seeking','looking for','want to','trying to','hoping to','in search of'];
+  const goalishFound = goalishPhrases.filter(p => lower.includes(p));
+  if (goalishFound.length) { score -= 14; issues.push(`Your headline says what you're SEEKING ("${goalishFound[0]}") — a headline should describe who you ARE, not what you want.`); }
+
+  score = clamp(score, 8, 97);
+
+  return {
+    section: 'Headline',
+    score,
+    reaction: buildHeadlineReaction(h, issues, score),
+    problem: issues.length ? issues[0] : `Your headline "${truncate(h, 60)}" clearly signals who you are — recruiters can categorize you instantly.`,
+    why: issues.length ? explainHeadlineWhy(issues[0]) : 'It signals identity, specialization, and credibility in one line.',
+    cost: issues.length ? costHeadline(issues[0]) : 'You\'re appearing in the right searches.',
+    quote,
+    rawValue: h,
+    issues,
+  };
+}
+
+function buildHeadlineReaction(h, issues, score) {
+  if (score >= 80) return `"${truncate(h,60)}" — clear, specific, recruiter-ready. This works.`;
+  if (score >= 60) return `"${truncate(h,60)}" — okay, but I'd tighten it. It doesn't scream your value yet.`;
+  if (score >= 40) return `"${truncate(h,60)}" — a recruiter scrolls past this. It tells them almost nothing.`;
+  return `"${truncate(h,60)}" — this is invisible. Recruiters literally won't find you.`;
+}
+
+function explainHeadlineWhy(issue) {
+  const map = {
+    'very short': 'A 3-word headline gives the algorithm nothing to match. You vanish from recruiter search.',
+    'generic': 'Recruiters filter out generic phrases — they signal a junior or passive candidate.',
+    'doesn\'t mention your target role': 'If your target role isn\'t in your headline, LinkedIn ranks you lower for that search.',
+    'likely truncated': 'On mobile, anything past ~220 characters is cut off — recruiters see half a headline.',
+    'could be more descriptive': 'A vague headline doesn\'t differentiate you from 500 other profiles.',
+  };
+  for (const k of Object.keys(map)) if (issue.includes(k)) return map[k];
+  return 'A weak headline makes you blend in with thousands of similar profiles.';
+}
+
+function costHeadline(issue) {
+  if (issue.includes('very short') || issue.includes('invisible')) return 'You\'re losing ~70% of recruiter search impressions.';
+  if (issue.includes('generic')) return 'Recruiters skip you ~3x faster — generic phrases trigger pattern-blindness.';
+  if (issue.includes('target role')) return 'You\'re invisible for the exact roles you want.';
+  if (issue.includes('truncated')) return 'Mobile recruiters (60%+ of traffic) see a broken headline.';
+  return 'You\'re competing against sharper headlines and losing.';
+}
+
+function analyzeAboutHook(about, goal) {
+  const a = (about || '').trim();
+  if (!a) return missingResult('About Hook', 'The first line of your About decides whether recruiters read on. Without it, the rest is invisible.');
+  const firstLine = a.split(/[.\n]/)[0].trim();
+  if (!firstLine) return missingResult('About Hook', 'Your About opens with nothing memorable.');
+  let score = 50;
+  const issues = [];
+
+  const wordCount = firstLine.split(/\s+/).filter(Boolean).length;
+  if (firstLine.length < 20) { score -= 15; issues.push('opening line is too short to hook anyone'); }
+  else if (wordCount > 32 || firstLine.length > 200) { score -= 8; issues.push('opening line rambles — recruiters lose interest'); }
+  else if (firstLine.length > 40 && firstLine.length <= 90) { score += 20; }
+  else { score += 12; }
+
+  const lower = firstLine.toLowerCase();
+  if (/^(my name is|hi,?\s*my name is|hello,?\s*my name is)/.test(lower)) { score -= 18; issues.push('opens with "My name is" — the most clichéd hook on LinkedIn'); }
+  if (hasMetrics(firstLine)) score += 12;
+  if (goal && lower.includes(goal.split(' ')[0].toLowerCase())) score += 8;
+
+  score = clamp(score, 8, 96);
+  return {
+    section: 'About Hook',
+    score,
+    reaction: score >= 75 ? 'Strong opening — recruiters will keep reading.' : score >= 50 ? 'The opening is fine but forgettable.' : 'The opening kills the read-through.',
+    problem: issues.length ? issues[0] : 'Opening line is appropriately sized and specific.',
+    why: issues.length ? explainHookWhy(issues[0]) : 'A crisp hook keeps recruiters reading past the first 3 seconds.',
+    cost: issues.length ? costHook(issues[0]) : 'You keep recruiter attention past the fold.',
+    rawValue: firstLine,
+    issues,
+  };
+}
+
+function explainHookWhy(issue) {
+  if (issue.includes('My name is')) return 'Recruiters already see your name above. Repeating it wastes the most valuable real estate on your profile.';
+  if (issue.includes('too short')) return 'A 2-word opener gives no reason to keep reading.';
+  if (issue.includes('rambles')) return 'Long openers get skimmed — recruiters decide in 3 seconds.';
+  return 'A weak hook means recruiters bounce before reading your value.';
+}
+function costHook(issue) {
+  if (issue.includes('My name is')) return '~60% of recruiters stop reading after line one.';
+  if (issue.includes('too short')) return 'You lose the recruiter\'s attention in the first 3 seconds.';
+  if (issue.includes('rambles')) return 'Skim-readers miss your actual value.';
+  return 'Lower read-through means fewer InMails.';
+}
+
+function analyzeAbout(about, goal, roleKw) {
+  const a = (about || '').trim();
+  if (!a) return missingResult('About', 'Your About section is where recruiters decide if you\'re worth a 15-minute call. Missing it = instant skip.');
+  const words = a.split(/\s+/).filter(Boolean).length;
+  let score = 45;
+  const issues = [];
+
+  if (words < 40) { score -= 20; issues.push(`only ${words} words — too thin to tell your story`); }
+  else if (words < 100) { score -= 8; issues.push(`${words} words — could go deeper`); }
+  else if (words <= 300) { score += 20; }
+  else if (words <= 400) { score += 8; }
+  else { score -= 10; issues.push(`${words} words — recruiters won\'t read all of it`); }
+
+  const lower = a.toLowerCase();
+  const firstPerson = /\b(i\b|i'm|i've|i've|i'd|i'll|my)\b/i.test(a);
+  if (firstPerson) score += 8; else issues.push('written in third person — feels distant and corporate');
+
+  if (hasMetrics(a)) score += 14; else issues.push('no numbers or metrics — impact is invisible');
+
+  if (roleKw && roleKw.keywords) {
+    const matched = roleKw.keywords.filter(k => lower.includes(k.toLowerCase()));
+    if (matched.length >= 3) score += 12;
+    else if (matched.length >= 1) score += 4;
+    else issues.push('missing role-specific keywords recruiters search for');
+  }
+
+  if (goal) {
+    const goalWords = goal.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
+    if (goalWords.some(w => lower.includes(w))) score += 6;
+  }
+
+  const weakCount = countWeakPhrases(a);
+  if (weakCount) { score -= weakCount * 6; issues.push(`${weakCount} weak phrase(s) like "responsible for"`); }
+
+  score = clamp(score, 8, 96);
+  return {
+    section: 'About',
+    score,
+    reaction: score >= 75 ? 'This About section tells a real story. Recruiters will read it.' : score >= 50 ? 'It\'s okay, but it reads like a resume, not a pitch.' : 'This About section is costing you interviews.',
+    problem: issues.length ? issues[0].charAt(0).toUpperCase() + issues[0].slice(1) : 'About is well-sized and specific.',
+    why: issues.length ? explainAboutWhy(issues[0]) : 'It balances story, proof, and keywords.',
+    cost: issues.length ? costAbout(issues[0]) : 'Recruiters move from skim to screen.',
+    rawValue: a,
+    issues,
+  };
+}
+
+function explainAboutWhy(issue) {
+  if (issue.includes('too thin')) return 'A 30-word About says nothing about your impact, story, or goals.';
+  if (issue.includes('could go deeper')) return 'Recruiters want proof — short Abouts lack the room to provide it.';
+  if (issue.includes('won\'t read')) return 'Attention spans are short; long blocks get skipped entirely.';
+  if (issue.includes('third person')) return 'Third-person writing feels stiff and impersonal on LinkedIn.';
+  if (issue.includes('no numbers')) return 'Without metrics, your impact is a claim, not a fact.';
+  if (issue.includes('missing role-specific')) return 'No keywords = no ATS match = no recruiter search appearance.';
+  if (issue.includes('weak phrase')) return '"Responsible for" tells recruiters your duty, not your result.';
+  return 'A weak About section drops you from the recruiter\'s shortlist.';
+}
+function costAbout(issue) {
+  if (issue.includes('too thin')) return 'Recruiters assume you have nothing to say.';
+  if (issue.includes('third person')) return 'Feels corporate and forgettable — recruiters move on.';
+  if (issue.includes('no numbers')) return 'Your impact looks unverified and exaggerated.';
+  if (issue.includes('missing role-specific')) return 'You don\'t surface in keyword searches.';
+  return 'Lower About quality = lower InMail rate.';
+}
+
+function analyzeExperience(exp, goal, roleKw) {
+  if (!exp || (!exp.title && !exp.company && !exp.description)) {
+    return missingResult('Experience', 'Your most recent role is the single biggest signal recruiters use. Missing it is fatal.');
+  }
+  const desc = (exp.description || '').trim();
+  let score = 45;
+  const issues = [];
+
+  if (!exp.title) { score -= 15; issues.push('no job title — recruiters can\'t categorize you'); }
+  if (!exp.company) { score -= 8; issues.push('no company name — looks incomplete'); }
+  if (!exp.description) { score -= 20; issues.push('no description — recruiters see a blank role'); }
+  else {
+    const words = desc.split(/\s+/).filter(Boolean).length;
+    if (words < 15) { score -= 12; issues.push(`description too short (${words} words)`); }
+    else if (words < 40) { score -= 4; }
+    else if (words <= 80) { score += 12; }
+    else { score += 6; }
+
+    const verbs = countActionVerbs(desc);
+    if (verbs >= 2) score += 12; else if (verbs === 0) { score -= 10; issues.push('no action verbs — reads passive'); }
+
+    if (hasMetrics(desc)) score += 16; else issues.push('no quantified results — impact is invisible');
+
+    const weak = countWeakPhrases(desc);
+    if (weak) { score -= weak * 8; issues.push(`${weak} weak phrase(s) — "responsible for" etc.`); }
+  }
+
+  if (goal && exp.title) {
+    const goalWords = goal.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
+    if (goalWords.some(w => exp.title.toLowerCase().includes(w))) score += 6;
+  }
+
+  score = clamp(score, 8, 96);
+  return {
+    section: 'Experience',
+    score,
+    reaction: score >= 75 ? 'This role is described with impact and specificity. Recruiters will dig in.' : score >= 50 ? 'It\'s listed but not sold. Add proof.' : 'This experience entry reads like a job description, not an achievement.',
+    problem: issues.length ? issues[0].charAt(0).toUpperCase() + issues[0].slice(1) : 'Role is described with action and metrics.',
+    why: issues.length ? explainExpWhy(issues[0]) : 'Action verbs + metrics = recruiter signal of real impact.',
+    cost: issues.length ? costExp(issues[0]) : 'Recruiters see proof, not just claims.',
+    rawValue: `${exp.title || ''} @ ${exp.company || ''}`.trim(),
+    issues,
+  };
+}
+
+function explainExpWhy(issue) {
+  if (issue.includes('no job title')) return 'Without a title, LinkedIn can\'t categorize your role for search.';
+  if (issue.includes('no company')) return 'Missing company looks careless and reduces credibility.';
+  if (issue.includes('no description')) return 'A blank role tells recruiters nothing about your impact.';
+  if (issue.includes('too short')) return 'One-line descriptions don\'t prove you did meaningful work.';
+  if (issue.includes('no action verbs')) return 'Passive phrasing ("worked on") dilutes your contribution.';
+  if (issue.includes('no quantified')) return 'Without numbers, your impact is an unverified claim.';
+  if (issue.includes('weak phrase')) return '"Responsible for" describes duty, not result — recruiters want results.';
+  return 'A weak experience entry drops you below candidates with proof.';
+}
+function costExp(issue) {
+  if (issue.includes('no quantified')) return 'You look identical to 50 other candidates with the same title.';
+  if (issue.includes('no action verbs')) return 'Your impact reads as soft and unverified.';
+  if (issue.includes('too short')) return 'Recruiters assume the role was junior or unimpactful.';
+  return 'Lower experience quality = lower interview rate.';
+}
+
+function analyzeSkills(skills, goal, roleKw) {
+  if (!skills || skills.length === 0) {
+    return missingResult('Skills', 'Skills are how LinkedIn\'s algorithm matches you to recruiter searches. Zero skills = zero appearances.');
+  }
+  const n = skills.length;
+  let score = 45;
+  const issues = [];
+
+  if (n < 5) { score -= 15; issues.push(`only ${n} skill(s) — too few for the algorithm to rank you`); }
+  else if (n < 10) { score -= 5; }
+  else if (n <= 30) { score += 20; }
+  else { score -= 8; issues.push(`${n} skills — dilutes your top strengths`); }
+
+  if (roleKw && roleKw.keywords) {
+    const lower = skills.map(s => s.toLowerCase());
+    const matched = roleKw.keywords.filter(k => lower.includes(k.toLowerCase()));
+    if (matched.length >= 4) score += 14;
+    else if (matched.length >= 2) score += 6;
+    else { score -= 8; issues.push('few skills match your target role'); }
+  }
+
+  if (goal) {
+    const goalWords = goal.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
+    const matched = goalWords.filter(w => skills.some(s => s.toLowerCase().includes(w)));
+    if (matched.length) score += 6;
+  }
+
+  score = clamp(score, 10, 96);
+  return {
+    section: 'Skills',
+    score,
+    reaction: score >= 75 ? 'Your skills are well-curated and role-aligned.' : score >= 50 ? 'Skills are okay, but not optimized for your target role.' : 'Your skills aren\'t helping recruiters find you.',
+    problem: issues.length ? issues[0].charAt(0).toUpperCase() + issues[0].slice(1) : 'Skill set is well-sized and role-relevant.',
+    why: issues.length ? explainSkillsWhy(issues[0]) : 'Right quantity + right relevance = strong search ranking.',
+    cost: issues.length ? costSkills(issues[0]) : 'You appear in the right searches.',
+    rawValue: skills.join(', '),
+    issues,
+  };
+}
+
+function explainSkillsWhy(issue) {
+  if (issue.includes('too few')) return 'LinkedIn needs ≥10 skills to reliably surface you in recruiter search.';
+  if (issue.includes('dilutes')) return '50+ skills makes your top 3 invisible — recruiters skim, they don\'t read.';
+  if (issue.includes('few skills match')) return 'If your skills don\'t match your target role, the algorithm ranks you lower.';
+  return 'A weak skill set reduces your search visibility.';
+}
+function costSkills(issue) {
+  if (issue.includes('too few')) return 'You\'re missing from ~60% of relevant recruiter searches.';
+  if (issue.includes('dilutes')) return 'Your strongest skills get buried.';
+  if (issue.includes('few skills match')) return 'You don\'t rank for your target role.';
+  return 'Lower search appearance = fewer InMails.';
+}
+
+function analyzeKeywords(answers, roleKw) {
+  const projectsText = (answers.projects || []).map(p => [p.name, p.description, p.technologies, p.role].filter(Boolean).join(' ')).join(' ');
+  const all = [answers.headline, answers.about, answers.experience?.description, (answers.skills || []).join(' '), projectsText].filter(Boolean).join(' ');
+  if (!all.trim()) return missingResult('Keywords', 'Keywords are how ATS and recruiter search find you. No text = no keywords.');
+  if (!roleKw) {
+    // no goal -> can't assess role relevance
+    return {
+      section: 'Keywords',
+      score: 55,
+      reaction: 'Add a target goal and I can score your keyword alignment precisely.',
+      problem: 'No target goal provided — keyword relevance can\'t be measured.',
+      why: 'Keyword scoring requires knowing which role you\'re targeting.',
+      cost: 'You may be ranking for the wrong searches.',
+      rawValue: '',
+      issues: ['no target goal to align keywords against'],
+    };
+  }
+  const lower = all.toLowerCase();
+  const matched = roleKw.keywords.filter(k => lower.includes(k.toLowerCase()));
+  const density = matched.length / roleKw.keywords.length;
+  let score = 40 + Math.round(density * 60);
+  const issues = [];
+  if (matched.length < 3) { score -= 10; issues.push(`only ${matched.length} role keyword(s) found`); }
+  if (matched.length === 0) { score = 25; issues.push('zero role-specific keywords detected'); }
+  score = clamp(score, 12, 96);
+  return {
+    section: 'Keywords',
+    score,
+    reaction: score >= 75 ? 'Strong keyword coverage — ATS and recruiter search will find you.' : score >= 50 ? 'Some keywords, but you\'re missing high-value ones.' : 'Your profile is keyword-starved for your target role.',
+    problem: issues.length ? issues[0].charAt(0).toUpperCase() + issues[0].slice(1) : 'Good keyword coverage for your target role.',
+    why: issues.length ? 'Recruiters search by keyword; if yours are missing, you don\'t appear.' : 'ATS systems parse these terms to rank your profile.',
+    cost: issues.length ? `Missing ~${Math.max(3, roleKw.keywords.length - matched.length)} high-value keywords for ${roleKw.role}.` : 'You\'re ranking for the right terms.',
+    rawValue: matched.join(', '),
+    missingKeywords: roleKw.keywords.filter(k => !lower.includes(k.toLowerCase())).slice(0, 12),
+    matchedKeywords: matched,
+    issues,
+  };
+}
+
+function missingResult(section, why) {
+  return {
+    section,
+    score: 0,
+    reaction: 'Additional information required.',
+    problem: `No ${section.toLowerCase()} provided.`,
+    why,
+    cost: 'This section is empty — recruiters can\'t evaluate it at all.',
+    rawValue: '',
+    issues: ['missing'],
+    missing: true,
+  };
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, Math.round(v))); }
+function truncate(s, n) {
+  if (s.length <= n) return s;
+  const cut = s.slice(0, n);
+  const lastSpace = cut.lastIndexOf(' ');
+  const safe = lastSpace > n * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return safe.trim() + '…';
+}
+
+/* =====================================================================
+   RESULTS RENDERING
+   ===================================================================== */
+function renderResults() {
+  $$('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  switchTab(state.activeTab);
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  $$('.tab-btn').forEach(btn => {
+    const active = btn.dataset.tab === tab;
+    btn.dataset.active = active;
+    btn.style.color = active ? 'var(--text)' : 'var(--text-3)';
+  });
+  const content = $('#resultsContent');
+  content.innerHTML = '';
+  const renderer = {
+    report: renderReportTab,
+    roast: renderRoastTab,
+    rebuild: renderRebuildTab,
+    compare: renderCompareTab,
+    plan: renderPlanTab,
+    summary: renderSummaryTab,
+  }[tab];
+  if (renderer) renderer(content);
+  refreshIcons();
+  content.scrollTop = 0;
+}
+
+/* ---------- TAB 1: Recruiter Report Card ---------- */
+function renderReportTab(root) {
+  const a = state.analysis;
+  const sections = [
+    { key: 'headline', label: 'Headline', icon: 'type' },
+    { key: 'aboutHook', label: 'About Hook', icon: 'fish' },
+    { key: 'about', label: 'About', icon: 'file-text' },
+    { key: 'experience', label: 'Experience', icon: 'briefcase' },
+    { key: 'skills', label: 'Skills', icon: 'list-checks' },
+    { key: 'keywords', label: 'Keywords', icon: 'search' },
+  ];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-6xl mx-auto space-y-6';
+
+  wrap.innerHTML = `
+    <div class="slide-up">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="award" class="w-5 h-5" style="color: var(--accent);"></i>
+        <h2 class="font-display font-bold text-2xl">Recruiter Report Card</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">Honest scores with the recruiter reaction, the problem, why it hurts, and the invisible cost.</p>
+    </div>
+
+    <!-- Overall + radar -->
+    <div class="grid lg:grid-cols-3 gap-4 slide-up">
+      <div class="glass rounded-2xl p-6 flex flex-col items-center justify-center gradient-border relative overflow-hidden">
+        <div class="text-xs uppercase tracking-wider font-semibold mb-3" style="color: var(--text-3);">Overall Recruiter Score</div>
+        ${scoreRing(a.overall, 120, 'overall')}
+        <div class="mt-3 text-sm text-center" style="color: var(--text-2);">${overallVerdict(a.overall)}</div>
+      </div>
+      <div class="glass rounded-2xl p-6 lg:col-span-2">
+        <div class="text-xs uppercase tracking-wider font-semibold mb-2" style="color: var(--text-3);">Score breakdown</div>
+        <div class="h-64"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Section cards -->
+    <div class="grid md:grid-cols-2 gap-4" id="reportCards"></div>
+  `;
+  root.appendChild(wrap);
+
+  const cardsWrap = wrap.querySelector('#reportCards');
+  sections.forEach((s, i) => {
+    const r = a[s.key];
+    const card = document.createElement('div');
+    card.className = 'glass rounded-2xl p-5 card-hover slide-up';
+    card.style.animationDelay = (i * 60) + 'ms';
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background: ${r.missing ? 'rgba(244,63,94,0.12)' : scoreColorBg(r.score)}; border: 1px solid ${r.missing ? 'rgba(244,63,94,0.3)' : scoreColorBorder(r.score)};">
+            <i data-lucide="${s.icon}" class="w-4 h-4" style="color: ${r.missing ? 'var(--warn)' : scoreColor(r.score)};"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-sm">${escapeHtml(s.label)}</div>
+            <div class="text-[11px]" style="color: var(--text-3);">${r.missing ? 'Missing' : scoreLabel(r.score)}</div>
+          </div>
+        </div>
+        ${scoreRing(r.score, 52, s.key)}
+      </div>
+
+      <div class="space-y-2.5 text-xs">
+        <div class="flex gap-2">
+          <span class="font-semibold shrink-0 w-20" style="color: var(--text-3);">Reaction</span>
+          <span style="color: var(--text-2);">${escapeHtml(r.reaction)}</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="font-semibold shrink-0 w-20" style="color: var(--text-3);">Problem</span>
+          <span style="color: var(--text-2);">${escapeHtml(r.problem)}</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="font-semibold shrink-0 w-20" style="color: var(--text-3);">Why it hurts</span>
+          <span style="color: var(--text-2);">${escapeHtml(r.why)}</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="font-semibold shrink-0 w-20" style="color: var(--text-3);">Invisible cost</span>
+          <span style="color: ${r.missing ? 'var(--warn)' : 'var(--gold)'};">${escapeHtml(r.cost)}</span>
+        </div>
+      </div>
+    `;
+    cardsWrap.appendChild(card);
+  });
+
+  refreshIcons();
+
+  // Radar chart
+  setTimeout(() => {
+    const ctx = $('#radarChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: sections.map(s => s.label),
+        datasets: [{
+          label: 'Score',
+          data: sections.map(s => a[s.key].score),
+          backgroundColor: 'rgba(16,185,129,0.18)',
+          borderColor: 'rgba(16,185,129,0.9)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(6,182,212,1)',
+          pointBorderColor: '#fff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          r: {
+            min: 0, max: 100,
+            ticks: { color: '#64748B', backdropColor: 'transparent', stepSize: 25, font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,0.08)' },
+            angleLines: { color: 'rgba(255,255,255,0.08)' },
+            pointLabels: { color: '#94A3B8', font: { size: 11, weight: '600' } },
+          }
+        }
+      }
+    });
+  }, 100);
+}
+
+function scoreRing(score, size=80, key='') {
+  const r = (size - 10) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (score / 100) * c;
+  const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : score > 0 ? '#f43f5e' : '#64748B';
+  return `
+    <div class="relative inline-flex items-center justify-center" style="width:${size}px;height:${size}px;">
+      <svg width="${size}" height="${size}" class="score-ring">
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"></circle>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="${c}" stroke-dashoffset="${offset}" style="transition: stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1);"></circle>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="font-bold" style="font-size:${size*0.28}px;color:${color};">${score}</span>
+        ${size >= 80 ? `<span class="text-[10px] uppercase tracking-wider" style="color: var(--text-3);">/ 100</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function scoreColor(s) { return s >= 75 ? '#10b981' : s >= 50 ? '#f59e0b' : s > 0 ? '#f43f5e' : '#64748B'; }
+function scoreColorBg(s) { return s >= 75 ? 'rgba(16,185,129,0.12)' : s >= 50 ? 'rgba(245,158,11,0.12)' : 'rgba(244,63,94,0.12)'; }
+function scoreColorBorder(s) { return s >= 75 ? 'rgba(16,185,129,0.3)' : s >= 50 ? 'rgba(245,158,11,0.3)' : 'rgba(244,63,94,0.3)'; }
+function scoreLabel(s) {
+  if (s === 0) return 'Missing';
+  if (s >= 85) return 'Excellent';
+  if (s >= 70) return 'Strong';
+  if (s >= 55) return 'Average';
+  if (s >= 35) return 'Weak';
+  return 'Critical';
+}
+function overallVerdict(s) {
+  if (s >= 80) return 'Recruiters will reach out. Sharpen the weak spots and you\'re elite.';
+  if (s >= 60) return 'You\'re in the maybe pile. A few fixes push you to the shortlist.';
+  if (s >= 40) return 'You\'re being skipped. Major sections need rebuilding.';
+  return 'Recruiters are scrolling past. Time for a serious rebuild.';
+}
+
+/* ---------- TAB 2: Profile Roast ---------- */
+function renderRoastTab(root) {
+  const a = state.analysis;
+  const sections = [
+    { key: 'headline', label: 'Headline', icon: 'type' },
+    { key: 'aboutHook', label: 'About Hook', icon: 'fish' },
+    { key: 'about', label: 'About', icon: 'file-text' },
+    { key: 'experience', label: 'Experience', icon: 'briefcase' },
+    { key: 'skills', label: 'Skills', icon: 'list-checks' },
+    { key: 'keywords', label: 'Keywords', icon: 'search' },
+  ];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-4xl mx-auto space-y-4';
+  wrap.innerHTML = `
+    <div class="slide-up mb-2">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="flame" class="w-5 h-5" style="color: var(--warn);"></i>
+        <h2 class="font-display font-bold text-2xl">Profile Roast</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">Brutally honest feedback. Tap any card to expand the fix.</p>
+    </div>
+  `;
+  root.appendChild(wrap);
+
+  sections.forEach((s, i) => {
+    const r = a[s.key];
+    const card = document.createElement('div');
+    card.className = 'glass rounded-2xl overflow-hidden slide-up card-hover';
+    card.style.animationDelay = (i * 60) + 'ms';
+
+    const heatIcon = r.missing ? '❄️' : r.score >= 70 ? '✅' : r.score >= 50 ? '🔥' : '🌋';
+    const heatLabel = r.missing ? 'ICE COLD' : r.score >= 70 ? 'NOT BAD' : r.score >= 50 ? 'ROASTED' : 'NUKED';
+
+    card.innerHTML = `
+      <button class="collapsible-toggle w-full flex items-center gap-3 p-4 text-left">
+        <span class="text-2xl">${heatIcon}</span>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm">${escapeHtml(s.label)}</div>
+          <div class="text-xs truncate" style="color: var(--text-3);">${escapeHtml(truncate(r.reaction, 70))}</div>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-1 rounded-full" style="background: ${r.missing ? 'rgba(244,63,94,0.15)' : scoreColorBg(r.score)}; color: ${r.missing ? 'var(--warn)' : scoreColor(r.score)};">${heatLabel} · ${r.score}</span>
+        <i data-lucide="chevron-down" class="w-4 h-4 chev shrink-0" style="color: var(--text-3);"></i>
+      </button>
+      <div class="collapsible-body px-4 pb-4">
+        <div class="border-t pt-3 space-y-3 text-sm" style="border-color: var(--line);">
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div class="rounded-lg p-3" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.18);">
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1" style="color: var(--warn);">Recruiter Reaction</div>
+              <div class="text-xs" style="color: var(--text-2);">${escapeHtml(r.reaction)}</div>
+            </div>
+            <div class="rounded-lg p-3" style="background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);">
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1" style="color: var(--gold);">Problem</div>
+              <div class="text-xs" style="color: var(--text-2);">${escapeHtml(r.problem)}</div>
+            </div>
+            <div class="rounded-lg p-3" style="background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.18);">
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1" style="color: var(--accent-3);">Why It Hurts</div>
+              <div class="text-xs" style="color: var(--text-2);">${escapeHtml(r.why)}</div>
+            </div>
+            <div class="rounded-lg p-3" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.18);">
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1" style="color: var(--accent);">The Fix</div>
+              <div class="text-xs" style="color: var(--text-2);">${escapeHtml(roastFix(s.key, r))}</div>
+            </div>
+          </div>
+          <div class="rounded-lg p-3 flex items-center gap-2" style="background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.18);">
+            <i data-lucide="trending-up" class="w-4 h-4 shrink-0" style="color: var(--accent-2);"></i>
+            <div>
+              <span class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--accent-2);">Expected Improvement</span>
+              <div class="text-xs" style="color: var(--text-2);">${escapeHtml(roastImprovement(s.key, r))}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(card);
+
+    const toggle = card.querySelector('.collapsible-toggle');
+    toggle.addEventListener('click', () => {
+      card.classList.toggle('open');
+    });
+  });
+
+  refreshIcons();
+}
+
+function roastFix(key, r) {
+  if (r.missing) return `Add your ${r.section.toLowerCase()} — see the Profile Rebuild tab for a generated starting point.`;
+  if (key === 'experience') return buildExperienceFix(r);
+  if (key === 'aboutHook') return buildAboutHookFix(r);
+  const fixes = {
+    headline: 'Rewrite as: [Current Role] | [Top 2 Skills] | [Credibility Marker]. Keep under 140 chars. Use a separator (| or •).',
+    about: 'Restructure into Hook → Story → Proof (with numbers) → CTA. Aim for 150–300 words, first person, 3+ metrics.',
+    skills: 'Curate 10–20 skills tightly aligned to your target role. Reorder so your top 3 lead. Endorsements follow relevance.',
+    keywords: 'Sprinkle 5–10 role-specific keywords naturally across headline, about, and experience. Don\'t stuff — integrate.',
+  };
+  return fixes[key] || 'Tighten language, add metrics, align with your target role.';
+}
+
+// Experience fix advice is built ONLY from the issues actually detected —
+// never tells the user to "add action verbs" if their bullets already have them.
+function buildExperienceFix(r) {
+  const issues = r.issues || [];
+  const tips = [];
+  if (issues.some(i => i.includes('no job title'))) tips.push('Add a clear job title so recruiters can categorize the role.');
+  if (issues.some(i => i.includes('no company'))) tips.push('Add the company name — an incomplete entry looks unfinished.');
+  if (issues.some(i => i.includes('no description'))) tips.push('Add a description — a blank role tells recruiters nothing.');
+  if (issues.some(i => i.includes('too short'))) tips.push('Expand each bullet with more specific detail on what you actually did.');
+  if (issues.some(i => i.includes('no action verbs'))) tips.push('Start each bullet with an action verb (Built, Led, Designed...).');
+  if (issues.some(i => i.includes('no quantified'))) tips.push('Add at least one number per bullet (%, $, time saved, users reached).');
+  if (issues.some(i => i.includes('weak phrase'))) tips.push('Replace weak phrases like "responsible for" with a specific result.');
+  if (!tips.length) tips.push('This entry already uses action verbs and specifics — focus on adding one more metric per bullet for extra lift.');
+
+  const projects = (state.answers.projects || []);
+  if (issues.some(i => i.includes('no quantified')) && projects.length) {
+    const withImpact = projects.find(projectHasRealImpact);
+    if (withImpact) tips.push(`You already have proof: your "${withImpact.name}" project shows real impact — pull that number into this bullet instead of leaving it generic.`);
+    else tips.push(`None of your projects have a stated impact yet either — add one metric (users, performance gain, recognition) to at least one project first, then reuse it here.`);
+  }
+  return tips.join(' ');
+}
+
+// About Hook fix — only mentions "My name is" if that's actually the detected issue.
+function buildAboutHookFix(r) {
+  const issues = r.issues || [];
+  if (issues.some(i => i.includes('My name is'))) {
+    return 'Open with a punchy one-liner that states your value — not "My name is". Lead with an outcome or a bold claim.';
+  }
+  if (issues.some(i => i.includes('too short'))) return 'Expand your opening line — a 2–3 word hook gives recruiters no reason to keep reading.';
+  if (issues.some(i => i.includes('rambles'))) return 'Tighten your opening line to under ~90 characters so it reads as a hook, not a paragraph.';
+  return 'Your opening line is solid — consider adding a number or bold claim to make it even sharper.';
+}
+
+function roastImprovement(key, r) {
+  if (r.missing) return 'Filling this in alone can lift your overall recruiter score by 15–25 points.';
+  const lift = r.score < 40 ? '20–30 points' : r.score < 60 ? '12–18 points' : r.score < 75 ? '6–10 points' : '2–5 points';
+  const specifics = {
+    headline: `A sharper headline can boost search impressions by 3–5x and lift your overall score by ${lift}.`,
+    aboutHook: `A better hook lifts read-through ~40%, indirectly raising your InMail rate. Score gain: ${lift}.`,
+    about: `A restructured About can move you from "maybe" to "shortlist". Score gain: ${lift}.`,
+    experience: `Quantified experience bullets are the #1 factor in recruiter shortlisting. Score gain: ${lift}.`,
+    skills: `Right-sized, role-aligned skills can double your search appearance. Score gain: ${lift}.`,
+    keywords: `Adding missing keywords surfaces you in ATS filters immediately. Score gain: ${lift}.`,
+  };
+  return specifics[key] || `Fixing this can lift your score by ${lift}.`;
+}
+
+/* ---------- TAB 3: Profile Rebuild ---------- */
+function renderRebuildTab(root) {
+  const a = state.analysis;
+  const ans = a.answers;
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-4xl mx-auto space-y-5';
+
+  wrap.innerHTML = `
+    <div class="slide-up mb-1">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="wand-sparkles" class="w-5 h-5" style="color: var(--accent-3);"></i>
+        <h2 class="font-display font-bold text-2xl">Profile Rebuild</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">AI-generated rewrites based on your real inputs. Copy what works.</p>
+    </div>
+  `;
+  root.appendChild(wrap);
+
+  // Headlines
+  const headlines = generateHeadlines(ans);
+  wrap.appendChild(rebuildBlock('3 Headline Options', 'type', headlines, ans, 'headline'));
+
+  // About
+  const about = generateAbout(ans);
+  wrap.appendChild(rebuildBlock('New About Section', 'file-text', about ? [about] : null, ans, 'about'));
+
+  // Experience
+  const exp = generateExperience(ans);
+  wrap.appendChild(rebuildBlock('Experience Rewrite', 'briefcase', exp ? [exp] : null, ans, 'experience'));
+
+  // Projects showcase (Featured section material)
+  const projectsShowcase = generateProjectsShowcase(ans);
+  wrap.appendChild(rebuildBlock('Projects Showcase (Featured Section)', 'folder-git-2', projectsShowcase.length ? projectsShowcase : null, ans, 'projects'));
+
+  // Skills suggestions
+  const skillsSugg = generateSkillsSuggestions(ans);
+  wrap.appendChild(rebuildBlock('Skills Suggestions', 'list-checks', skillsSugg.length ? skillsSugg : null, ans, 'skills'));
+
+  // Keywords
+  const keywords = generateKeywordSuggestions(ans);
+  wrap.appendChild(rebuildBlock('Keyword Suggestions (ATS)', 'search', keywords.length ? keywords : null, ans, 'keywords'));
+
+  refreshIcons();
+}
+
+function rebuildBlock(title, icon, items, ans, type) {
+  const block = document.createElement('div');
+  block.className = 'glass rounded-2xl p-5 slide-up card-hover';
+  const missing = !items || items.length === 0;
+
+  let itemsHtml = '';
+  if (missing) {
+    itemsHtml = `
+      <div class="dashed-empty rounded-xl p-6 text-center">
+        <i data-lucide="alert-circle" class="w-5 h-5 mx-auto mb-2" style="color: var(--gold);"></i>
+        <div class="text-sm font-medium" style="color: var(--text);">Additional information required</div>
+        <div class="text-xs mt-1" style="color: var(--text-3);">${missingReason(type, ans)}</div>
+      </div>
+    `;
+  } else {
+    itemsHtml = items.map((it, i) => `
+      <div class="rounded-xl p-4 flex items-start gap-3 group" style="background: rgba(0,0,0,0.2); border: 1px solid var(--line);">
+        <div class="flex-1 min-w-0">
+          ${type === 'headline'
+            ? `<div class="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style="color: var(--accent-2);"><span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style="background: rgba(6,182,212,0.18);">${i+1}</span>Option ${i+1}</div>
+               <p class="text-sm leading-relaxed" style="color: var(--text);">${escapeHtml(it)}</p>
+               <div class="text-[10px] mt-1.5" style="color: var(--text-3);">${it.length} characters</div>`
+            : type === 'skills' || type === 'keywords'
+              ? `<div class="flex flex-wrap gap-1.5">${it.split(', ').map(s => `<span class="chip px-2.5 py-1 rounded-full text-xs">${escapeHtml(s)}</span>`).join('')}</div>`
+              : `<p class="text-sm leading-relaxed whitespace-pre-wrap" style="color: var(--text);">${escapeHtml(it)}</p>`
+          }
+        </div>
+        <button class="copy-btn btn-ghost px-2.5 py-2 rounded-lg text-xs flex items-center gap-1 shrink-0" data-text="${escapeHtml(it)}">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Copy</span>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  block.innerHTML = `
+    <div class="flex items-center gap-2.5 mb-3">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25);">
+        <i data-lucide="${icon}" class="w-4 h-4" style="color: var(--accent-3);"></i>
+      </div>
+      <h3 class="font-semibold text-sm">${escapeHtml(title)}</h3>
+      ${!missing ? `<button class="copy-all-btn ml-auto btn-ghost px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1" data-all="${escapeHtml(items.join('\n\n'))}">
+        <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>Copy all
+      </button>` : ''}
+    </div>
+    <div class="space-y-2.5">${itemsHtml}</div>
+  `;
+
+  // wire copy buttons
+  setTimeout(() => {
+    block.querySelectorAll('.copy-btn').forEach(b => {
+      b.addEventListener('click', () => copyText(b.dataset.text, 'Copied to clipboard'));
+    });
+    block.querySelectorAll('.copy-all-btn').forEach(b => {
+      b.addEventListener('click', () => copyText(b.dataset.all, 'All items copied'));
+    });
+  }, 0);
+
+  return block;
+}
+
+function missingReason(type, ans) {
+  if (type === 'headline' || type === 'about') return `Enter your ${type} first — I rebuild from your real content, not templates.`;
+  if (type === 'experience') return 'Add your most recent role and I\'ll rewrite it with stronger action verbs and metric prompts.';
+  if (type === 'projects') return 'Add your top 3–5 projects and I\'ll format them into Featured-section-ready blurbs.';
+  if (type === 'skills') return 'Add a few skills and a target goal — I\'ll suggest role-aligned additions.';
+  if (type === 'keywords') return 'Add a target goal — keyword suggestions are based on the role you\'re aiming for.';
+  return 'Add more profile information to generate this.';
+}
+
+function generateHeadlines(ans) {
+  const identity = deriveCurrentIdentity(ans);
+  const stage = detectCareerStage(ans);
+  const skills = (ans.skills || []);
+  const top2 = skills.slice(0, 2);
+  const top3 = skills.slice(0, 3);
+  const cred = credibility(ans);
+  const focus = valueProp(ans);
+
+  // Nothing to build a headline from at all
+  if (identity === 'Professional' && skills.length === 0) return [];
+
+  const opts = [];
+
+  // 1. Recruiter Search Optimized — current role/identity | top skills | credibility
+  if (top2.length >= 2) opts.push(`${identity} | ${top2.join(' & ')} | ${cred}`);
+  else if (top2.length === 1) opts.push(`${identity} | ${top2[0]} | ${cred}`);
+  else opts.push(`${identity} | ${cred}`);
+
+  // 2. Personal Brand — voice-driven, built from current identity + what they actually do
+  if (stage === 'student') {
+    opts.push(`${identity} | ${focus} | Building in public`);
+  } else if (stage === 'founder') {
+    opts.push(`${identity} | ${focus}`);
+  } else if (stage === 'freelancer') {
+    opts.push(`${identity} | ${focus} | Open for select projects`);
+  } else {
+    opts.push(`${identity} | ${focus}`);
+  }
+
+  // 3. Thought Leadership — authority framing around a real skill/topic they have
+  const topic = top3[0] || identity.split(' ')[0];
+  if (stage === 'student') {
+    opts.push(`Documenting how I'm learning ${topic ? topic.toLowerCase() : 'to build'} — one project at a time`);
+  } else if (stage === 'senior' || stage === 'founder') {
+    opts.push(`${identity} | Sharing what actually works with ${topic}`);
+  } else {
+    opts.push(`${identity} | Building hands-on experience with ${topic}`);
+  }
+
+  return opts
+    .map(h => h.replace(/\s\|\s$/, '').trim())
+    .filter(Boolean)
+    .map(h => h.length > 140 ? h.slice(0, 137).trim() + '...' : h);
+}
+
+function extractRole(goal) {
+  // Pull a clean role phrase out of a full goal sentence, discarding the
+  // "purpose" tail (e.g. "...while building a personal brand and sharing...")
+  const g = (goal || '').trim();
+  if (!g) return 'Professional';
+
+  // Cut off everything after a purpose/branding connector — that part isn't the role.
+  const STOP = /\b(while|so that|in order to|so i can|and\s+(?:building|showcasing|sharing|creating|growing)\b)/i;
+  let cleaned = g.split(STOP)[0];
+
+  // remove leading verbs like "secure", "land", "i want to"
+  cleaned = cleaned.replace(/^(i want to|i'm looking to|i am looking to|looking for|land|get|find|secure|obtain|switch to|move to|become)\s+/i, '');
+
+  // take up to first comma or " at "
+  let role = cleaned.split(/,| at /i)[0].trim();
+
+  // strip generic trailing filler that adds no signal
+  role = role.replace(/\s+and\s+full[-\s]?time\s+opportunities$/i, '');
+  role = role.replace(/\s+full[-\s]?time\s+opportunities$/i, '');
+  role = role.replace(/\s+opportunities$/i, '');
+  role = role.replace(/\s+role$/i, '');
+  role = role.trim();
+
+  if (!role) return 'Professional';
+  role = role.charAt(0).toUpperCase() + role.slice(1);
+  return role;
+}
+
+function valueProp(ans) {
+  const about = (ans.about || '').toLowerCase();
+  if (hasMetrics(ans.about || '')) return 'Driving measurable impact';
+  if (about.includes('build')) return 'Building things people use';
+  if (about.includes('lead') || about.includes('manage')) return 'Leading teams that ship';
+  if ((ans.skills || []).length >= 3) return 'Shipping with depth across the stack';
+  return 'Focused on real outcomes';
+}
+
+function audienceFor(goal) {
+  const g = goal.toLowerCase();
+  if (g.includes('startup')) return 'early-stage startups';
+  if (g.includes('enterprise') || g.includes('b2b')) return 'B2B teams';
+  if (g.includes('fintech')) return 'fintech teams';
+  if (g.includes('consumer')) return 'consumer teams';
+  return 'teams that ship';
+}
+
+function outcomeFor(goal) {
+  const g = goal.toLowerCase();
+  if (g.includes('senior') || g.includes('lead') || g.includes('staff')) return 'scale what matters';
+  if (g.includes('switch') || g.includes('transition')) return 'make the transition stick';
+  if (g.includes('land')) return 'land the right role';
+  return 'deliver work that compounds';
+}
+
+function credibility(ans) {
+  const exp = ans.experience;
+  if (exp && exp.duration) {
+    const m = exp.duration.match(/(\d+)\s*year/);
+    if (m) return `${m[1]}+ yrs experience`;
+  }
+  if ((ans.skills || []).length >= 5) return 'Hands-on builder';
+  return 'Open to the right role';
+}
+
+function generateAbout(ans) {
+  if (!ans.about && !ans.goal) return null;
+  const goal = ans.goal || '';
+  const role = extractRole(goal) || '';
+  const original = (ans.about || '').trim();
+  const skills = (ans.skills || []).slice(0, 5);
+  const exp = ans.experience;
+  const stage = detectCareerStage(ans);
+
+  const lines = [];
+  // Hook — tailored to career stage so a student doesn't sound like a VP
+  const hookLine = aboutHookForStage(stage, ans);
+  lines.push(hookLine);
+  lines.push('');
+
+  // Story
+  if (stage === 'student') {
+    const level = detectExperienceLevel(ans);
+    const parts = [];
+    if (level.education) parts.push(level.education + '.');
+    parts.push(level.projectChallenge ? level.projectChallenge + '.' : 'I build hands-on projects to learn by doing.');
+    lines.push(parts.join(' '));
+  } else if (exp && (exp.title || exp.company)) {
+    lines.push(`As ${exp.title ? 'a ' + exp.title : 'a professional'}${exp.company ? ' at ' + exp.company : ''}, I focus on ${original ? 'the work I describe below — rebuilt for clarity:' : 'building systems that hold up under real load.'}`);
+  } else {
+    lines.push(`My focus is ${role ? role.toLowerCase() : 'building things that matter'} — and doing it well.`);
+  }
+  lines.push('');
+
+  // Original content (lightly framed) — strip the "My name is" filler AND
+  // the sentence we already reused as the hook, so it isn't repeated verbatim.
+  if (original) {
+    let cleaned = original.replace(/^(my name is[^.]*\.?\s*)/i, '').trim();
+    if (hookLine) {
+      const escapedHook = hookLine.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      cleaned = cleaned.replace(new RegExp('^' + escapedHook + '[.!?]?\\s*'), '').trim();
+    }
+    if (cleaned) {
+      lines.push(cleaned);
+      lines.push('');
+    }
+  }
+  // Skills / value
+  if (skills.length) {
+    lines.push(`What I work with: ${skills.join(', ')}.`);
+    lines.push('');
+  }
+
+  // Projects — real, user-provided proof of work. Never invents metrics;
+  // only surfaces an achievement line if the user actually gave one.
+  const featured = bestProjects(ans, 2);
+  if (featured.length) {
+    lines.push('A couple of projects that show how I work:');
+    featured.forEach(p => {
+      const bits = [];
+      bits.push(`• ${p.name}${p.description ? ' — ' + p.description : ''}`);
+      if (p.technologies) bits.push(`  Built with ${p.technologies}.`);
+      if (projectHasRealImpact(p)) bits.push(`  ${p.impact}`);
+      lines.push(bits.join(' '));
+    });
+    lines.push('');
+  }
+
+  // CTA — tailored to career stage
+  lines.push(aboutCtaForStage(stage, role));
+
+  return lines.join('\n');
+}
+
+function aboutHookForStage(stage, ans) {
+  if (hasMetrics(ans.about || '')) {
+    const firstSentence = (ans.about || '').split(/(?<=[.!?])\s+/)[0];
+    if (firstSentence && firstSentence.trim()) return firstSentence.trim();
+  }
+  switch (stage) {
+    case 'student': return `I'm a student who learns by building — and shipping — real projects.`;
+    case 'entry': return `I turn what I've learned into things that actually ship.`;
+    case 'mid': return `I build things that solve real problems, and I like owning them end to end.`;
+    case 'senior': return `I help teams turn ambiguity into shipped product.`;
+    case 'founder': return `I'm building something from scratch, and figuring it out as I go.`;
+    case 'freelancer': return `I help teams ship — on a project basis, without the overhead of a full-time hire.`;
+    default: return `I help teams turn ambiguity into shipped product.`;
+  }
+}
+
+function aboutCtaForStage(stage, role) {
+  const r = role ? role.toLowerCase() : 'a role like this';
+  switch (stage) {
+    case 'student': return `If you're hiring for internships or entry-level roles in ${r} — I'd love to talk.`;
+    case 'founder': return `If you're interested in what I'm building, or want to compare notes — let's talk.`;
+    case 'freelancer': return `If you need help with ${r} — I'm open to new project engagements.`;
+    default: return `If you're hiring for ${r} — or just want to compare notes — let's talk.`;
+  }
+}
+
+function generateExperience(ans) {
+  const exp = ans.experience;
+  if (!exp || (!exp.title && !exp.company && !exp.description)) return null;
+  const desc = (exp.description || '').trim();
+  const lines = [];
+  // Header line
+  if (exp.title && exp.company) lines.push(`${exp.title} — ${exp.company}${exp.duration ? ' · ' + exp.duration : ''}`);
+  else if (exp.title) lines.push(`${exp.title}${exp.duration ? ' · ' + exp.duration : ''}`);
+  else lines.push(`${exp.company || 'Role'}${exp.duration ? ' · ' + exp.duration : ''}`);
+  lines.push('');
+
+  if (desc) {
+    // Prefer real line breaks (bullets already entered as separate lines);
+    // fall back to sentence-splitting only if the description is one block.
+    const rawLines = desc.split(/\n+/).map(s => s.trim()).filter(Boolean);
+    const bulletSource = rawLines.length > 1 ? rawLines : desc.split(/(?<=[.!?])\s+/).filter(Boolean);
+
+    bulletSource.forEach(s => {
+      const rewritten = convertGerundBullet(s);
+      if (rewritten) lines.push(`• ${rewritten}`);
+    });
+    // suggest a metric bullet only if none of the existing bullets already have one
+    if (!hasMetrics(desc)) {
+      lines.push('• [Add a measurable outcome — e.g. "Reduced X by Y%" or "Scaled to N users"]');
+    }
+  } else {
+    lines.push('• [Describe your top 2–3 achievements with numbers]');
+  }
+  lines.push('');
+  lines.push('Tip: every bullet should have a verb and, ideally, a number.');
+
+  // Projects reinforce the Experience section with concrete, user-verified proof.
+  const projects = ans.projects || [];
+  if (projects.length) {
+    lines.push('');
+    lines.push('Projects & Impact (add to Featured or a Projects entry):');
+    projects.forEach(p => {
+      const parts = [`• ${p.name}`];
+      if (p.role) parts.push(`— ${p.role}`);
+      lines.push(parts.join(' '));
+      if (projectHasRealImpact(p)) lines.push(`  Impact: ${p.impact}`);
+      else lines.push('  Impact: [Add a measurable outcome — users, performance improvement, or recognition]');
+    });
+  }
+
+  return lines.join('\n');
+}
+
+function generateSkillsSuggestions(ans) {
+  const goal = (ans.goal || '').toLowerCase();
+  const existing = (ans.skills || []).map(s => s.toLowerCase());
+
+  // Missing skills straight from the user's own project stack — highest confidence signal.
+  const projectTech = projectTechList(ans);
+  const missingFromProjects = projectTech.filter(t => !existing.includes(t.toLowerCase()));
+
+  if (!goal) {
+    if (missingFromProjects.length === 0) return [];
+    return [missingFromProjects.slice(0, 12).join(', ')];
+  }
+
+  const roleKw = matchRoleKeywords(goal);
+  const missingFromRole = (roleKw && roleKw.keywords) ? roleKw.keywords.filter(k => !existing.includes(k.toLowerCase())) : [];
+
+  // Merge, project-stack skills first (they're proven, not just role-typical), dedupe case-insensitively.
+  const seen = new Set();
+  const merged = [];
+  [...missingFromProjects, ...missingFromRole].forEach(k => {
+    const key = k.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); merged.push(k); }
+  });
+
+  if (merged.length === 0) return ['Your skill set already covers the core keywords for this role and your project stack — reorder your top 3 to lead.'];
+  return [merged.slice(0, 12).join(', ')];
+}
+
+function generateProjectsShowcase(ans) {
+  const projects = ans.projects || [];
+  return projects.map(p => {
+    const lines = [];
+    lines.push(p.name + (p.description ? ' — ' + p.description : ''));
+    if (p.technologies) lines.push(`Built with: ${p.technologies}`);
+    if (p.role) lines.push(`Role: ${p.role}`);
+    lines.push(projectHasRealImpact(p)
+      ? `Impact: ${p.impact}`
+      : `Impact: [Add a measurable outcome — users, performance improvement, or recognition]`);
+    if (p.github) lines.push(`GitHub: ${p.github}`);
+    if (p.demo) lines.push(`Live demo: ${p.demo}`);
+    return lines.join('\n');
+  });
+}
+
+function generateKeywordSuggestions(ans) {
+  const goal = (ans.goal || '').toLowerCase();
+  const projectsText = (ans.projects || []).map(p => [p.name, p.description, p.technologies, p.role].filter(Boolean).join(' ')).join(' ');
+  const allText = [ans.headline, ans.about, ans.experience?.description, (ans.skills||[]).join(' '), projectsText].filter(Boolean).join(' ').toLowerCase();
+
+  // ATS keywords sourced directly from the technologies used across the user's projects.
+  const projectTech = projectTechList(ans);
+  const missingProjectTech = projectTech.filter(t => !allText.includes(t.toLowerCase()));
+
+  if (!goal) {
+    if (missingProjectTech.length === 0) return [];
+    return [missingProjectTech.slice(0, 12).join(', ')];
+  }
+
+  const roleKw = matchRoleKeywords(goal);
+  const missingFromRole = (roleKw && roleKw.keywords) ? roleKw.keywords.filter(k => !allText.includes(k.toLowerCase())) : [];
+
+  const seen = new Set();
+  const merged = [];
+  [...missingProjectTech, ...missingFromRole].forEach(k => {
+    const key = k.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); merged.push(k); }
+  });
+
+  if (merged.length === 0) return ['You already cover the high-value keywords for this role and your project stack. Focus on density, not additions.'];
+  return [merged.slice(0, 12).join(', ')];
+}
+
+/* ---------- TAB 4: Before vs After ---------- */
+function renderCompareTab(root) {
+  const a = state.analysis;
+  const ans = a.answers;
+
+  // Compute "after" scores using rebuild quality estimates
+  const afterScores = computeAfterScores(a);
+
+  const sections = [
+    { key: 'headline', label: 'Headline', icon: 'type' },
+    { key: 'about', label: 'About', icon: 'file-text' },
+    { key: 'experience', label: 'Experience', icon: 'briefcase' },
+    { key: 'skills', label: 'Skills', icon: 'list-checks' },
+  ];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-5xl mx-auto space-y-5';
+
+  wrap.innerHTML = `
+    <div class="slide-up mb-1">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="git-compare" class="w-5 h-5" style="color: var(--accent-2);"></i>
+        <h2 class="font-display font-bold text-2xl">Before vs After</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">Projected impact if you apply the rebuilt profile. Animated comparison.</p>
+    </div>
+
+    <div class="glass rounded-2xl p-6 slide-up">
+      <div class="text-xs uppercase tracking-wider font-semibold mb-3" style="color: var(--text-3);">Overall score — before → after</div>
+      <div class="h-64"><canvas id="compareChart"></canvas></div>
+    </div>
+  `;
+
+  // Section comparisons
+  sections.forEach((s, i) => {
+    const before = a[s.key].score;
+    const after = afterScores[s.key];
+    const beforeText = getBeforeText(ans, s.key);
+    const afterText = getAfterText(ans, s.key);
+    const delta = after - before;
+
+    const card = document.createElement('div');
+    card.className = 'glass rounded-2xl p-5 slide-up card-hover';
+    card.style.animationDelay = (i * 70) + 'ms';
+    card.innerHTML = `
+      <div class="flex items-center gap-2.5 mb-4">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25);">
+          <i data-lucide="${s.icon}" class="w-4 h-4" style="color: var(--accent-2);"></i>
+        </div>
+        <h3 class="font-semibold text-sm flex-1">${escapeHtml(s.label)}</h3>
+        <span class="text-xs font-bold px-2 py-1 rounded-full" style="background: ${delta > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.06)'}; color: ${delta > 0 ? 'var(--accent)' : 'var(--text-3)'};">
+          ${delta > 0 ? '+' : ''}${delta} pts
+        </span>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="rounded-xl p-4" style="background: rgba(244,63,94,0.05); border: 1px solid rgba(244,63,94,0.18);">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--warn);">Before</span>
+            <span class="text-xs font-bold" style="color: var(--warn);">${before}/100</span>
+          </div>
+          <div class="text-xs leading-relaxed" style="color: var(--text-2);">${beforeText ? escapeHtml(truncate(beforeText, 220)) : '<span style="color: var(--text-3);">Empty</span>'}</div>
+        </div>
+        <div class="rounded-xl p-4" style="background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.18);">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider" style="color: var(--accent);">After</span>
+            <span class="text-xs font-bold" style="color: var(--accent);">${after}/100</span>
+          </div>
+          <div class="text-xs leading-relaxed" style="color: var(--text-2);">${afterText ? escapeHtml(truncate(afterText, 220)) : '<span style="color: var(--text-3);">Additional information required</span>'}</div>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-2 text-xs">
+        <span style="color: var(--text-3);">Before</span>
+        <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.06);">
+          <div class="h-full rounded-full" style="width: ${before}%; background: var(--warn); transition: width 1s ease;"></div>
+        </div>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5" style="color: var(--text-3);"></i>
+        <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.06);">
+          <div class="h-full rounded-full" style="width: ${after}%; background: var(--accent); transition: width 1.2s ease .3s;"></div>
+        </div>
+        <span style="color: var(--text-3);">After</span>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+
+  root.appendChild(wrap);
+  refreshIcons();
+
+  // Animate bars
+  setTimeout(() => {
+    // Bar chart
+    const ctx = $('#compareChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Overall', ...sections.map(s => s.label)],
+        datasets: [
+          {
+            label: 'Before',
+            data: [a.overall, ...sections.map(s => a[s.key].score)],
+            backgroundColor: 'rgba(244,63,94,0.6)',
+            borderColor: 'rgba(244,63,94,0.9)',
+            borderWidth: 1,
+            borderRadius: 6,
+          },
+          {
+            label: 'After (projected)',
+            data: [afterScores.overall, ...sections.map(s => afterScores[s.key])],
+            backgroundColor: 'rgba(16,185,129,0.6)',
+            borderColor: 'rgba(16,185,129,0.9)',
+            borderWidth: 1,
+            borderRadius: 6,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#94A3B8', font: { size: 11 } } },
+          tooltip: { mode: 'index', intersect: false },
+        },
+        scales: {
+          x: { ticks: { color: '#94A3B8', font: { size: 11 } }, grid: { display: false } },
+          y: { min: 0, max: 100, ticks: { color: '#64748B', stepSize: 20 }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        },
+        animation: { duration: 1100, easing: 'easeOutQuart' },
+      }
+    });
+  }, 120);
+}
+
+function computeAfterScores(a) {
+  // estimate projected "after" scores if user applies rebuild
+  const lift = (before, cap=96) => {
+    if (before === 0) return 0; // can't project if missing — handled by text
+    return Math.min(cap, Math.round(before + (100 - before) * 0.55));
+  };
+  return {
+    headline: a.headline.missing ? 0 : lift(a.headline.score),
+    about: a.about.missing ? 0 : lift(a.about.score),
+    experience: a.experience.missing ? 0 : lift(a.experience.score),
+    skills: a.skills.missing ? 0 : lift(a.skills.score),
+    overall: Math.round(a.overall + (100 - a.overall) * 0.5),
+  };
+}
+
+function getBeforeText(ans, key) {
+  if (key === 'headline') return ans.headline || '';
+  if (key === 'about') return ans.about || '';
+  if (key === 'experience') {
+    const e = ans.experience;
+    return [e.title && e.company ? `${e.title} @ ${e.company}` : e.title || e.company || '', e.duration, e.description].filter(Boolean).join(' — ');
+  }
+  if (key === 'skills') return (ans.skills || []).join(', ');
+  return '';
+}
+
+function getAfterText(ans, key) {
+  if (key === 'headline') { const h = generateHeadlines(ans); return h.length ? h[0] : ''; }
+  if (key === 'about') return generateAbout(ans) || '';
+  if (key === 'experience') return generateExperience(ans) || '';
+  if (key === 'skills') { const s = generateSkillsSuggestions(ans); return s.length ? s[0] : ''; }
+  return '';
+}
+
+/* ---------- TAB 5: 7-Day Action Plan ---------- */
+function renderPlanTab(root) {
+  const a = state.analysis;
+  const ans = a.answers;
+  const role = ans.goal ? extractRole(ans.goal) : 'your target role';
+  const planProjects = bestProjects(ans, 2);
+  const topProject = planProjects[0];
+
+  const days = [
+    {
+      day: 1, icon: 'list-checks', title: 'Profile Foundation', color: 'var(--accent)',
+      summary: 'Apply the rebuilds and lock in your foundation.',
+      tasks: [
+        `Update your headline using Option 1 from the Rebuild tab.`,
+        `Replace your About section with the AI-generated version.`,
+        `Rewrite your most recent experience entry with action verbs + one metric.`,
+        `Reorder your top 3 skills to lead with the most role-relevant one.`,
+        topProject
+          ? `Add "${topProject.name}" (and any other strong projects) to your Featured section using the Projects Showcase blurb from the Rebuild tab.`
+          : `Add 1–2 real projects to your profile's Featured section — even a small one beats an empty section.`,
+      ],
+    },
+    {
+      day: 2, icon: 'pen-line', title: 'Publish a LinkedIn Post', color: 'var(--accent-2)',
+      summary: 'Signal expertise. One post, real value, no fluff.',
+      tasks: [
+        topProject
+          ? `Write a 150-word post breaking down what you built in "${topProject.name}" and one real thing you learned.`
+          : `Write a 150-word post about a real lesson from your work as ${role.toLowerCase()}.`,
+        `Hook line: start with a contrarian observation or a specific number.`,
+        `End with one clear question to invite comments.`,
+        `Tag 2 people who'd find it relevant. Post between 8–10am local.`,
+      ],
+    },
+    {
+      day: 3, icon: 'user-plus', title: 'Strategic Connection Requests', color: 'var(--accent-3)',
+      summary: 'Grow the right network — quality over quantity.',
+      tasks: [
+        `Send 10 connection requests to ${role.toLowerCase()}s at companies you'd join.`,
+        `Each request includes a 1-line personalized note — never the default.`,
+        `Connect with 3 recruiters who staff ${role.toLowerCase()} roles.`,
+        `Connect with 2 people who recently got hired into your target role.`,
+      ],
+    },
+    {
+      day: 4, icon: 'message-square', title: 'Comment Strategy', color: 'var(--accent)',
+      summary: "Show up on others' posts. Visibility compounds.",
+      tasks: [
+        `Find 5 posts from thought leaders in ${role.toLowerCase()} space.`,
+        `Leave a substantive comment (> 2 sentences, adds a real perspective).`,
+        `Reply to every comment on your Day 2 post within 4 hours.`,
+        `Engage before you post again — reciprocity drives reach.`,
+      ],
+    },
+    {
+      day: 5, icon: 'lightbulb', title: 'Thought Leadership Seed', color: 'var(--accent-2)',
+      summary: "Plant a flag. Pick one topic you'll be known for.",
+      tasks: [
+        (() => {
+          const tech = projectTechList(ans);
+          return tech.length
+            ? `Pick one niche topic tied to ${role.toLowerCase()} work you can own — your ${tech.slice(0, 2).join(' / ')} project work is a natural angle.`
+            : `Pick one niche topic tied to ${role.toLowerCase()} work you can own.`;
+        })(),
+        `Draft a 3-post mini-series on that topic (save as drafts).`,
+        `Publish post #1 today. Schedule #2 and #3 for Days 9 and 13.`,
+        `Add the topic to your About section as a stated focus area.`,
+      ],
+    },
+    {
+      day: 6, icon: 'users', title: 'Network Conversations', color: 'var(--accent-3)',
+      summary: 'Turn connections into conversations.',
+      tasks: [
+        `Message 5 connections from Day 3 with a genuine question (not a pitch).`,
+        `Ask one mentor-type for a 15-min call this week.`,
+        `Follow up with anyone who commented on your posts.`,
+        `End 2 stale conversations with a soft "how's it going?".`,
+      ],
+    },
+    {
+      day: 7, icon: 'bar-chart-3', title: 'Review Analytics & Iterate', color: 'var(--gold)',
+      summary: 'Measure what worked. Double down next week.',
+      tasks: [
+        `Open LinkedIn analytics — note impressions on your posts.`,
+        `Check profile views — compare to your pre-week baseline.`,
+        `Check search appearances (Premium) or infer from view quality.`,
+        `Pick ONE thing that worked. Make it your focus for week 2.`,
+        `Save this report. Re-run the optimizer in 14 days to measure lift.`,
+      ],
+    },
+  ];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-3xl mx-auto space-y-4';
+
+  wrap.innerHTML = `
+    <div class="slide-up mb-1">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="calendar-check" class="w-5 h-5" style="color: var(--accent);"></i>
+        <h2 class="font-display font-bold text-2xl">7-Day Action Plan</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">A focused week to turn your rebuilt profile into momentum. Tap a day to expand.</p>
+    </div>
+  `;
+  root.appendChild(wrap);
+
+  const timeline = document.createElement('div');
+  timeline.className = 'relative pl-8';
+  timeline.innerHTML = `<div class="absolute left-3 top-2 bottom-2 w-px" style="background: linear-gradient(180deg, var(--accent), var(--accent-2), var(--accent-3), var(--gold));"></div>`;
+
+  days.forEach((d, i) => {
+    const node = document.createElement('div');
+    node.className = 'relative mb-3 slide-up';
+    node.style.animationDelay = (i * 60) + 'ms';
+    node.innerHTML = `
+      <div class="absolute -left-[1.65rem] top-4 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style="background: ${d.color}; color: #04110d; box-shadow: 0 0 0 4px var(--bg);">${i+1}</div>
+      <div class="glass rounded-2xl overflow-hidden card-hover">
+        <button class="day-toggle w-full flex items-center gap-3 p-4 text-left">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background: ${d.color}22; border: 1px solid ${d.color}55;">
+            <i data-lucide="${d.icon}" class="w-4 h-4" style="color: ${d.color};"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider" style="color: ${d.color};">Day ${d.day}</span>
+            </div>
+            <div class="font-semibold text-sm">${escapeHtml(d.title)}</div>
+            <div class="text-xs truncate" style="color: var(--text-3);">${escapeHtml(d.summary)}</div>
+          </div>
+          <i data-lucide="chevron-down" class="w-4 h-4 chev shrink-0" style="color: var(--text-3);"></i>
+        </button>
+        <div class="collapsible-body px-4 pb-4">
+          <div class="border-t pt-3 space-y-2" style="border-color: var(--line);">
+            ${d.tasks.map(t => `
+              <label class="flex items-start gap-2.5 cursor-pointer group">
+                <input type="checkbox" class="plan-check mt-0.5 w-4 h-4 rounded accent-emerald-500 shrink-0" />
+                <span class="text-xs leading-relaxed plan-task" style="color: var(--text-2);">${escapeHtml(t)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    timeline.appendChild(node);
+
+    const toggle = node.querySelector('.day-toggle');
+    toggle.addEventListener('click', () => node.querySelector('.glass').classList.toggle('open'));
+
+    node.querySelectorAll('.plan-check').forEach(cb => {
+      cb.addEventListener('change', e => {
+        const span = e.target.nextElementSibling;
+        if (e.target.checked) {
+          span.style.textDecoration = 'line-through';
+          span.style.color = 'var(--text-3)';
+        } else {
+          span.style.textDecoration = 'none';
+          span.style.color = 'var(--text-2)';
+        }
+      });
+    });
+  });
+
+  wrap.appendChild(timeline);
+
+  // progress summary
+  const summary = document.createElement('div');
+  summary.className = 'glass rounded-2xl p-4 flex items-center gap-3 slide-up';
+  summary.innerHTML = `
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.12);">
+      <i data-lucide="check-circle-2" class="w-4 h-4" style="color: var(--accent);"></i>
+    </div>
+    <div class="flex-1 text-xs" style="color: var(--text-2);">
+      <strong style="color: var(--text);">Pro tip:</strong> Don't try to do all 7 days perfectly. Consistency beats intensity — show up every day, even briefly.
+    </div>
+  `;
+  wrap.appendChild(summary);
+
+  refreshIcons();
+
+  // auto-open day 1
+  setTimeout(() => {
+    const first = timeline.querySelector('.glass');
+    if (first) first.classList.add('open');
+  }, 300);
+}
+
+/* ---------- TAB 6: Summary Card ---------- */
+function renderSummaryTab(root) {
+  const a = state.analysis;
+  const ans = a.answers;
+  const afterScores = computeAfterScores(a);
+
+  const topMistakes = [];
+  ['headline','about','experience','skills','keywords'].forEach(k => {
+    const r = a[k];
+    if (r.issues && r.issues.length && !r.missing) {
+      topMistakes.push({ section: r.section, issue: r.problem, score: r.score });
+    } else if (r.missing) {
+      topMistakes.push({ section: r.section, issue: `${r.section} is missing`, score: 0 });
+    }
+  });
+  topMistakes.sort((x, y) => x.score - y.score);
+  const top3 = topMistakes.slice(0, 3);
+
+  // biggest improvement
+  let biggest = { section: 'Overall', delta: afterScores.overall - a.overall };
+  ['headline','about','experience','skills'].forEach(k => {
+    const d = afterScores[k] - a[k].score;
+    if (d > biggest.delta) biggest = { section: a[k].section, delta: d };
+  });
+
+  const role = ans.goal ? extractRole(ans.goal) : 'Your target role';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'max-w-3xl mx-auto space-y-4';
+
+  wrap.innerHTML = `
+    <div class="slide-up mb-1 no-print">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="image" class="w-5 h-5" style="color: var(--accent-3);"></i>
+        <h2 class="font-display font-bold text-2xl">Summary Card</h2>
+      </div>
+      <p class="text-sm" style="color: var(--text-2);">A shareable snapshot of your optimization. Screenshot-ready.</p>
+    </div>
+  `;
+  root.appendChild(wrap);
+
+  const card = document.createElement('div');
+  card.className = 'glass-strong rounded-3xl p-7 md:p-9 gradient-border relative overflow-hidden slide-up';
+  card.innerHTML = `
+    <!-- decorative -->
+    <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full" style="background: radial-gradient(circle, rgba(16,185,129,0.18), transparent 70%); filter: blur(30px);"></div>
+    <div class="absolute -bottom-20 -left-20 w-64 h-64 rounded-full" style="background: radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%); filter: blur(30px);"></div>
+
+    <div class="relative">
+      <!-- header -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--accent), var(--accent-2));">
+            <i data-lucide="sparkles" class="w-5 h-5 text-black"></i>
+          </div>
+          <div>
+            <div class="font-display font-bold text-sm">LinkedIn Profile Optimizer</div>
+            <div class="text-[10px]" style="color: var(--text-3);">AI Analysis Report</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] uppercase tracking-wider" style="color: var(--text-3);">Target</div>
+          <div class="text-xs font-semibold" style="color: var(--accent-2);">${escapeHtml(role)}</div>
+        </div>
+      </div>
+
+      <!-- scores -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="rounded-2xl p-4 text-center" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.22);">
+          <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--warn);">Before Score</div>
+          <div class="text-4xl font-bold" style="color: var(--warn);">${a.overall}</div>
+          <div class="text-[10px]" style="color: var(--text-3);">out of 100</div>
+        </div>
+        <div class="rounded-2xl p-4 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.22);">
+          <div class="text-[10px] uppercase tracking-wider font-semibold mb-1" style="color: var(--accent);">After Score (projected)</div>
+          <div class="text-4xl font-bold" style="color: var(--accent);">${afterScores.overall}</div>
+          <div class="text-[10px]" style="color: var(--text-3);">+${afterScores.overall - a.overall} points</div>
+        </div>
+      </div>
+
+      <!-- progress bar -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between text-[10px] mb-1.5" style="color: var(--text-3);">
+          <span>Recruiter Magnet Score</span>
+          <span>${Math.round(afterScores.overall)}% optimized</span>
+        </div>
+        <div class="h-2 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.06);">
+          <div class="h-full rounded-full" style="width: ${afterScores.overall}%; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));"></div>
+        </div>
+      </div>
+
+      <!-- top 3 mistakes -->
+      <div class="mb-5">
+        <div class="text-[10px] uppercase tracking-wider font-semibold mb-2" style="color: var(--text-3);">Top 3 Mistakes</div>
+        <div class="space-y-2">
+          ${top3.length ? top3.map((m, i) => `
+            <div class="flex items-start gap-2.5 rounded-xl p-2.5" style="background: rgba(244,63,94,0.05); border: 1px solid rgba(244,63,94,0.15);">
+              <span class="text-xs font-bold shrink-0 w-5 h-5 rounded-full flex items-center justify-center" style="background: rgba(244,63,94,0.2); color: var(--warn);">${i+1}</span>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold" style="color: var(--text);">${escapeHtml(m.section)}</div>
+                <div class="text-[11px]" style="color: var(--text-2);">${escapeHtml(m.issue)}</div>
+              </div>
+            </div>
+          `).join('') : `<div class="text-xs" style="color: var(--text-3);">No major mistakes detected.</div>`}
+        </div>
+      </div>
+
+      <!-- biggest improvement -->
+      <div class="rounded-2xl p-4 flex items-center gap-3" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.20);">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="background: rgba(16,185,129,0.18);">
+          <i data-lucide="trending-up" class="w-4 h-4" style="color: var(--accent);"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--accent);">Biggest Improvement Opportunity</div>
+          <div class="text-xs font-semibold" style="color: var(--text);">${escapeHtml(biggest.section)} — +${biggest.delta} points projected</div>
+        </div>
+      </div>
+
+      <!-- footer -->
+      <div class="mt-6 pt-4 border-t flex items-center justify-between" style="border-color: var(--line);">
+        <div class="text-[10px]" style="color: var(--text-3);">Generated by LinkedIn Profile Optimizer AI</div>
+        <div class="text-[10px]" style="color: var(--text-3);">${new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })}</div>
+      </div>
+    </div>
+  `;
+  wrap.appendChild(card);
+
+  // actions
+  const actions = document.createElement('div');
+  actions.className = 'no-print flex flex-wrap gap-2 justify-center slide-up';
+  actions.innerHTML = `
+    <button id="copySummaryBtn" class="btn-ghost px-4 py-2.5 rounded-xl text-sm flex items-center gap-2">
+      <i data-lucide="copy" class="w-4 h-4"></i>Copy summary
+    </button>
+    <button id="printBtn" class="btn-primary px-4 py-2.5 rounded-xl text-sm flex items-center gap-2">
+      <i data-lucide="download" class="w-4 h-4"></i>Save as PDF / Screenshot
+    </button>
+  `;
+  wrap.appendChild(actions);
+
+  $('#copySummaryBtn').addEventListener('click', () => {
+    const text = `LinkedIn Profile Optimizer AI — Summary\n` +
+      `Target: ${role}\n` +
+      `Before score: ${a.overall}/100\n` +
+      `After score (projected): ${afterScores.overall}/100 (+${afterScores.overall - a.overall})\n\n` +
+      `Top 3 mistakes:\n` +
+      (top3.length ? top3.map((m,i) => `${i+1}. ${m.section} — ${m.issue}`).join('\n') : 'None') +
+      `\n\nBiggest improvement: ${biggest.section} (+${biggest.delta} points)`;
+    copyText(text, 'Summary copied');
+  });
+  $('#printBtn').addEventListener('click', () => window.print());
+
+  refreshIcons();
+}
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+function init() {
+  refreshIcons();
+  updatePreview();
+}
+init();
+</script>
+
+</body>
+</html>
