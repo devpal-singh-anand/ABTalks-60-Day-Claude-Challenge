@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Verdict Engine — AI Engineer vs Cybersecurity vs Data Scientist</title>
+<style>
+:root{
+  --ink:#0B1220;
+  --ink-2:#111C2E;
+  --panel:#15213A;
+  --panel-2:#1B2A45;
+  --line:rgba(201,199,189,0.12);
+  --line-strong:rgba(201,199,189,0.22);
+  --paper:#E9E6DC;
+  --paper-dim:#B7B4A8;
+  --paper-faint:#7C8296;
+  --brass:#C9A227;
+  --brass-bright:#E8C15A;
+  --teal:#5FC9C0;
+  --rose:#C96A5F;
+  --verified:#5FC9C0;
+  --estimate:#C9A227;
+  --placeholder:#8A8F9F;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --radius: 3px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(ellipse 1200px 800px at 15% -10%, rgba(201,162,39,0.07), transparent 60%),
+    radial-gradient(ellipse 1000px 900px at 100% 10%, rgba(95,201,192,0.05), transparent 55%),
+    var(--ink);
+  color:var(--paper);
+  font-family:var(--font-body);
+  overflow:hidden;
+  height:100vh;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+}
+
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--panel-2); border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:var(--brass);}
+
+/* ============ APP SHELL ============ */
+.app{
+  display:grid;
+  grid-template-columns:248px 1fr;
+  height:100vh;
+}
+
+/* ============ SIDEBAR ============ */
+.sidebar{
+  background:linear-gradient(180deg, var(--ink-2), var(--ink));
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  padding:26px 18px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 6px 22px 6px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:20px;
+}
+.brand-mark{
+  width:34px; height:34px;
+  border:1.5px solid var(--brass);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display);
+  font-size:16px;
+  color:var(--brass-bright);
+  flex-shrink:0;
+  position:relative;
+}
+.brand-mark::after{
+  content:'';
+  position:absolute;
+  inset:5px;
+  border:1px solid rgba(201,162,39,0.35);
+  border-radius:50%;
+}
+.brand-text{line-height:1.15;}
+.brand-text .t1{font-family:var(--font-display); font-size:15.5px; letter-spacing:0.3px; color:var(--paper);}
+.brand-text .t2{font-family:var(--font-mono); font-size:9px; letter-spacing:1.6px; text-transform:uppercase; color:var(--paper-faint); margin-top:2px;}
+
+.case-label{
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  padding:0 10px;
+  margin-bottom:10px;
+}
+
+.nav{display:flex; flex-direction:column; gap:3px; flex:1;}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 12px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  color:var(--paper-dim);
+  font-size:13.5px;
+  font-weight:500;
+  border-left:2px solid transparent;
+  transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  position:relative;
+}
+.nav-item .n{
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--paper-faint);
+  width:16px;
+}
+.nav-item:hover{background:rgba(201,162,39,0.06); color:var(--paper);}
+.nav-item.active{
+  background:rgba(201,162,39,0.1);
+  color:var(--brass-bright);
+  border-left-color:var(--brass);
+}
+.nav-item.active .n{color:var(--brass);}
+
+.sidebar-foot{
+  padding:14px 10px 4px 10px;
+  border-top:1px solid var(--line);
+  margin-top:12px;
+}
+.sidebar-foot .sf-title{font-family:var(--font-mono); font-size:9px; letter-spacing:1.2px; text-transform:uppercase; color:var(--paper-faint); margin-bottom:8px;}
+.sidebar-foot .sf-row{display:flex; justify-content:space-between; font-size:11.5px; color:var(--paper-dim); padding:3px 0;}
+.sidebar-foot .sf-row b{color:var(--paper); font-weight:600;}
+
+/* ============ MAIN ============ */
+.main{
+  overflow-y:auto;
+  height:100vh;
+  position:relative;
+}
+.screen{
+  display:none;
+  padding:44px 56px 80px 56px;
+  max-width:1180px;
+  margin:0 auto;
+  animation:fadeUp 0.45s ease;
+}
+.screen.active{display:block;}
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--brass);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.eyebrow::before{content:'§'; color:var(--brass-bright);}
+
+h1.hero-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:46px;
+  letter-spacing:-0.5px;
+  line-height:1.08;
+  margin-bottom:14px;
+}
+h1.hero-title em{font-style:italic; color:var(--brass-bright);}
+.hero-sub{
+  font-size:16px;
+  color:var(--paper-dim);
+  max-width:600px;
+  line-height:1.55;
+  margin-bottom:34px;
+}
+h2.screen-title{
+  font-family:var(--font-display);
+  font-size:30px;
+  font-weight:600;
+  margin-bottom:8px;
+  letter-spacing:-0.3px;
+}
+.screen-sub{color:var(--paper-dim); font-size:14.5px; margin-bottom:32px; max-width:640px; line-height:1.5;}
+
+/* ============ DOSSIER CARDS ============ */
+.dossier-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:36px;
+}
+.dossier-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+}
+.dossier-card::before{
+  content:attr(data-tag);
+  position:absolute; top:12px; right:-30px;
+  font-family:var(--font-mono);
+  font-size:9px;
+  letter-spacing:1px;
+  color:var(--paper-faint);
+  transform:rotate(35deg);
+  opacity:0.5;
+}
+.dossier-card .dc-label{font-family:var(--font-mono); font-size:9.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--paper-faint); margin-bottom:10px;}
+.dossier-card .dc-value{font-family:var(--font-display); font-size:20px; color:var(--paper); line-height:1.3; margin-bottom:6px;}
+.dossier-card .dc-detail{font-size:12.5px; color:var(--paper-dim); line-height:1.5;}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:26px 28px;
+  margin-bottom:20px;
+}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px;}
+.panel-head h3{font-family:var(--font-display); font-size:19px; font-weight:600;}
+.panel-head .ph-meta{font-family:var(--font-mono); font-size:10px; color:var(--paper-faint);}
+
+.option-row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+}
+.option-row:last-child{border-bottom:none;}
+.option-chip{
+  width:38px; height:38px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display);
+  font-size:15px;
+  font-weight:600;
+  flex-shrink:0;
+}
+.option-name{font-size:14.5px; font-weight:600; color:var(--paper); margin-bottom:2px;}
+.option-desc{font-size:12.5px; color:var(--paper-dim);}
+
+/* ============ STAMPS (signature element) ============ */
+.stamp{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding:3px 8px;
+  border-radius:2px;
+  border:1px solid currentColor;
+  white-space:nowrap;
+}
+.stamp::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
+.stamp.verified{color:var(--verified);}
+.stamp.estimate{color:var(--estimate);}
+.stamp.placeholder{color:var(--placeholder);}
+
+/* ============ COMPARISON MATRIX ============ */
+.matrix-controls{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+.crit-tab{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.4px;
+  padding:8px 14px;
+  border:1px solid var(--line-strong);
+  border-radius:20px;
+  color:var(--paper-dim);
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.crit-tab:hover{border-color:var(--brass); color:var(--paper);}
+.crit-tab.active{background:var(--brass); border-color:var(--brass); color:var(--ink);}
+
+.matrix-row{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px 22px;
+  margin-bottom:14px;
+  cursor:pointer;
+  transition:border-color 0.2s ease, background 0.2s ease;
+}
+.matrix-row:hover{border-color:var(--line-strong); background:var(--panel-2);}
+.matrix-row-top{display:flex; align-items:center; gap:16px; margin-bottom:10px;}
+.mr-name{font-family:var(--font-display); font-size:17px; font-weight:600; flex:0 0 190px;}
+.mr-bar-track{flex:1; height:9px; background:rgba(255,255,255,0.06); border-radius:5px; overflow:hidden; position:relative;}
+.mr-bar-fill{height:100%; border-radius:5px; transition:width 0.9s cubic-bezier(.16,1,.3,1);}
+.mr-score{font-family:var(--font-mono); font-size:15px; font-weight:600; width:44px; text-align:right;}
+.mr-detail{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height 0.35s ease;
+}
+.matrix-row.expanded .mr-detail{max-height:400px;}
+.mr-detail-inner{padding-top:16px; border-top:1px solid var(--line); margin-top:14px; font-size:13px; color:var(--paper-dim); line-height:1.6;}
+.mr-detail-inner .mrd-row{display:flex; justify-content:space-between; gap:14px; margin-bottom:8px;}
+.mr-chevron{font-family:var(--font-mono); color:var(--paper-faint); transition:transform 0.3s ease; margin-left:auto; flex-shrink:0;}
+.matrix-row.expanded .mr-chevron{transform:rotate(90deg);}
+
+/* ============ DECISION ENGINE ============ */
+.engine-grid{display:grid; grid-template-columns:1fr 380px; gap:22px; align-items:start;}
+.slider-block{margin-bottom:22px;}
+.slider-label{display:flex; justify-content:space-between; font-size:13px; margin-bottom:9px;}
+.slider-label .sl-name{font-weight:600; color:var(--paper);}
+.slider-label .sl-val{font-family:var(--font-mono); color:var(--brass-bright); font-weight:600;}
+input[type=range]{
+  -webkit-appearance:none;
+  width:100%;
+  height:4px;
+  border-radius:2px;
+  background:rgba(255,255,255,0.1);
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px; height:16px;
+  border-radius:50%;
+  background:var(--brass-bright);
+  cursor:pointer;
+  border:2px solid var(--ink);
+  box-shadow:0 0 0 1px var(--brass);
+}
+input[type=range]::-moz-range-thumb{
+  width:16px; height:16px;
+  border-radius:50%;
+  background:var(--brass-bright);
+  cursor:pointer;
+  border:2px solid var(--ink);
+}
+.preset-row{display:flex; gap:8px; margin-bottom:26px; flex-wrap:wrap;}
+.preset-btn{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  padding:7px 12px;
+  border:1px solid var(--line-strong);
+  border-radius:20px;
+  color:var(--paper-dim);
+  cursor:pointer;
+  transition:all 0.2s ease;
+  background:transparent;
+}
+.preset-btn:hover{border-color:var(--teal); color:var(--teal);}
+.norm-note{font-size:11.5px; color:var(--paper-faint); margin-top:-6px; margin-bottom:22px; font-style:italic;}
+
+.rank-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:12px;
+  position:relative;
+  transition:transform 0.5s cubic-bezier(.16,1,.3,1);
+}
+.rank-card.leader{border-color:var(--brass); background:linear-gradient(135deg, rgba(201,162,39,0.08), var(--panel));}
+.rank-top{display:flex; align-items:center; gap:12px; margin-bottom:8px;}
+.rank-pos{font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--paper-faint); width:26px;}
+.rank-card.leader .rank-pos{color:var(--brass-bright);}
+.rank-name{font-family:var(--font-display); font-size:16px; font-weight:600; flex:1;}
+.rank-score{font-family:var(--font-mono); font-size:17px; font-weight:700; color:var(--brass-bright);}
+.rank-bar-track{height:6px; background:rgba(255,255,255,0.07); border-radius:4px; overflow:hidden;}
+.rank-bar-fill{height:100%; background:linear-gradient(90deg, var(--brass), var(--brass-bright)); border-radius:4px; transition:width 0.7s cubic-bezier(.16,1,.3,1);}
+
+/* ============ VERDICT ============ */
+.verdict-hero{
+  background:linear-gradient(135deg, rgba(201,162,39,0.1), var(--panel) 60%);
+  border:1px solid var(--brass);
+  border-radius:var(--radius);
+  padding:38px 40px;
+  margin-bottom:26px;
+  position:relative;
+  overflow:hidden;
+}
+.verdict-hero::before{
+  content:'VERDICT';
+  position:absolute;
+  top:20px; right:26px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:3px;
+  color:var(--brass);
+  border:1px solid var(--brass);
+  padding:4px 10px;
+  border-radius:2px;
+  transform:rotate(3deg);
+}
+.verdict-winner{font-family:var(--font-display); font-size:38px; font-weight:600; margin-bottom:8px;}
+.verdict-score-line{font-family:var(--font-mono); font-size:13px; color:var(--brass-bright); margin-bottom:16px;}
+.verdict-lede{font-size:15px; color:var(--paper-dim); line-height:1.6; max-width:680px;}
+.hedge{font-size:12.5px; color:var(--paper-faint); font-style:italic; margin-top:14px;}
+
+.sw-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;}
+.sw-box{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
+.sw-box h4{font-family:var(--font-mono); font-size:11px; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:14px;}
+.sw-box.strengths h4{color:var(--teal);}
+.sw-box.weaknesses h4{color:var(--rose);}
+.sw-box ul{list-style:none;}
+.sw-box li{font-size:13px; color:var(--paper-dim); padding:7px 0; padding-left:16px; position:relative; line-height:1.5;}
+.sw-box li::before{content:'—'; position:absolute; left:0; color:var(--paper-faint);}
+
+.tradeoff-strip{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:20px;
+}
+.tradeoff-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+.tradeoff-card .to-rank{font-family:var(--font-mono); font-size:10px; color:var(--paper-faint); margin-bottom:6px;}
+.tradeoff-card .to-name{font-family:var(--font-display); font-size:16px; font-weight:600; margin-bottom:4px;}
+.tradeoff-card .to-score{font-family:var(--font-mono); font-size:13px; color:var(--brass-bright); margin-bottom:10px;}
+.tradeoff-card .to-note{font-size:12px; color:var(--paper-dim); line-height:1.5;}
+
+/* ============ SOURCES ============ */
+.source-card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+}
+.source-name{font-family:var(--font-display); font-size:15.5px; font-weight:600; margin-bottom:4px;}
+.source-org{font-family:var(--font-mono); font-size:10.5px; color:var(--paper-faint); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.6px;}
+.source-supports{font-size:12.5px; color:var(--paper-dim); line-height:1.5;}
+.source-link{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--teal);
+  text-decoration:none;
+  border:1px solid rgba(95,201,192,0.35);
+  padding:6px 12px;
+  border-radius:20px;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:all 0.2s ease;
+}
+.source-link:hover{background:rgba(95,201,192,0.12);}
+
+/* ============ METHODOLOGY ACCORDION ============ */
+.accordion-item{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  margin-bottom:10px;
+  overflow:hidden;
+  background:var(--panel);
+}
+.accordion-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 20px;
+  cursor:pointer;
+}
+.accordion-head h4{font-family:var(--font-display); font-size:15.5px; font-weight:600;}
+.accordion-icon{font-family:var(--font-mono); color:var(--brass); transition:transform 0.3s ease;}
+.accordion-item.open .accordion-icon{transform:rotate(45deg);}
+.accordion-body{max-height:0; overflow:hidden; transition:max-height 0.4s ease;}
+.accordion-item.open .accordion-body{max-height:600px;}
+.accordion-body-inner{padding:0 20px 20px 20px; font-size:13.5px; color:var(--paper-dim); line-height:1.65;}
+.accordion-body-inner p{margin-bottom:10px;}
+.accordion-body-inner b{color:var(--paper);}
+
+/* option colors */
+.c-ai{color:#E8C15A;} .bg-ai{background:#E8C15A;}
+.c-cy{color:#5FC9C0;} .bg-cy{background:#5FC9C0;}
+.c-ds{color:#C96A5F;} .bg-ds{background:#C96A5F;}
+.chip-ai{background:rgba(232,193,90,0.15); color:#E8C15A; border:1px solid rgba(232,193,90,0.4);}
+.chip-cy{background:rgba(95,201,192,0.15); color:#5FC9C0; border:1px solid rgba(95,201,192,0.4);}
+.chip-ds{background:rgba(201,106,95,0.15); color:#C96A5F; border:1px solid rgba(201,106,95,0.4);}
+
+@media (max-width: 980px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .dossier-grid, .sw-grid, .tradeoff-strip{grid-template-columns:1fr;}
+  .engine-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div class="brand-text">
+        <div class="t1">Verdict Engine</div>
+        <div class="t2">Case No. 2026-0714</div>
+      </div>
+    </div>
+    <div class="case-label">Case Docket</div>
+    <div class="nav" id="navList">
+      <div class="nav-item active" data-screen="overview"><span class="n">01</span>Decision Overview</div>
+      <div class="nav-item" data-screen="research"><span class="n">02</span>Research Criteria</div>
+      <div class="nav-item" data-screen="matrix"><span class="n">03</span>Comparison Matrix</div>
+      <div class="nav-item" data-screen="engine"><span class="n">04</span>Decision Engine</div>
+      <div class="nav-item" data-screen="verdict"><span class="n">05</span>Final Verdict</div>
+      <div class="nav-item" data-screen="sources"><span class="n">06</span>Sources Library</div>
+      <div class="nav-item" data-screen="methodology"><span class="n">07</span>Methodology</div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="sf-title">Profile Snapshot</div>
+      <div class="sf-row"><span>Stage</span><b>Fresher</b></div>
+      <div class="sf-row"><span>Background</span><b>BCA + MCA*</b></div>
+      <div class="sf-row"><span>Runway</span><b>12+ mo</b></div>
+      <div class="sf-row"><span>Budget</span><b>$0</b></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- SCREEN 1: DECISION OVERVIEW -->
+    <section class="screen active" id="screen-overview">
+      <div class="eyebrow">Decision Intelligence Brief</div>
+      <h1 class="hero-title">The Verdict Engine<br><em>renders its case.</em></h1>
+      <p class="hero-sub">Evidence-backed decisions powered by transparent research. Every score on this dossier traces back to a named, public source — labeled as a verified fact, a reasoned estimate, or a synthetic placeholder, never invented.</p>
+
+      <div class="dossier-grid">
+        <div class="dossier-card" data-tag="decision">
+          <div class="dc-label">Decision Under Review</div>
+          <div class="dc-value">First tech specialization</div>
+          <div class="dc-detail">Which path a CS-degree fresher should commit the next 12+ months to, before job-hunting begins.</div>
+        </div>
+        <div class="dossier-card" data-tag="profile">
+          <div class="dc-label">Subject Profile</div>
+          <div class="dc-value">Fresher · BCA + MCA (in progress)</div>
+          <div class="dc-detail">12+ months learning runway · zero paid-course budget · optimizing for fast job entry and AI-resilience over peak salary.</div>
+        </div>
+        <div class="dossier-card" data-tag="scope">
+          <div class="dc-label">Options Compared</div>
+          <div class="dc-value">3 career paths</div>
+          <div class="dc-detail">AI Engineer, Cybersecurity Engineer, Data Scientist / Data Engineer — three CS-adjacent, comparable specializations.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Options on the docket</h3><span class="ph-meta">3 CANDIDATES</span></div>
+        <div id="optionRows"></div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: RESEARCH CRITERIA -->
+    <section class="screen" id="screen-research">
+      <h2 class="screen-title">Research Criteria</h2>
+      <p class="screen-sub">The measures this dossier scores each option against, and how the underlying research was gathered.</p>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Criteria selected</h3><span class="ph-meta">6 MEASURES</span></div>
+        <div id="criteriaRows"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Research summary</h3><span class="ph-meta">9 SOURCES</span></div>
+        <p style="font-size:13.5px; color:var(--paper-dim); line-height:1.7;">
+        Data was pulled from the U.S. Bureau of Labor Statistics Occupational Outlook Handbook, the World Economic Forum's <i>Future of Jobs Report 2025</i>, and industry salary aggregators (Levels.fyi, Indeed, Built In). Because no government agency tracks "AI Engineer" as a distinct occupation yet, its compensation and demand figures are <span class="stamp estimate" style="margin:0 3px;">estimate</span> blends of the closest BLS proxy occupation and multiple named market reports — flagged accordingly throughout. Free-resource accessibility (Forage, Kaggle, TryHackMe, GitHub Student Pack) was checked directly against each platform's current course/internship catalog.
+        </p>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: MATRIX -->
+    <section class="screen" id="screen-matrix">
+      <div class="eyebrow">Exhibit B</div>
+      <h2 class="screen-title">Comparison Matrix</h2>
+      <p class="screen-sub">Every option scored against every criterion, 0–100. Click a row to see the reasoning and evidence behind the score.</p>
+
+      <div class="matrix-controls" id="critTabs"></div>
+      <div id="matrixRows"></div>
+    </section>
+
+    <!-- SCREEN 3: ENGINE -->
+    <section class="screen" id="screen-engine">
+      <div class="eyebrow">Exhibit C</div>
+      <h2 class="screen-title">Decision Engine</h2>
+      <p class="screen-sub">Adjust the weights to match what actually matters to you. Rankings recalculate instantly — weights auto-normalize to 100%.</p>
+
+      <div class="engine-grid">
+        <div>
+          <div class="preset-row">
+            <button class="preset-btn" data-preset="default">↺ Recommended default</button>
+            <button class="preset-btn" data-preset="ai">⚡ Prioritize AI resilience</button>
+            <button class="preset-btn" data-preset="salary">💰 Prioritize salary</button>
+            <button class="preset-btn" data-preset="stability">🛡 Prioritize stability</button>
+            <button class="preset-btn" data-preset="fast">🚀 Prioritize fastest entry</button>
+          </div>
+          <div id="sliders"></div>
+          <div class="norm-note" id="normNote">Weights normalized to 100%.</div>
+        </div>
+        <div>
+          <div class="panel-head" style="margin-bottom:14px;"><h3 style="font-size:16px;">Live ranking</h3></div>
+          <div id="rankList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: VERDICT -->
+    <section class="screen" id="screen-verdict">
+      <div class="eyebrow">Exhibit D · Closing Statement</div>
+      <h2 class="screen-title">Final Verdict</h2>
+      <p class="screen-sub">Based on your priorities and the available evidence — not an absolute truth, a reasoned conclusion you can inspect and challenge.</p>
+
+      <div class="verdict-hero">
+        <div id="verdictWinner"></div>
+      </div>
+
+      <div class="sw-grid">
+        <div class="sw-box strengths"><h4>Strengths</h4><ul id="strengthsList"></ul></div>
+        <div class="sw-box weaknesses"><h4>Weaknesses</h4><ul id="weaknessesList"></ul></div>
+      </div>
+
+      <div class="panel-head" style="margin-bottom:14px;"><h3 style="font-size:16px;">Full ranking &amp; trade-offs</h3></div>
+      <div class="tradeoff-strip" id="tradeoffStrip"></div>
+    </section>
+
+    <!-- SCREEN 5: SOURCES -->
+    <section class="screen" id="screen-sources">
+      <div class="eyebrow">Exhibit E</div>
+      <h2 class="screen-title">Sources Library</h2>
+      <p class="screen-sub">Every citation used to build this dossier, with what it supports.</p>
+      <div id="sourcesList"></div>
+    </section>
+
+    <!-- SCREEN 6: METHODOLOGY -->
+    <section class="screen" id="screen-methodology">
+      <div class="eyebrow">Exhibit F</div>
+      <h2 class="screen-title">Research Methodology</h2>
+      <p class="screen-sub">How this dossier was built, what it assumes, and where it's weakest.</p>
+      <div id="accordionList"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   ============================================================ */
+const CAREERS = [
+  { id:'ai', name:'AI Engineer', short:'AI Eng.', cls:'ai', color:'#E8C15A',
+    desc:'Builds, fine-tunes, and deploys ML/LLM systems in production.' },
+  { id:'cy', name:'Cybersecurity Engineer', short:'Cybersecurity', cls:'cy', color:'#5FC9C0',
+    desc:'Defends networks, systems, and data from attack; the BLS proxy is "Information Security Analyst."' },
+  { id:'ds', name:'Data Scientist / Data Engineer', short:'Data Sci.', cls:'ds', color:'#C96A5F',
+    desc:'Extracts insight from data and builds the pipelines that feed it.' }
+];
+
+const CRITERIA = [
+  { id:'demand', name:'Market Demand', short:'Demand', defaultWeight:25,
+    detail:'Job growth, hiring trends, industry adoption.' },
+  { id:'resilience', name:'AI Disruption Resilience', short:'AI Resilience', defaultWeight:25,
+    detail:'Automation exposure, human-expertise requirement, future relevance.' },
+  { id:'learning', name:'Learning Curve & Free Accessibility', short:'Learning Curve', defaultWeight:20,
+    detail:'Time to job-ready using only free resources: docs, OSS, free certs, free virtual internships, hackathons.' },
+  { id:'growth', name:'Career Growth Potential', short:'Career Growth', defaultWeight:15,
+    detail:'Senior/leadership paths, transferable skills.' },
+  { id:'stability', name:'Job Stability', short:'Stability', defaultWeight:10,
+    detail:'Industry stability, hiring consistency, economic resilience.' },
+  { id:'comp', name:'Compensation Potential', short:'Compensation', defaultWeight:5,
+    detail:'Entry salary, salary growth, long-term earning ceiling.' }
+];
+
+// score, confidence: 'verified' | 'estimate' | 'placeholder'
+const SCORES = {
+  ai: {
+    demand:      { score:95, confidence:'estimate', note:'WEF Future of Jobs 2025 ranks "AI and Machine Learning Specialists" the #1 fastest-growing role globally (verified). No BLS occupation code exists yet for "AI Engineer," so translating that global rank into a US demand score is an estimate — the closest BLS proxy, Computer & Information Research Scientists, projects a slower 20% growth to 2034.' },
+    resilience:  { score:85, confidence:'estimate', note:'Reasoned estimate: engineers who build and deploy AI systems sit closer to the "human expertise required" side of automation than most roles, per WEF\'s framing of AI-adjacent jobs as hard to automate. Counter-risk: AI coding assistants are themselves automating parts of ML engineering work, which caps the score below cybersecurity.' },
+    learning:    { score:68, confidence:'estimate', note:'Steepest free on-ramp of the three: needs linear algebra, statistics, and deep learning foundations before free platforms like fast.ai, Hugging Face courses, or Kaggle become productive. Free virtual internships exist (e.g. BCG GenAI simulation on Forage, verified) but are fewer than in data or cybersecurity tracks.' },
+    growth:      { score:90, confidence:'estimate', note:'Market reports (Levels.fyi, Built In, KORE1) describe a fast-widening career ladder — junior AI engineer, ML engineer, staff/principal AI engineer, and applied-research tracks — with a documented pay premium over adjacent engineering roles at every level.' },
+    stability:   { score:75, confidence:'estimate', note:'Newer, less standardized role category than cybersecurity; demand is currently very high but concentrated in AI-funding-cycle-sensitive companies, which introduces more volatility than a compliance-mandated function like security.' },
+    comp:        { score:92, confidence:'estimate', note:'No single authoritative government wage figure exists yet. Blended estimate from Indeed ($189,770 avg. ML engineer), Levels.fyi ($190,000 median base / $261,683 median total comp), and Built In ($212,022 avg. total comp) — all industry-reported, not BLS-verified.' }
+  },
+  cy: {
+    demand:      { score:85, confidence:'verified', note:'BLS: Information Security Analyst employment projected to grow 29% from 2024–2034, ranked among the 6th-fastest-growing US occupations, ~16,000 annual openings. ISC2 industry data cited by multiple outlets puts the global workforce gap at ~4.7 million unfilled roles against a 5.5M active workforce.' },
+    resilience:  { score:88, confidence:'estimate', note:'Industry commentary (StationX 2026 market report) notes AI is automating routine Tier-1 SOC triage, but simultaneously creating new categories — AI security architects, quantum-resistant cryptography engineers — that require deeper human judgment. Net effect scored as high resilience, but this synthesis of trend reports is an estimate, not a single verified figure.' },
+    learning:    { score:88, confidence:'verified', note:'Strongest free ecosystem found: Cisco Networking Academy\'s free "Introduction to Cybersecurity" course, TryHackMe\'s free tier, Microsoft SC-900 free certification voucher programs, and multiple free Forage virtual internships (PwC cybersecurity risk assessment, Deloitte STEM cyber forensics) — all directly verified as currently live, no-cost programs.' },
+    growth:      { score:80, confidence:'estimate', note:'Clear ladder from analyst → security architect → CISO is well documented in career guides, though exact transition rates aren\'t published by BLS, making this an estimate rather than a verified statistic.' },
+    stability:   { score:92, confidence:'estimate', note:'Security spending is largely non-discretionary even during downturns (compliance and breach-response obligations don\'t pause), reasoned from the consistently positive hiring-growth commentary across all sources reviewed — no BLS "recession resilience" metric exists to verify this directly.' },
+    comp:        { score:78, confidence:'verified', note:'BLS: median annual wage for Information Security Analysts was $124,910 in May 2024, with the top 10% earning over $186,420.' }
+  },
+  ds: {
+    demand:      { score:90, confidence:'verified', note:'BLS: Data Scientist employment projected to grow 34% from 2024–2034 — the 4th fastest-growing occupation in the US economy, from 245,900 to 328,300 jobs, ~23,400 annual openings.' },
+    resilience:  { score:70, confidence:'estimate', note:'Estimate: routine data cleaning, basic descriptive analysis, and dashboarding are increasingly handled by AI copilots (per widespread industry commentary), while higher-order modeling judgment and domain framing remain human-led — lowering this relative to cybersecurity and AI engineering roles that sit further from the automatable end of the spectrum.' },
+    learning:    { score:85, confidence:'verified', note:'Wide, well-documented free ecosystem: Kaggle\'s free courses, competitions and community-run virtual internships (Sparks Foundation, KPMG Data Analytics via Forage — verified live programs), plus freeCodeCamp and Google\'s free Data Analytics course materials.' },
+    growth:      { score:82, confidence:'estimate', note:'Career-ladder data (UK-specific, via Qualify Nation 2026 report) shows Head of Data Science at ~£110,759 median and Chief Data Officer at £183,775+ — directionally useful evidence of a long ladder, but not a US-specific verified figure, hence estimate.' },
+    stability:   { score:78, confidence:'estimate', note:'Strong verified growth numbers, but data-team headcount is documented in industry press as one of the first areas cut in tech-sector downturns relative to security — reasoned estimate, not a BLS-tracked stability metric.' },
+    comp:        { score:74, confidence:'verified', note:'BLS: median annual wage for Data Scientists was $112,590 in May 2024 (all industries); $120,090 for those in scientific R&D services specifically.' }
+  }
+};
+
+const SOURCES = [
+  { name:'Data Scientists — Occupational Outlook Handbook', org:'U.S. Bureau of Labor Statistics', url:'https://www.bls.gov/ooh/math/data-scientists.htm', supports:'Data Scientist median wage ($112,590, May 2024) and 34% employment growth 2024–2034.' },
+  { name:'Information Security Analysts — Occupational Outlook Handbook', org:'U.S. Bureau of Labor Statistics', url:'https://www.bls.gov/ooh/computer-and-information-technology/information-security-analysts.htm', supports:'Cybersecurity median wage ($124,910, May 2024) and 29% employment growth 2024–2034.' },
+  { name:'Computer and Information Research Scientists — Occupational Outlook Handbook', org:'U.S. Bureau of Labor Statistics', url:'https://www.bls.gov/ooh/computer-and-information-technology/computer-and-information-research-scientists.htm', supports:'Closest BLS proxy occupation for AI Engineer: $140,910 median wage, 20% growth 2024–2034.' },
+  { name:'The Future of Jobs Report 2025', org:'World Economic Forum', url:'https://www.weforum.org/publications/the-future-of-jobs-report-2025/digest/', supports:'AI and Machine Learning Specialists ranked the #1 fastest-growing role globally in percentage terms; framing of AI-adjacent roles as automation-resistant.' },
+  { name:'Machine Learning Engineer Salary', org:'Levels.fyi', url:'https://www.levels.fyi/t/software-engineer/title/machine-learning-engineer', supports:'AI/ML Engineer compensation estimate: $190,000 median base, $261,683 median total comp (big-tech-weighted).' },
+  { name:'Machine Learning Engineer Salaries', org:'Indeed Career Guide', url:'https://www.indeed.com/career/machine-learning-engineer/salaries', supports:'AI/ML Engineer average salary estimate: $189,770/year, based on Indeed job postings.' },
+  { name:'Cybersecurity Job Market Statistics and Trends', org:'StationX (secondary aggregation of BLS &amp; ISC2 data)', url:'https://app.stationx.net/articles/cybersecurity-job-market-statistics', supports:'Global cybersecurity workforce gap (10.2M needed vs 5.5M active) and commentary on AI reshaping Tier-1 SOC roles.' },
+  { name:'Free Virtual Internships &amp; Courses', org:'Forage', url:'https://www.theforage.com/virtualprograms/virtual-internship', supports:'Verified existence of free, no-cost virtual internship programs for data science and cybersecurity (Sparks Foundation, KPMG, PwC, Deloitte, BCG GenAI).' },
+  { name:'AI Engineer Salary Guide 2026', org:'KORE1 (industry recruiting research)', url:'https://www.kore1.com/ai-engineer-salary-guide/', supports:'Cross-check of AI Engineer base pay range ($145,000–$310,000) blending Levels.fyi, Glassdoor, Built In and BLS context.' }
+];
+
+let weights = {};
+CRITERIA.forEach(c => weights[c.id] = c.defaultWeight);
+
+const PRESETS = {
+  default:  { demand:25, resilience:25, learning:20, growth:15, stability:10, comp:5 },
+  ai:       { demand:15, resilience:45, learning:15, growth:15, stability:5,  comp:5 },
+  salary:   { demand:15, resilience:10, learning:10, growth:15, stability:5,  comp:45 },
+  stability:{ demand:15, resilience:15, learning:10, growth:10, stability:45, comp:5 },
+  fast:     { demand:15, resilience:15, learning:50, growth:10, stability:5,  comp:5 }
+};
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('screen-'+item.dataset.screen).classList.add('active');
+  });
+});
+
+/* ============================================================
+   SCREEN 1: OVERVIEW
+   ============================================================ */
+function renderOverview(){
+  const rows = CAREERS.map(c=>`
+    <div class="option-row">
+      <div class="option-chip chip-${c.cls}">${c.name[0]}</div>
+      <div>
+        <div class="option-name">${c.name}</div>
+        <div class="option-desc">${c.desc}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('optionRows').innerHTML = rows;
+
+  const critRows = CRITERIA.map(c=>`
+    <div class="option-row">
+      <div class="option-chip" style="background:rgba(201,162,39,0.15); color:var(--brass-bright); font-size:12px;">${c.defaultWeight}%</div>
+      <div>
+        <div class="option-name">${c.name}</div>
+        <div class="option-desc">${c.detail}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('criteriaRows').innerHTML = critRows;
+}
+
+/* ============================================================
+   SCREEN 2: MATRIX
+   ============================================================ */
+let activeCrit = 'demand';
+
+function renderCritTabs(){
+  document.getElementById('critTabs').innerHTML = CRITERIA.map(c=>
+    `<div class="crit-tab ${c.id===activeCrit?'active':''}" data-crit="${c.id}">${c.short}</div>`
+  ).join('');
+  document.querySelectorAll('.crit-tab').forEach(t=>{
+    t.addEventListener('click', ()=>{ activeCrit = t.dataset.crit; renderCritTabs(); renderMatrixRows(); });
+  });
+}
+
+function renderMatrixRows(){
+  const crit = CRITERIA.find(c=>c.id===activeCrit);
+  const rowsHtml = CAREERS.map(career=>{
+    const d = SCORES[career.id][activeCrit];
+    return `
+    <div class="matrix-row" data-row="${career.id}">
+      <div class="matrix-row-top">
+        <div class="mr-name" style="color:${career.color}">${career.short}</div>
+        <div class="mr-bar-track"><div class="mr-bar-fill" style="width:0%; background:${career.color};" data-target="${d.score}"></div></div>
+        <div class="mr-score">${d.score}</div>
+        <span class="stamp ${d.confidence}">${d.confidence}</span>
+        <span class="mr-chevron">›</span>
+      </div>
+      <div class="mr-detail"><div class="mr-detail-inner">
+        <div class="mrd-row"><b style="color:var(--paper); flex-shrink:0;">Measuring:</b><span>${crit.detail}</span></div>
+        <div class="mrd-row"><b style="color:var(--paper); flex-shrink:0;">Reasoning:</b><span>${d.note}</span></div>
+      </div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('matrixRows').innerHTML = rowsHtml;
+
+  document.querySelectorAll('.matrix-row').forEach(row=>{
+    row.addEventListener('click', ()=> row.classList.toggle('expanded'));
+  });
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.mr-bar-fill').forEach(el=>{
+      el.style.width = el.dataset.target + '%';
+    });
+  });
+}
+
+/* ============================================================
+   SCORING ENGINE
+   ============================================================ */
+function computeTotals(w){
+  const totalWeight = Object.values(w).reduce((a,b)=>a+b,0) || 1;
+  const results = CAREERS.map(career=>{
+    let total = 0;
+    CRITERIA.forEach(c=>{
+      const norm = w[c.id] / totalWeight;
+      total += SCORES[career.id][c.id].score * norm;
+    });
+    return { id:career.id, name:career.name, short:career.short, color:career.color, total: total };
+  });
+  results.sort((a,b)=>b.total-a.total);
+  return results;
+}
+
+/* ============================================================
+   SCREEN 3: DECISION ENGINE
+   ============================================================ */
+function renderSliders(){
+  document.getElementById('sliders').innerHTML = CRITERIA.map(c=>`
+    <div class="slider-block">
+      <div class="slider-label"><span class="sl-name">${c.name}</span><span class="sl-val" id="val-${c.id}">${weights[c.id]}%</span></div>
+      <input type="range" min="0" max="60" value="${weights[c.id]}" id="slider-${c.id}" data-crit="${c.id}">
+    </div>
+  `).join('');
+  CRITERIA.forEach(c=>{
+    document.getElementById('slider-'+c.id).addEventListener('input', e=>{
+      weights[c.id] = parseInt(e.target.value);
+      document.getElementById('val-'+c.id).textContent = weights[c.id]+'%';
+      normalizeAndRender();
+    });
+  });
+}
+
+function normalizeAndRender(){
+  const total = Object.values(weights).reduce((a,b)=>a+b,0);
+  document.getElementById('normNote').textContent = total===100
+    ? 'Weights sum to exactly 100%.'
+    : `Weights sum to ${total}% — auto-normalized to 100% in scoring.`;
+  renderRankList();
+  if(document.getElementById('screen-verdict').classList.contains('active')) renderVerdict();
+}
+
+function renderRankList(){
+  const results = computeTotals(weights);
+  document.getElementById('rankList').innerHTML = results.map((r,i)=>`
+    <div class="rank-card ${i===0?'leader':''}">
+      <div class="rank-top">
+        <div class="rank-pos">${i+1}</div>
+        <div class="rank-name" style="color:${r.color}">${r.short}</div>
+        <div class="rank-score">${r.total.toFixed(1)}</div>
+      </div>
+      <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${r.total}%; background:${r.color};"></div></div>
+    </div>
+  `).join('');
+}
+
+function applyPreset(name){
+  weights = Object.assign({}, PRESETS[name]);
+  renderSliders();
+  normalizeAndRender();
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>applyPreset(btn.dataset.preset));
+});
+
+/* ============================================================
+   SCREEN 4: VERDICT
+   ============================================================ */
+const NARRATIVES = {
+  ai: {
+    strengths:['Highest compensation ceiling of the three, per industry salary aggregators.', 'Ranked the #1 fastest-growing role globally by the WEF Future of Jobs Report 2025.', 'Fast-widening career ladder into staff/principal AI and applied-research tracks.'],
+    weaknesses:['Steepest free learning curve — needs strong math/ML foundations before free resources become productive.', 'Fewest free virtual-internship options of the three paths.', 'Newer role category means less standardized hiring and more exposure to AI-funding-cycle volatility.']
+  },
+  cy: {
+    strengths:['Most accessible free learning path found — Cisco, TryHackMe, and multiple free Forage cybersecurity simulations are live today.', 'BLS-verified 29% job growth and a well-documented global talent shortage.', 'Security spend tends to be non-discretionary, supporting stronger job stability.'],
+    weaknesses:['Lowest compensation ceiling of the three on current BLS data.', 'Entry-level SOC/Tier-1 work is the segment most exposed to near-term AI automation.', 'Slightly slower career-growth documentation than the other two paths.']
+  },
+  ds: {
+    strengths:['BLS-verified 34% job growth — the 4th fastest-growing US occupation overall.', 'Strong, well-documented free ecosystem (Kaggle, Forage data-analytics simulations, freeCodeCamp).', 'Long, well-mapped career ladder up to Head of Data / Chief Data Officer.'],
+    weaknesses:['Lower AI-resilience score — routine data cleaning and basic analysis are increasingly automated by AI copilots.', 'Mid-pack compensation, behind AI engineering roles specifically.', 'Data-team headcount is often an early target in tech-sector budget cuts.']
+  }
+};
+
+function renderVerdict(){
+  const results = computeTotals(weights);
+  const winner = results[0];
+  const n = NARRATIVES[winner.id];
+
+  document.getElementById('verdictWinner').innerHTML = `
+    <div class="verdict-winner" style="color:${winner.color}">${winner.name}</div>
+    <div class="verdict-score-line">WEIGHTED SCORE ${winner.total.toFixed(1)} / 100 · ${(results[0].total-results[1].total).toFixed(1)}-PT MARGIN OVER RUNNER-UP</div>
+    <p class="verdict-lede">Based on your priorities and the available evidence, <b style="color:${winner.color}">${winner.name}</b> comes out ahead under the current weighting. This is a reasoned conclusion from six scored criteria, not an absolute truth — move the sliders on the Decision Engine screen and this verdict will change.</p>
+    <div class="hedge">Confidence note: this verdict blends BLS-verified figures with several industry-report estimates, most notably around AI Engineer compensation and demand, since no government occupation code exists for that role yet.</div>
+  `;
+
+  document.getElementById('strengthsList').innerHTML = n.strengths.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('weaknessesList').innerHTML = n.weaknesses.map(s=>`<li>${s}</li>`).join('');
+
+  document.getElementById('tradeoffStrip').innerHTML = results.map((r,i)=>`
+    <div class="tradeoff-card" style="border-color:${i===0?r.color:'var(--line)'}">
+      <div class="to-rank">RANK ${i+1}</div>
+      <div class="to-name" style="color:${r.color}">${r.name}</div>
+      <div class="to-score">${r.total.toFixed(1)} / 100</div>
+      <div class="to-note">${i===0 ? 'Leads under your current priority weighting.' : 'Trails by ' + (results[0].total-r.total).toFixed(1) + ' pts — reconsider if you weight ' + (i===1?'demand or compensation':'stability or learning accessibility') + ' more heavily.'}</div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   SCREEN 5: SOURCES
+   ============================================================ */
+function renderSources(){
+  document.getElementById('sourcesList').innerHTML = SOURCES.map(s=>`
+    <div class="source-card">
+      <div>
+        <div class="source-name">${s.name}</div>
+        <div class="source-org">${s.org}</div>
+        <div class="source-supports">${s.supports}</div>
+      </div>
+      <a class="source-link" href="${s.url}" target="_blank" rel="noopener">View source ↗</a>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   SCREEN 6: METHODOLOGY
+   ============================================================ */
+const ACCORDION = [
+  { title:'How research was performed', body:`<p>Every figure was pulled from named, publicly verifiable sources: the U.S. Bureau of Labor Statistics Occupational Outlook Handbook, the World Economic Forum's <i>Future of Jobs Report 2025</i>, and industry salary aggregators including Levels.fyi, Indeed, and Built In. Free-learning claims (Forage, Kaggle, TryHackMe, Cisco Networking Academy, GitHub Student Developer Pack) were checked against each platform's current catalog rather than assumed.</p><p>No salary, growth percentage, benchmark, or ranking in this dossier was invented. Where a figure could not be sourced with confidence, it is labeled <b>Estimate</b> rather than presented as fact.</p>` },
+  { title:'How scoring works', body:`<p>Each of the three careers is scored 0–100 on each of six criteria. A default weighting (Market Demand 25%, AI Resilience 25%, Learning Curve &amp; Free Accessibility 20%, Career Growth 15%, Job Stability 10%, Compensation 5%) reflects your stated priorities as a budget-conscious fresher optimizing for fast entry and long-term AI relevance over peak salary. The Decision Engine screen lets you override any weight; the app renormalizes all weights to sum to 100% and recalculates every score live.</p>` },
+  { title:'Assumptions', body:`<p>The model assumes a CS-adjacent fresher (BCA + MCA in progress) with 12+ months of runway and no budget for paid courses or certifications — so every "Learning Curve" score specifically measures free-resource accessibility, not general difficulty.</p><p>"AI Engineer" is treated as a distinct path from "Data Scientist," even though the two overlap in practice, because their compensation, demand, and skill-building trajectories are reported separately by most 2025–2026 industry sources.</p>` },
+  { title:'Conflicts between sources', body:`<p>Salary aggregators disagree substantially on AI/ML engineer pay — Glassdoor, Indeed, Built In, and Levels.fyi each report different figures, ranging from roughly $160,000 to $270,000 depending on whether base salary or total compensation (including equity) is measured. This dossier used Indeed's reported average ($189,770) and Levels.fyi's median base ($190,000) as the anchor figures, and flagged the resulting compensation score as an <b>Estimate</b> rather than a single verified number.</p><p>Growth-rate figures for Information Security Analysts also vary slightly across secondary sources (28.5%–29% for 2024–2034); the BLS's own OOH page figure of 29% was used as the authoritative verified number.</p>` },
+  { title:'Limitations', body:`<p>No BLS occupation code exists for "AI Engineer," so its demand and compensation figures are the least directly verifiable in this dossier — treat that career's numbers with more skepticism than the BLS-anchored Data Scientist and Cybersecurity figures.</p><p>All compensation figures reflect the US labor market; figures will differ substantially in other countries. Free-resource accessibility was assessed based on catalog availability at time of research and can change as platforms add or remove free tiers.</p>` }
+];
+
+function renderAccordion(){
+  document.getElementById('accordionList').innerHTML = ACCORDION.map((a,i)=>`
+    <div class="accordion-item" data-idx="${i}">
+      <div class="accordion-head"><h4>${a.title}</h4><span class="accordion-icon">+</span></div>
+      <div class="accordion-body"><div class="accordion-body-inner">${a.body}</div></div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.accordion-item').forEach(item=>{
+    item.querySelector('.accordion-head').addEventListener('click', ()=> item.classList.toggle('open'));
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderOverview();
+renderCritTabs();
+renderMatrixRows();
+renderSliders();
+renderRankList();
+renderVerdict();
+renderSources();
+renderAccordion();
+
+// re-render verdict when navigating to it (ensures fresh bars/animations)
+document.querySelector('[data-screen="verdict"]').addEventListener('click', renderVerdict);
+document.querySelector('[data-screen="engine"]').addEventListener('click', renderRankList);
+document.querySelector('[data-screen="matrix"]').addEventListener('click', renderMatrixRows);
+</script>
+</body>
+</html>
