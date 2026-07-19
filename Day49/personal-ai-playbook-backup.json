@@ -1,0 +1,382 @@
+{
+  "exportedAt": "2026-07-19T18:38:20.345Z",
+  "workflows": [
+    {
+      "id": "wf_xi3kxppdmrs4wlik",
+      "custom": false,
+      "favorite": true,
+      "lastUsed": null,
+      "name": "Debugging Loop",
+      "category": "Debugging",
+      "purpose": "Turns a single 'fix this error' message into a structured, iterative root-cause loop instead of shallow one-off patches.",
+      "whenToUse": "You've been stuck on a bug for more than one exchange, the same error keeps reappearing after a 'fix', or you want the actual root cause instead of a band-aid.",
+      "template": "You are an expert {{LANGUAGE}} debugger. I'm working on {{PROJECT_CONTEXT}}.\n\nERROR:\n{{ERROR_MESSAGE}}\n\nRELEVANT CODE:\n{{CODE_SNIPPET}}\n\nWHAT I'VE ALREADY TRIED:\n{{ATTEMPTS}}\n\nDo the following, in order, and show your reasoning at each step:\n1. State your top 3 hypotheses for the root cause, ranked by likelihood.\n2. For hypothesis #1, identify the exact line(s) or logic responsible.\n3. Propose a fix and explain why it addresses the root cause, not just the symptom.\n4. Give me one concrete test to run that confirms the fix worked.\n5. If the fix doesn't work, tell me exactly what to check next (hypothesis #2).\n\nStop and wait for my actual test result before proposing another change.",
+      "variables": [
+        {
+          "key": "LANGUAGE",
+          "label": "Language / framework",
+          "default": "Python"
+        },
+        {
+          "key": "PROJECT_CONTEXT",
+          "label": "Project context",
+          "default": "a FastAPI backend for a RAG pipeline"
+        },
+        {
+          "key": "ERROR_MESSAGE",
+          "label": "Full error / stack trace",
+          "default": "paste the full traceback here"
+        },
+        {
+          "key": "CODE_SNIPPET",
+          "label": "Relevant code",
+          "default": "paste the function or file section here"
+        },
+        {
+          "key": "ATTEMPTS",
+          "label": "What you've already tried",
+          "default": "e.g. checked types, added logging, restarted kernel"
+        }
+      ],
+      "examples": [
+        "Filled with a KeyError in a vector-store lookup: the model correctly identified a race condition between an async cache write and read, instead of just suggesting a try/except."
+      ],
+      "bestPractices": [
+        "Paste the FULL traceback, not just the last line — the root cause is often several frames up.",
+        "Report the exact new error after testing a fix, instead of 'still broken' — that's what keeps the loop tight.",
+        "Mention anything that changed recently (dependency update, refactor) since regressions usually trace back there."
+      ],
+      "expectedOutput": "A ranked list of hypotheses, a targeted fix tied to the top hypothesis, and one verification test — ready to feed the result of back into the next iteration."
+    },
+    {
+      "id": "wf_fhfynxq6mrs4wlik",
+      "custom": false,
+      "favorite": true,
+      "lastUsed": null,
+      "name": "Code Review & Refactor Assistant",
+      "category": "Code Quality",
+      "purpose": "Replaces a generic 'does this look okay?' with a structured, multi-angle review covering correctness, edge cases, performance, security and readability.",
+      "whenToUse": "Before a commit/PR, after finishing a feature, or when code 'works' but you're not confident it's solid.",
+      "template": "Act as a senior {{LANGUAGE}} engineer doing a thorough code review.\n\nCODE TO REVIEW:\n{{CODE_SNIPPET}}\n\nCONTEXT: {{CONTEXT}}\nPRIORITIES (ranked): {{PRIORITIES}}\n\nReview across these dimensions, and only flag genuine issues (skip a section if there's nothing meaningful to say):\n1. Correctness — logic errors, off-by-one issues, incorrect assumptions.\n2. Edge cases — inputs or states that would break this.\n3. Performance — real bottlenecks, not micro-optimizations.\n4. Security — injection, unsafe deserialization, secrets, auth gaps.\n5. Readability & structure — naming, duplication, function size.\n\nFor each issue: quote the exact line, explain the risk in one sentence, then give the corrected code.\nEnd with a short refactored version of the full snippet if changes are non-trivial.",
+      "variables": [
+        {
+          "key": "LANGUAGE",
+          "label": "Language",
+          "default": "TypeScript"
+        },
+        {
+          "key": "CODE_SNIPPET",
+          "label": "Code to review",
+          "default": "paste code here"
+        },
+        {
+          "key": "CONTEXT",
+          "label": "What this code does / where it runs",
+          "default": "an Express API route handling file uploads"
+        },
+        {
+          "key": "PRIORITIES",
+          "label": "What matters most here",
+          "default": "security, then readability, then performance"
+        }
+      ],
+      "examples": [
+        "Given an unauthenticated file-upload handler, the model flagged a missing MIME-type check as the top security issue before touching style."
+      ],
+      "bestPractices": [
+        "State your priority order — a review of a hackathon prototype and a production auth service should weigh differently.",
+        "Include the surrounding context (framework, who calls this) so suggestions aren't generic.",
+        "Ask it to skip sections with nothing to say — this avoids review reports padded with non-issues."
+      ],
+      "expectedOutput": "A structured review report with quoted lines, risk explanations, corrected snippets, and an optional full refactor."
+    },
+    {
+      "id": "wf_3dc5n6rsmrs4wlik",
+      "custom": false,
+      "favorite": false,
+      "lastUsed": null,
+      "name": "System / Architecture Design Assistant",
+      "category": "Architecture",
+      "purpose": "Turns a vague project idea into a concrete architecture with explicit tradeoffs, instead of a single opinionated answer.",
+      "whenToUse": "Starting a new project, scaling an existing one, or choosing between competing technical approaches.",
+      "template": "You are a pragmatic software architect. Help me design the architecture for: {{PROJECT_DESCRIPTION}}\n\nREQUIREMENTS: {{REQUIREMENTS}}\nSCALE / CONSTRAINTS: {{CONSTRAINTS}}\nMY EXPERIENCE LEVEL: {{EXPERIENCE_LEVEL}}\n\nProduce:\n1. A proposed architecture, described component by component (in text — describe it clearly enough that I could sketch it).\n2. Each component's single responsibility and how data flows between them.\n3. Two alternative approaches, with the real tradeoffs of each (cost, complexity, scalability, time-to-build) versus your main proposal.\n4. The most likely failure points at this scale, and how to mitigate them.\n5. A scaling plan: what breaks first if usage grows 10x, and what changes then.\n\nBe opinionated — recommend one option and say why, don't just list possibilities.",
+      "variables": [
+        {
+          "key": "PROJECT_DESCRIPTION",
+          "label": "Project description",
+          "default": "an AI agent platform that runs scheduled research tasks and emails summaries"
+        },
+        {
+          "key": "REQUIREMENTS",
+          "label": "Key requirements",
+          "default": "multi-user, needs to run tasks reliably even if the app restarts"
+        },
+        {
+          "key": "CONSTRAINTS",
+          "label": "Scale / constraints",
+          "default": "solo developer, small budget, expecting under 1000 users initially"
+        },
+        {
+          "key": "EXPERIENCE_LEVEL",
+          "label": "Your experience level",
+          "default": "comfortable with Python/Node, new to distributed systems"
+        }
+      ],
+      "examples": [
+        "For a solo-dev agent platform, the model recommended a simple job queue over a full message broker, explicitly trading scalability for time-to-ship — with a clear note on when to revisit that call."
+      ],
+      "bestPractices": [
+        "State your real constraints (team size, budget, timeline) — architecture 'best practice' without constraints is generic advice.",
+        "Ask it to be opinionated, not just list options — a menu of tradeoffs without a recommendation just shifts the decision back to you.",
+        "Revisit this workflow at each major milestone; architecture decisions age."
+      ],
+      "expectedOutput": "A recommended architecture with named components, a clear data flow, two compared alternatives, failure points, and a concrete scaling trigger."
+    },
+    {
+      "id": "wf_uh4qrskumrs4wlik",
+      "custom": false,
+      "favorite": false,
+      "lastUsed": null,
+      "name": "README / Project Documentation Generator",
+      "category": "Documentation",
+      "purpose": "Generates a genuinely useful README from a rough project description, instead of a generic template with placeholder text.",
+      "whenToUse": "Wrapping up a project for GitHub, your portfolio, or before handing it off / submitting it.",
+      "template": "Write a clear, professional README.md for this project.\n\nPROJECT NAME: {{PROJECT_NAME}}\nONE-LINE DESCRIPTION: {{DESCRIPTION}}\nTECH STACK: {{TECH_STACK}}\nKEY FEATURES: {{FEATURES}}\nSETUP STEPS (rough notes): {{SETUP_NOTES}}\nAUDIENCE: {{AUDIENCE}}\n\nStructure it as:\n1. Title + one-line description + badges placeholder\n2. Overview (2-3 sentences, what problem this solves and for whom)\n3. Features (bulleted, benefit-focused not just feature names)\n4. Tech stack\n5. Setup / installation (numbered, copy-pasteable commands)\n6. Usage example\n7. Project structure (brief)\n8. Notes on limitations or future work, if any\n\nKeep the tone direct and technical — no marketing fluff, no filler adjectives.",
+      "variables": [
+        {
+          "key": "PROJECT_NAME",
+          "label": "Project name",
+          "default": "AgentFlow"
+        },
+        {
+          "key": "DESCRIPTION",
+          "label": "One-line description",
+          "default": "A lightweight framework for building and chaining autonomous AI agents"
+        },
+        {
+          "key": "TECH_STACK",
+          "label": "Tech stack",
+          "default": "Python, LangChain, FastAPI, Redis"
+        },
+        {
+          "key": "FEATURES",
+          "label": "Key features",
+          "default": "visual agent chaining, retry logic, cost tracking per run"
+        },
+        {
+          "key": "SETUP_NOTES",
+          "label": "Rough setup notes",
+          "default": "clone repo, pip install -r requirements.txt, set OPENAI_API_KEY, run uvicorn main:app"
+        },
+        {
+          "key": "AUDIENCE",
+          "label": "Who's reading this",
+          "default": "other developers evaluating whether to use this in their own project"
+        }
+      ],
+      "examples": [
+        "Given rough setup notes, the model produced numbered, copy-pasteable install steps and inferred a sensible 'Usage' example from the described features."
+      ],
+      "bestPractices": [
+        "Give real setup notes, even messy ones — the model structures them, it doesn't need them pre-formatted.",
+        "Specify your audience — a README for recruiters reads differently than one for contributors.",
+        "Regenerate this whenever features change significantly rather than hand-patching an old README."
+      ],
+      "expectedOutput": "A complete, ready-to-paste README.md with real setup commands and a usage example, not placeholder text."
+    },
+    {
+      "id": "wf_6nj2mze5mrs4wlik",
+      "custom": false,
+      "favorite": true,
+      "lastUsed": null,
+      "name": "Research Paper Summarizer",
+      "category": "Research",
+      "purpose": "Extracts the actual substance of a paper — contribution, method, limitations — instead of a surface-level abstract restatement.",
+      "whenToUse": "Doing a literature review, deciding whether a paper is relevant to your research, or prepping for a discussion/presentation.",
+      "template": "Read the following paper content and analyze it critically.\n\nPAPER CONTENT / ABSTRACT:\n{{PAPER_TEXT}}\n\nMY RESEARCH AREA: {{RESEARCH_AREA}}\n\nProvide:\n1. Plain-language summary (3-4 sentences, no jargon).\n2. The single core contribution — what's actually new here.\n3. Methodology, briefly, and one genuine critique or limitation of it.\n4. Stated limitations vs. limitations you notice that the authors didn't mention.\n5. How this connects to my research area: {{RESEARCH_AREA}} — is it directly relevant, tangential, or a useful contrast?\n6. Three follow-up questions I should investigate next.\n\nBe honest if the contribution is incremental — don't oversell a paper's novelty.",
+      "variables": [
+        {
+          "key": "PAPER_TEXT",
+          "label": "Paper text / abstract",
+          "default": "paste abstract or key sections here"
+        },
+        {
+          "key": "RESEARCH_AREA",
+          "label": "Your research area",
+          "default": "retrieval-augmented generation for domain-specific QA systems"
+        }
+      ],
+      "examples": [
+        "Given an abstract on prompt compression, the model separated the authors' stated limitation (dataset size) from an unstated one it identified (no evaluation on multi-turn dialogue)."
+      ],
+      "bestPractices": [
+        "Paste as much of the actual paper as you can, not just the abstract — methodology critique needs the methods section.",
+        "Always state your research area — 'relevance' is meaningless without a reference point.",
+        "Ask it to be honest about incremental work; this avoids treating every paper as groundbreaking."
+      ],
+      "expectedOutput": "A structured critical summary: contribution, methodology critique, relevance to your work, and concrete follow-up questions."
+    },
+    {
+      "id": "wf_42bjnd2mmrs4wlik",
+      "custom": false,
+      "favorite": false,
+      "lastUsed": null,
+      "name": "New Concept / Tech Explainer",
+      "category": "Learning",
+      "purpose": "Explains an unfamiliar concept calibrated to your actual background, with a check for understanding — instead of a generic Wikipedia-style answer.",
+      "whenToUse": "Encountering a new framework, algorithm, or term while building, and you want to actually understand it, not just copy-paste around it.",
+      "template": "Explain {{CONCEPT}} to me.\n\nMY BACKGROUND: {{BACKGROUND}}\nWHY I'M LEARNING THIS: {{GOAL}}\n\nStructure the explanation as:\n1. One-sentence definition, in plain language.\n2. An analogy grounded in something from my background above.\n3. A minimal, runnable code example (if applicable) with inline comments explaining each part.\n4. The most common misconception beginners have about this.\n5. When to use this vs. the main alternative(s), and why.\n\nThen quiz me with 2 short questions to check my understanding — don't give the answers yet, wait for my responses.",
+      "variables": [
+        {
+          "key": "CONCEPT",
+          "label": "Concept / technology",
+          "default": "vector embeddings and cosine similarity"
+        },
+        {
+          "key": "BACKGROUND",
+          "label": "Your background",
+          "default": "MCA student, comfortable with Python and basic ML, new to NLP internals"
+        },
+        {
+          "key": "GOAL",
+          "label": "Why you're learning this",
+          "default": "building a semantic search feature for a project"
+        }
+      ],
+      "examples": [
+        "For a student with a Python/ML background, the model anchored the embeddings analogy in coordinate geometry the student already knew, instead of a generic 'like GPS coordinates' analogy."
+      ],
+      "bestPractices": [
+        "Be specific about your background — 'beginner' vs 'comfortable with X, new to Y' changes the whole explanation.",
+        "State why you're learning it — the explanation should serve your actual goal, not be exhaustive.",
+        "Actually answer the quiz questions instead of skipping them; that's what turns this into retained knowledge."
+      ],
+      "expectedOutput": "A calibrated explanation with an analogy, a minimal code example, common pitfalls, and two comprehension-check questions."
+    },
+    {
+      "id": "wf_7966955dmrs4wlik",
+      "custom": false,
+      "favorite": false,
+      "lastUsed": null,
+      "name": "Autonomous Agent Prompt Builder",
+      "category": "Agents",
+      "purpose": "Defines a complete, guardrailed system prompt for an autonomous AI agent instead of an ad-hoc instruction that drifts over time.",
+      "whenToUse": "Building an agent that needs to operate over multiple steps with tools, and needs consistent behavior and clear boundaries.",
+      "template": "You are {{AGENT_ROLE}}, an autonomous agent. Your goal: {{GOAL}}.\n\nAVAILABLE TOOLS: {{TOOLS}}\n\nOPERATING LOOP:\n1. Assess the current state against the goal.\n2. Decide the single next action using only the tools listed above.\n3. Execute and observe the result.\n4. Re-assess: is the goal met, partially met, or blocked?\n5. Repeat until the goal is met or a stop condition below is triggered.\n\nSTOP CONDITIONS: {{STOP_CONDITIONS}}\nGUARDRAILS (never do these): {{GUARDRAILS}}\n\nOUTPUT FORMAT: For every step, output exactly:\nTHOUGHT: <your reasoning>\nACTION: <tool name + input>\nOBSERVATION: <result, or \"awaiting execution\">\n\nIf you are blocked or a guardrail would be violated, stop and output BLOCKED: <reason> instead of taking an action.",
+      "variables": [
+        {
+          "key": "AGENT_ROLE",
+          "label": "Agent role/persona",
+          "default": "a research assistant agent"
+        },
+        {
+          "key": "GOAL",
+          "label": "Agent's goal",
+          "default": "find and summarize the 5 most relevant recent papers on a given topic"
+        },
+        {
+          "key": "TOOLS",
+          "label": "Tools available",
+          "default": "web_search(query), fetch_page(url), save_summary(text)"
+        },
+        {
+          "key": "STOP_CONDITIONS",
+          "label": "Stop conditions",
+          "default": "5 relevant papers found and summarized, OR 10 search attempts reached with no new relevant results"
+        },
+        {
+          "key": "GUARDRAILS",
+          "label": "Guardrails / never do",
+          "default": "never fabricate a citation; never fetch pages outside the search results"
+        }
+      ],
+      "examples": [
+        "A research agent with a clear stop condition (5 papers OR 10 attempts) avoided an infinite refinement loop that a goal-only prompt had previously fallen into."
+      ],
+      "bestPractices": [
+        "Always pair a positive stop condition (goal met) with a negative one (attempt limit) — this is what prevents runaway loops.",
+        "List tools exactly as they're callable, including parameter names, so the agent's ACTION lines are directly executable.",
+        "Keep guardrails as concrete forbidden actions, not vague values like 'be safe'."
+      ],
+      "expectedOutput": "A complete agent system prompt with an explicit operating loop, stop conditions, guardrails, and a structured Thought/Action/Observation output format."
+    },
+    {
+      "id": "wf_cviezalfmrs4wlik",
+      "custom": false,
+      "favorite": false,
+      "lastUsed": null,
+      "name": "Project Idea → Spec Generator",
+      "category": "Planning",
+      "purpose": "Converts a rough project idea into a structured spec with MVP scope and milestones, instead of an unstructured brain dump.",
+      "whenToUse": "At the very start of a new side project, hackathon, or when an idea needs to become an actionable plan.",
+      "template": "Turn this rough idea into a structured project spec.\n\nROUGH IDEA: {{IDEA}}\nTIME AVAILABLE: {{TIME_AVAILABLE}}\nMY SKILLS: {{SKILLS}}\n\nProduce:\n1. Problem statement — what problem this solves, in one paragraph.\n2. Target user — who feels this problem most acutely.\n3. Core features — split into \"MVP (must have)\" and \"Later (nice to have)\", with reasoning for the split.\n4. Recommended tech stack, matched to my listed skills and the time available.\n5. Milestones — a numbered build order (not a calendar), each with a clear \"done\" definition.\n6. Top 3 risks that could derail this, and one mitigation each.\n\nBe realistic about scope given the time available — cut features rather than compress timelines.",
+      "variables": [
+        {
+          "key": "IDEA",
+          "label": "Rough idea",
+          "default": "an app that turns messy class notes into spaced-repetition flashcards automatically"
+        },
+        {
+          "key": "TIME_AVAILABLE",
+          "label": "Time available",
+          "default": "3 weekends"
+        },
+        {
+          "key": "SKILLS",
+          "label": "Your current skills",
+          "default": "Python, basic React, some experience with LLM APIs"
+        }
+      ],
+      "examples": [
+        "Given a 3-weekend timeline, the model moved multi-user support to 'Later' and defined the MVP as single-user + one input format, with a clear milestone-based build order."
+      ],
+      "bestPractices": [
+        "Give a real time budget, not 'whenever I get to it' — vague time inputs produce vague scoping.",
+        "List actual current skills, not aspirational ones — the stack recommendation should match what you can ship with now.",
+        "Ask it to cut features over compressing timelines; that's the instruction that actually protects a realistic MVP."
+      ],
+      "expectedOutput": "A scoped spec: problem statement, MVP vs later feature split, matched tech stack, ordered milestones, and named risks with mitigations."
+    },
+    {
+      "id": "wf_3qs2tdadmrs51uvc",
+      "custom": true,
+      "favorite": true,
+      "lastUsed": null,
+      "name": "AI Debugging Assistant",
+      "category": "Software Development",
+      "purpose": "Analyze technical errors, identify root causes, and provide step-by-step solutions.",
+      "whenToUse": "Whenever you're stuck on an error and want a structured, root-cause-first fix instead of a guess.",
+      "template": "[ROLE]\nAct as a senior software engineer and debugging expert.\n\n[OBJECTIVE]\nAnalyze the provided error and provide the best solution.\n\n[CONTEXT]\nProgramming language: {{LANGUAGE}}\nFramework: {{FRAMEWORK}}\nError message: {{ERROR_MESSAGE}}\nPrevious attempts: {{ATTEMPTS}}\n\n[CONSTRAINTS]\nDo not provide random fixes. Explain the root cause first.\n\n[REASONING STRATEGY]\nAnalyze symptoms, identify possible causes, rank solutions, and recommend the safest fix.\n\n[OUTPUT FORMAT]\n1. Error summary\n2. Root cause\n3. Solution steps\n4. Prevention tips\n\n[QUALITY CHECKS]\nVerify the solution is technically correct before responding.",
+      "variables": [
+        {
+          "key": "LANGUAGE",
+          "label": "Programming language",
+          "default": "Dart / Flutter"
+        },
+        {
+          "key": "FRAMEWORK",
+          "label": "Framework",
+          "default": "Flutter (Android build)"
+        },
+        {
+          "key": "ERROR_MESSAGE",
+          "label": "Error message",
+          "default": "I am getting a Flutter Gradle build error related to Android dependencies."
+        },
+        {
+          "key": "ATTEMPTS",
+          "label": "Previous attempts",
+          "default": "Cleaned build, invalidated caches"
+        }
+      ],
+      "examples": [
+        "Flutter Gradle build error related to Android dependencies."
+      ],
+      "bestPractices": [
+        "Paste the full error message, not a summary.",
+        "Mention what you've already tried."
+      ],
+      "expectedOutput": "Error summary — a concise restatement of the Gradle/Android dependency error. Root cause — the specific dependency conflict or version mismatch responsible. Solution steps — ordered, concrete steps to resolve it. Prevention tips — how to avoid this class of error in future builds."
+    }
+  ]
+}
