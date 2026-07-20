@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Defense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+  :root{
+    --ink:#12151c; --ink-2:#181c25; --panel:#1d222c; --line:#2c3140;
+    --parchment:#ede6d6; --parchment-dim:#a6a08f;
+    --brass:#c89b3c; --brass-dim:#8a6c2c;
+    --teal:#4f7d70; --teal-dim:#33473f; --red:#a8503f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--ink); color:var(--parchment); font-family:'Inter',sans-serif; min-height:100vh;}
+  #app{max-width:1180px; margin:0 auto; padding:28px 20px 60px;}
+  header.top{display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:24px; flex-wrap:wrap; gap:10px;}
+  header.top h1{font-family:'Fraunces',serif; font-weight:600; font-style:italic; font-size:28px; margin:0; color:var(--parchment);}
+  .top-right{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .case-no{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--parchment-dim); letter-spacing:1px; margin-right:8px;}
+  .icon-btn{background:transparent; border:1px solid var(--line); color:var(--parchment-dim); font-family:'IBM Plex Mono',monospace; font-size:11px; padding:7px 12px; border-radius:2px; cursor:pointer;}
+  .icon-btn:hover{color:var(--parchment); border-color:var(--brass-dim);}
+
+  .layout{display:grid; grid-template-columns:300px 1fr; gap:24px;}
+  @media (max-width:860px){.layout{grid-template-columns:1fr;} #ledger{order:2;}}
+
+  #ledger{background:var(--panel); border:1px solid var(--line); border-radius:2px; padding:18px; align-self:start; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto;}
+  #ledger h2{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--brass); margin:0 0 14px;}
+  .ledger-empty{font-size:13px; color:var(--parchment-dim); font-style:italic; line-height:1.6;}
+  .exhibit{border-top:1px solid var(--line); padding:10px 0;}
+  .exhibit:first-of-type{border-top:none;}
+  .exhibit .ex-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .exhibit .ex-id{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-dim);}
+  .exhibit .ex-title{font-size:13px; color:var(--parchment); margin:3px 0 6px; line-height:1.4;}
+  .status-pill{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.6px; padding:2px 7px; border-radius:20px; white-space:nowrap;}
+  .status-open{background:rgba(200,155,60,0.15); color:var(--brass); border:1px solid var(--brass-dim);}
+  .status-held{background:rgba(79,125,112,0.18); color:#8fbaad; border:1px solid var(--teal-dim);}
+  .status-weak{background:rgba(168,80,63,0.18); color:#d18d7e; border:1px solid var(--red);}
+
+  #meta-row{display:flex; gap:16px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim); flex-wrap:wrap;}
+  #meta-row span b{color:var(--parchment);}
+  #provider-badge{margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim);}
+  #provider-badge b{color:var(--brass);}
+
+  #transcript-wrap{background:var(--panel); border:1px solid var(--line); border-radius:2px; display:flex; flex-direction:column; min-height:560px;}
+  #transcript{flex:1; padding:24px 26px 8px; display:flex; flex-direction:column; gap:18px; overflow-y:auto; max-height:70vh;}
+  .msg .who{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.2px; color:var(--parchment-dim); margin-bottom:6px;}
+  .msg.ai .who{color:var(--brass);}
+  .msg .bubble{font-family:'Fraunces',serif; font-size:16.5px; line-height:1.6; color:var(--parchment);}
+  .msg.user .bubble{font-family:'Inter',sans-serif; font-size:14.5px; color:#d8d3c4;}
+
+  .options{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .opt-btn{text-align:left; background:transparent; border:1px solid var(--line); color:var(--parchment); font-family:'Inter',sans-serif; font-size:13.5px; padding:10px 14px; border-radius:2px; cursor:pointer;}
+  .opt-btn:hover{border-color:var(--brass-dim); background:rgba(200,155,60,0.06);}
+  .opt-btn .tag{color:var(--brass); font-family:'IBM Plex Mono',monospace; font-size:11px; margin-right:8px;}
+
+  #input-row{border-top:1px solid var(--line); padding:14px 20px; display:flex; gap:10px; align-items:flex-end;}
+  #input-row textarea{flex:1; background:var(--ink-2); border:1px solid var(--line); color:var(--parchment); font-family:'Inter',sans-serif; font-size:14px; padding:10px 12px; border-radius:2px; resize:none; min-height:40px; max-height:140px;}
+  #input-row textarea:focus{outline:none; border-color:var(--brass-dim);}
+  #input-row button.send{background:var(--brass); color:#241a08; border:none; font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:10px 18px; border-radius:2px; cursor:pointer;}
+  #input-row button.send:disabled{opacity:0.4; cursor:default;}
+  #input-row button.upload{background:transparent; border:1px solid var(--line); color:var(--parchment-dim); font-size:13px; padding:10px 14px; border-radius:2px; cursor:pointer;}
+  #input-row button.upload:hover{color:var(--parchment); border-color:var(--brass-dim);}
+  #file-input{display:none;}
+  #upload-tags{display:flex; gap:6px; flex-wrap:wrap; padding:0 20px 10px;}
+  .file-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass); border:1px solid var(--brass-dim); padding:2px 8px; border-radius:20px;}
+
+  .thinking{display:flex; gap:5px; padding:2px 0;}
+  .thinking span{width:5px; height:5px; border-radius:50%; background:var(--brass-dim); animation:blink 1.1s infinite ease-in-out;}
+  .thinking span:nth-child(2){animation-delay:0.15s;}
+  .thinking span:nth-child(3){animation-delay:0.3s;}
+  @keyframes blink{0%,80%,100%{opacity:0.25;}40%{opacity:1;}}
+
+  .verdict{background:var(--ink-2); border:1px solid var(--brass-dim); padding:20px 22px; margin-top:6px;}
+  .verdict h3{font-family:'Fraunces',serif; font-style:italic; color:var(--brass); margin:0 0 10px; font-size:19px;}
+  .verdict p{font-size:14px; line-height:1.7; color:var(--parchment); margin:0 0 8px;}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(10,11,14,0.7); z-index:400; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .modal{background:var(--panel); border:1px solid var(--line); max-width:640px; width:100%; max-height:85vh; overflow-y:auto; border-radius:2px;}
+  .modal-head{display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .modal-head h3{font-family:'Fraunces',serif; font-style:italic; color:var(--brass); margin:0; font-size:19px;}
+  .modal-close{background:none; border:none; color:var(--parchment-dim); font-size:18px; cursor:pointer;}
+  .modal-body{padding:18px 20px;}
+  .provider-tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;}
+  .ptab{font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:6px 10px; border:1px solid var(--line); background:transparent; color:var(--parchment-dim); cursor:pointer; border-radius:20px;}
+  .ptab.active{color:var(--brass); border-color:var(--brass-dim);}
+  .ptab .dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; background:var(--parchment-dim);}
+  .ptab.ready .dot{background:var(--teal);}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:var(--parchment-dim); margin-bottom:5px;}
+  .field input, .field select{width:100%; background:var(--ink-2); border:1px solid var(--line); color:var(--parchment); font-family:'Inter',sans-serif; font-size:13px; padding:8px 10px; border-radius:2px;}
+  .field input:focus, .field select:focus{outline:none; border-color:var(--brass-dim);}
+  .field .hint{font-size:11.5px; color:var(--parchment-dim); margin-top:5px; line-height:1.5;}
+  .modal-actions{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .btn-brass{background:var(--brass); color:#241a08; border:none; font-weight:600; font-size:12.5px; padding:8px 16px; border-radius:2px; cursor:pointer;}
+  .btn-ghost{background:transparent; border:1px solid var(--line); color:var(--parchment); font-size:12.5px; padding:8px 16px; border-radius:2px; cursor:pointer;}
+  .status-line{font-family:'IBM Plex Mono',monospace; font-size:11px; margin-top:10px;}
+  .status-line.ok{color:var(--teal);}
+  .status-line.err{color:var(--red);}
+
+  .tutorial-overlay{position:fixed; right:20px; bottom:20px; z-index:450; max-width:340px;}
+  .tutorial-card{background:var(--panel); border:1px solid var(--brass-dim); padding:18px 20px; border-radius:2px;}
+  .tutorial-card h4{font-family:'Fraunces',serif; font-style:italic; color:var(--brass); margin:0 0 8px; font-size:16px;}
+  .tutorial-card p{font-size:13px; line-height:1.6; color:var(--parchment); margin:0 0 12px;}
+  .tutorial-progress{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .tutorial-progress .bar{flex:1; height:4px; border-radius:3px; background:var(--line); overflow:hidden;}
+  .tutorial-progress .bar i{display:block; height:100%; background:var(--brass); border-radius:3px;}
+  .tutorial-progress span{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--parchment-dim); white-space:nowrap;}
+  .tutorial-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .btn-sm{font-size:11.5px; padding:6px 12px;}
+  @media (max-width:860px){.tutorial-overlay{left:10px; right:10px; max-width:none;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1>The Defense</h1>
+    <div class="top-right">
+      <span class="case-no mono" id="case-no">FILE NO. —</span>
+      <button class="icon-btn" id="btn-tutorial">Tutorial</button>
+      <button class="icon-btn" id="btn-voice-settings">Voice</button>
+      <button class="icon-btn" id="btn-settings">Settings</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside id="ledger">
+      <h2>Case file</h2>
+      <div id="ledger-body">
+        <div class="ledger-empty">No claims on record yet. The file builds as you speak.</div>
+      </div>
+      <div id="meta-row"></div>
+      <div id="provider-badge"></div>
+    </aside>
+
+    <section id="transcript-wrap">
+      <div id="transcript"></div>
+      <div id="upload-tags"></div>
+      <div id="input-row">
+        <input type="file" id="file-input" multiple accept=".txt,.md,.csv,.json,.pdf,.docx">
+        <button class="upload" id="upload-btn" title="Attach resume / notes (.txt, .md, .pdf, .docx)">＋ file</button>
+        <textarea id="user-input" placeholder="Type your answer…" rows="1"></textarea>
+        <button class="send" id="send-btn">Answer</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="tutorial-root"></div>
+
+<script>
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let out = '';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strs = content.items.map(it => it.str);
+    out += strs.join(' ') + '\n\n';
+  }
+  return out.trim();
+}
+async function extractDocxText(file){
+  const buf = await file.arrayBuffer();
+  const result = await window.mammoth.extractRawText({arrayBuffer: buf});
+  return (result.value || '').trim();
+}
+
+class ProviderAdapter{
+  constructor(id, name, opts){
+    this.id=id; this.name=name;
+    this.defaultModel=opts.defaultModel; this.models=opts.models||[];
+    this.defaultBaseUrl=opts.defaultBaseUrl; this.docs=opts.docs;
+    this.noKeyRequired=!!opts.noKeyRequired; this.isLocal=!!opts.isLocal;
+  }
+  async buildError(resp, bodyText){
+    let detail=bodyText;
+    try{ const j=JSON.parse(bodyText); detail=j.error?.message||j.error?.type||j.message||bodyText; }catch(e){}
+    const err=new Error(this.name+' API '+resp.status+': '+detail);
+    err.status=resp.status; return err;
+  }
+}
+class AnthropicAdapter extends ProviderAdapter{
+  constructor(){
+    super('anthropic','Anthropic',{
+      defaultModel:'claude-sonnet-4-6',
+      models:['claude-sonnet-4-6','claude-opus-4-8','claude-haiku-4-5-20251001'],
+      defaultBaseUrl:'https://api.anthropic.com', docs:'https://docs.anthropic.com'
+    });
+  }
+  async chat({apiKey,baseUrl,model,system,user,settings,signal}){
+    const url=(baseUrl||this.defaultBaseUrl)+'/v1/messages';
+    const resp=await fetch(url,{method:'POST', signal,
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:model||this.defaultModel, max_tokens:settings.maxTokens, temperature:settings.temperature, system, messages:[{role:'user',content:user}]})
+    });
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    const data=JSON.parse(bodyText);
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    return {text};
+  }
+  async testConnection(c){ return await this.chat({...c, system:'Reply with OK', user:'ping', settings:{maxTokens:10,temperature:0}, signal:AbortSignal.timeout(15000)}); }
+}
+class OpenAIAdapter extends ProviderAdapter{
+  constructor(id,name,opts){
+    super(id||'openai', name||'OpenAI', opts||{
+      defaultModel:'gpt-4o', models:['gpt-4o','gpt-4o-mini','gpt-4-turbo'],
+      defaultBaseUrl:'https://api.openai.com', docs:'https://platform.openai.com/docs'
+    });
+  }
+  async chat({apiKey,baseUrl,model,system,user,settings,signal}){
+    const url=(baseUrl||this.defaultBaseUrl)+'/v1/chat/completions';
+    const messages=[]; if(system) messages.push({role:'system',content:system}); messages.push({role:'user',content:user});
+    const resp=await fetch(url,{method:'POST', signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({model:model||this.defaultModel, messages, max_tokens:settings.maxTokens, temperature:settings.temperature})
+    });
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    const data=JSON.parse(bodyText);
+    return {text:data.choices?.[0]?.message?.content||''};
+  }
+  async testConnection(c){ return await this.chat({...c, system:'Reply with OK', user:'ping', settings:{maxTokens:10,temperature:0}, signal:AbortSignal.timeout(15000)}); }
+}
+class GeminiAdapter extends ProviderAdapter{
+  constructor(){
+    super('gemini','Google Gemini',{
+      defaultModel:'gemini-1.5-pro', models:['gemini-1.5-pro','gemini-1.5-flash'],
+      defaultBaseUrl:'https://generativelanguage.googleapis.com', docs:'https://ai.google.dev/docs'
+    });
+  }
+  async chat({apiKey,baseUrl,model,system,user,settings,signal}){
+    const base=baseUrl||this.defaultBaseUrl;
+    const url=base+'/v1beta/models/'+(model||this.defaultModel)+':generateContent?key='+encodeURIComponent(apiKey);
+    const body={contents:[{role:'user',parts:[{text:user}]}], generationConfig:{temperature:settings.temperature, maxOutputTokens:settings.maxTokens}};
+    if(system) body.systemInstruction={parts:[{text:system}]};
+    const resp=await fetch(url,{method:'POST', signal, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    const data=JSON.parse(bodyText);
+    const text=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n');
+    return {text};
+  }
+  async testConnection(c){ return await this.chat({...c, system:'Reply with OK', user:'ping', settings:{maxTokens:10,temperature:0}, signal:AbortSignal.timeout(15000)}); }
+}
+class GroqAdapter extends OpenAIAdapter{
+  constructor(){ super('groq','Groq',{defaultModel:'llama-3.3-70b-versatile', models:['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768'], defaultBaseUrl:'https://api.groq.com/openai', docs:'https://console.groq.com/docs'}); }
+}
+class NvidiaNimAdapter extends OpenAIAdapter{
+  constructor(){ super('nvidia','NVIDIA NIM',{defaultModel:'meta/llama-3.1-70b-instruct', models:['meta/llama-3.1-70b-instruct','mistralai/mixtral-8x22b-instruct-v0.1','nvidia/nemotron-4-340b-instruct'], defaultBaseUrl:'https://integrate.api.nvidia.com', docs:'https://build.nvidia.com/'}); }
+}
+class OllamaAdapter extends ProviderAdapter{
+  constructor(){
+    super('ollama','Ollama (local)',{
+      defaultModel:'qwen2.5:3b-instruct', models:['qwen2.5:3b-instruct','llama3.2:3b','mistral:7b-instruct'],
+      defaultBaseUrl:'http://localhost:11434', docs:'https://github.com/ollama/ollama', noKeyRequired:true, isLocal:true
+    });
+  }
+  async chat({baseUrl,model,system,user,settings,signal}){
+    const base=(baseUrl||this.defaultBaseUrl).replace(/\/+$/,'');
+    const messages=[]; if(system) messages.push({role:'system',content:system}); messages.push({role:'user',content:user});
+    const resp=await fetch(base+'/api/chat',{method:'POST', signal, headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:model||this.defaultModel, messages, stream:false, options:{temperature:settings.temperature, num_predict:settings.maxTokens}})});
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    const data=JSON.parse(bodyText);
+    return {text:data.message?.content||''};
+  }
+  async testConnection({baseUrl}){
+    const base=(baseUrl||this.defaultBaseUrl).replace(/\/+$/,'');
+    const resp=await fetch(base+'/api/tags',{signal:AbortSignal.timeout(8000)});
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    return {text:'Reachable.'};
+  }
+}
+class LlamaCppAdapter extends ProviderAdapter{
+  constructor(){
+    super('llamacpp','Llama.cpp (local)',{
+      defaultModel:'local-model', defaultBaseUrl:'http://localhost:8080',
+      docs:'https://github.com/ggml-org/llama.cpp', noKeyRequired:true, isLocal:true
+    });
+  }
+  async chat({baseUrl,model,system,user,settings,signal}){
+    const base=(baseUrl||this.defaultBaseUrl).replace(/\/+$/,'');
+    const messages=[]; if(system) messages.push({role:'system',content:system}); messages.push({role:'user',content:user});
+    const resp=await fetch(base+'/v1/chat/completions',{method:'POST', signal, headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:model||this.defaultModel, messages, max_tokens:settings.maxTokens, temperature:settings.temperature, stream:false})});
+    const bodyText=await resp.text();
+    if(!resp.ok) throw await this.buildError(resp,bodyText);
+    const data=JSON.parse(bodyText);
+    return {text:data.choices?.[0]?.message?.content||''};
+  }
+  async testConnection({baseUrl,model}){
+    const base=(baseUrl||this.defaultBaseUrl).replace(/\/+$/,'');
+    return await this.chat({baseUrl:base, model, system:'Reply with OK', user:'ping', settings:{maxTokens:10,temperature:0}, signal:AbortSignal.timeout(15000)});
+  }
+}
+
+const PROVIDERS=[
+  new AnthropicAdapter(),
+  new OpenAIAdapter(),
+  new GeminiAdapter(),
+  new GroqAdapter(),
+  new NvidiaNimAdapter(),
+  new OllamaAdapter(),
+  new LlamaCppAdapter()
+];
+
+const PSTORE='defense.provider.v1';
+class ProviderManager{
+  constructor(){
+    this.adapters={}; PROVIDERS.forEach(a=>this.adapters[a.id]=a);
+    this.configs=this._load();
+    this.activeId=localStorage.getItem(PSTORE+'.active')||null;
+    if(this.activeId && !this.adapters[this.activeId]) this.activeId=null;
+  }
+  _load(){ try{ return JSON.parse(localStorage.getItem(PSTORE)||'{}'); }catch(e){ return {}; } }
+  _save(){ localStorage.setItem(PSTORE, JSON.stringify(this.configs)); }
+  setActive(id){ if(this.adapters[id]){ this.activeId=id; localStorage.setItem(PSTORE+'.active', id); } }
+  getActive(){ return this.activeId?this.adapters[this.activeId]:null; }
+  getConfig(id){
+    const a=this.adapters[id]; const c=this.configs[id]||{};
+    return {
+      apiKey:c.apiKey||'', baseUrl:c.baseUrl||a.defaultBaseUrl, model:c.model||a.defaultModel,
+      temperature:c.temperature!=null?c.temperature:0.7, maxTokens:c.maxTokens||1200,
+      status:c.status||(a.noKeyRequired?'ready':'not-configured'), lastError:c.lastError||null
+    };
+  }
+  setConfig(id,patch){
+    this.configs[id]={...(this.configs[id]||{}),...patch};
+    const c=this.configs[id]; const a=this.adapters[id];
+    if(a.noKeyRequired){ if(c.status!=='connected') c.status='ready'; }
+    else { if(!c.apiKey) c.status='not-configured'; else if(c.status==='not-configured') c.status='ready'; }
+    this._save();
+  }
+  async test(id){
+    const a=this.adapters[id]; const c=this.getConfig(id);
+    if(!a.noKeyRequired && !c.apiKey) throw new Error('No API key set');
+    const r=await a.testConnection(c);
+    this.setConfig(id,{status:'connected', lastError:null});
+    return r;
+  }
+  async chat({system,user}){
+    const a=this.getActive();
+    if(!a) throw new Error('No provider selected. Open Settings to choose one.');
+    const c=this.getConfig(this.activeId);
+    if(!a.noKeyRequired && !c.apiKey) throw new Error('No API key configured for '+a.name+'. Open Settings to add one.');
+    const settings={temperature:c.temperature, maxTokens:c.maxTokens};
+    try{
+      const r=await a.chat({apiKey:c.apiKey, baseUrl:c.baseUrl, model:c.model, system, user, settings, signal:AbortSignal.timeout(60000)});
+      return r;
+    }catch(err){
+      this.setConfig(this.activeId,{status:'error', lastError:err.message});
+      throw err;
+    }
+  }
+}
+const PM=new ProviderManager();
+
+const SETTINGS_TAB_KEY='defense.settingsTab';
+let settingsTab=localStorage.getItem(SETTINGS_TAB_KEY)||PM.activeId||PROVIDERS[0].id;
+function renderProviderBadge(){
+  const badge=document.getElementById('provider-badge');
+  const active=PM.getActive();
+  if(!active){
+    badge.innerHTML='Provider <b style="color:var(--parchment-dim)">Not Selected</b>';
+    return;
+  }
+  const cfg=PM.getConfig(PM.activeId);
+  const isReady = cfg.status==='ready'||cfg.status==='connected';
+  badge.innerHTML = isReady
+    ? 'Provider <b style="color:var(--teal)">'+escapeHTML(active.name)+'</b> <span style="color:var(--teal)">&#9679; Active</span>'
+    : 'Provider <b>'+escapeHTML(active.name)+'</b> <span style="color:var(--red)">&#9679; Not connected</span>';
+}
+function openSettings(){ settingsTab=localStorage.getItem(SETTINGS_TAB_KEY)||PM.activeId||PROVIDERS[0].id; renderSettingsModal(); }
+function closeSettings(){ document.getElementById('modal-root').innerHTML=''; }
+function escapeHTML(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderSettingsModal(){
+  const root=document.getElementById('modal-root');
+  const a=PM.adapters[settingsTab]; const c=PM.getConfig(settingsTab);
+  const tabs=PROVIDERS.map(p=>{
+    const cfg=PM.getConfig(p.id);
+    const ready=cfg.status==='ready'||cfg.status==='connected';
+    return '<button class="ptab '+(ready?'ready':'')+' '+(p.id===settingsTab?'active':'')+'" data-tab="'+p.id+'"><span class="dot"></span>'+p.name+'</button>';
+  }).join('');
+
+  let fields='';
+  {
+    if(!a.noKeyRequired){
+      fields += '<div class="field"><label>API key</label><input type="password" id="cfg-apikey" value="'+escapeHTML(c.apiKey)+'" placeholder="Paste your '+a.name+' API key"></div>';
+    }
+    fields += '<div class="field"><label>Base URL</label><input type="text" id="cfg-baseurl" value="'+escapeHTML(c.baseUrl)+'"></div>';
+    if(a.models && a.models.length){
+      fields += '<div class="field"><label>Model</label><select id="cfg-model">'+a.models.map(m=>'<option value="'+m+'" '+(m===c.model?'selected':'')+'>'+m+'</option>').join('')+'</select></div>';
+    } else {
+      fields += '<div class="field"><label>Model</label><input type="text" id="cfg-model" value="'+escapeHTML(c.model)+'"></div>';
+    }
+    if(a.isLocal){
+      fields += '<div class="field"><div class="hint">Runs on your machine. Make sure the local server is started and reachable from the browser before testing.</div></div>';
+    }
+    if(a.docs){
+      fields += '<div class="field"><div class="hint">Docs: <a href="'+a.docs+'" target="_blank" style="color:var(--brass)">'+a.docs+'</a></div></div>';
+    }
+  }
+
+  root.innerHTML = '<div class="modal-overlay" id="settings-overlay">'+
+    '<div class="modal">'+
+      '<div class="modal-head"><h3>Provider settings</h3><button class="modal-close" id="settings-close">&times;</button></div>'+
+      '<div class="modal-body">'+
+        '<div class="provider-tabs">'+tabs+'</div>'+
+        fields+
+        '<div class="modal-actions">'+
+          '<button class="btn-brass" id="cfg-save">Save</button><button class="btn-ghost" id="cfg-test">Test connection</button>'+
+          '<button class="btn-ghost" id="cfg-use">Use this provider</button>'+
+        '</div>'+
+        '<div class="status-line" id="cfg-status"></div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  document.getElementById('settings-close').onclick=closeSettings;
+  document.getElementById('settings-overlay').onclick=(e)=>{ if(e.target.id==='settings-overlay') closeSettings(); };
+  root.querySelectorAll('.ptab').forEach(t=>t.onclick=()=>{ settingsTab=t.dataset.tab; localStorage.setItem(SETTINGS_TAB_KEY,settingsTab); renderSettingsModal(); });
+
+  const saveBtn=document.getElementById('cfg-save');
+  if(saveBtn) saveBtn.onclick=()=>{
+    const patch={};
+    const keyEl=document.getElementById('cfg-apikey'); if(keyEl) patch.apiKey=keyEl.value.trim();
+    const urlEl=document.getElementById('cfg-baseurl'); if(urlEl) patch.baseUrl=urlEl.value.trim();
+    const modelEl=document.getElementById('cfg-model'); if(modelEl) patch.model=modelEl.value.trim();
+    PM.setConfig(settingsTab,patch);
+    document.getElementById('cfg-status').className='status-line ok';
+    document.getElementById('cfg-status').textContent='Saved.';
+  };
+  const testBtn=document.getElementById('cfg-test');
+  if(testBtn) testBtn.onclick=async ()=>{
+    if(saveBtn) saveBtn.onclick();
+    const statusEl=document.getElementById('cfg-status');
+    statusEl.className='status-line'; statusEl.textContent='Testing…';
+    try{
+      await PM.test(settingsTab);
+      PM.setActive(settingsTab);
+      renderProviderBadge();
+      renderSettingsModal();
+      const freshStatus=document.getElementById('cfg-status');
+      freshStatus.className='status-line ok';
+      freshStatus.textContent='Connected — '+PM.adapters[settingsTab].name+' is now active.';
+      maybeResumeFromProviderWall();
+    }
+    catch(err){ statusEl.className='status-line err'; statusEl.textContent='Failed: '+err.message; }
+  };
+  document.getElementById('cfg-use').onclick=()=>{
+    PM.setActive(settingsTab);
+    renderProviderBadge();
+    closeSettings();
+    maybeResumeFromProviderWall();
+  };
+}
+// If the person was stuck at the "connect a model first" wall before question one,
+// clear that wall and move straight into the interview the moment a provider goes active.
+function maybeResumeFromProviderWall(){
+  if(state.awaitingProvider && state.qa.length===0 && state.qIndex===0){
+    state.awaitingProvider=false;
+    transcriptEl.innerHTML='';
+    closeSettings();
+    askNext();
+  }
+}
+document.getElementById('btn-settings').onclick=openSettings;
+
+const voiceState=JSON.parse(localStorage.getItem('defense.voice.v1')||'{}');
+if(voiceState.enabled==null) voiceState.enabled=true;
+if(voiceState.rate==null) voiceState.rate=1;
+if(voiceState.pitch==null) voiceState.pitch=1;
+if(voiceState.volume==null) voiceState.volume=1;
+function saveVoiceState(){ localStorage.setItem('defense.voice.v1', JSON.stringify(voiceState)); }
+let __speakKeepAlive=null;
+function speak(text){
+  clearInterval(__speakKeepAlive);
+  if(!('speechSynthesis' in window) || !voiceState.enabled) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=voiceState.rate; u.pitch=voiceState.pitch; u.volume=voiceState.volume;
+  window.speechSynthesis.speak(u);
+  __speakKeepAlive=setInterval(()=>{
+    if(!window.speechSynthesis.speaking){ clearInterval(__speakKeepAlive); return; }
+    if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  },2000);
+}
+function stopSpeaking(){ clearInterval(__speakKeepAlive); if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+
+document.getElementById('btn-voice-settings').onclick=()=>{
+  const root=document.getElementById('modal-root');
+  root.innerHTML='<div class="modal-overlay" id="voice-overlay"><div class="modal" style="max-width:420px">'+
+    '<div class="modal-head"><h3>Narration settings</h3><button class="modal-close" id="voice-close">&times;</button></div>'+
+    '<div class="modal-body">'+
+      '<div class="field"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="voice-enabled" '+(voiceState.enabled?'checked':'')+' style="width:auto;"> Enable narration during the tutorial</label></div>'+
+      '<div class="field"><label>Speed: <span id="rate-val">'+voiceState.rate+'</span></label><input type="range" id="rate-range" min="0.6" max="1.6" step="0.05" value="'+voiceState.rate+'"></div>'+
+      '<div class="field"><label>Pitch: <span id="pitch-val">'+voiceState.pitch+'</span></label><input type="range" id="pitch-range" min="0.5" max="1.5" step="0.05" value="'+voiceState.pitch+'"></div>'+
+      '<div class="field"><label>Volume: <span id="vol-val">'+voiceState.volume+'</span></label><input type="range" id="vol-range" min="0" max="1" step="0.05" value="'+voiceState.volume+'"></div>'+
+      '<div class="modal-actions"><button class="btn-ghost" id="voice-test">Test voice</button></div>'+
+    '</div></div></div>';
+  document.getElementById('voice-close').onclick=()=>{ root.innerHTML=''; };
+  document.getElementById('voice-overlay').onclick=(e)=>{ if(e.target.id==='voice-overlay') root.innerHTML=''; };
+  document.getElementById('voice-enabled').onchange=(e)=>{ voiceState.enabled=e.target.checked; saveVoiceState(); };
+  document.getElementById('rate-range').oninput=(e)=>{ voiceState.rate=parseFloat(e.target.value); document.getElementById('rate-val').textContent=voiceState.rate; saveVoiceState(); };
+  document.getElementById('pitch-range').oninput=(e)=>{ voiceState.pitch=parseFloat(e.target.value); document.getElementById('pitch-val').textContent=voiceState.pitch; saveVoiceState(); };
+  document.getElementById('vol-range').oninput=(e)=>{ voiceState.volume=parseFloat(e.target.value); document.getElementById('vol-val').textContent=voiceState.volume; saveVoiceState(); };
+  document.getElementById('voice-test').onclick=()=> speak('This is how narration will sound during the guided tutorial.');
+};
+
+const TUTORIAL_STEPS=[
+  {title:'Welcome to The Defense', body:'This app rehearses you defending your real experience — work, projects, research, or a career story — through adaptive questioning. It knows nothing about you until you tell it.'},
+  {title:'The case file', body:'On the left is your case file. As the Examiner learns specific, defensible claims about your work, each becomes an exhibit you will be asked to hold up under questioning.'},
+  {title:'Connect a model early', body:'This app makes no built-in AI calls. As soon as you answer the first question, it will ask you to open Settings, pick Anthropic, OpenAI, Gemini, Groq, NVIDIA NIM, or a local Ollama / llama.cpp server, enter your own key or endpoint, test it, and select it as active.'},
+  {title:'The interview is fixed', body:'You will be asked the same thirteen questions every time, in order — intake, evidence, technical depth, weak points, a closing scenario, and finally a request for proof. The questions themselves are never generated on the fly.'},
+  {title:'Add your material', body:'The last question asks if you have proof. Use the file button to attach a resume, notes, or project write-up — plain text, markdown, PDF, or Word (.docx) are all parsed directly in your browser, and included when the case is judged.'},
+  {title:'Answer as you go', body:'Some questions offer quick multiple-choice options; pick "Other" on any of those to type your own answer instead. Once a model is connected, every answer is quietly sent off for analysis the moment you give it, so once all thirteen are answered, the closing verdict comes together in a jiffy.'}
+];
+let tutStep=0;
+function stripTags(html){ return String(html||'').replace(/<[^>]+>/g,''); }
+function startTutorial(){ tutStep=0; renderTutorialCard(); }
+function renderTutorialCard(){
+  const root=document.getElementById('tutorial-root');
+  const step=TUTORIAL_STEPS[tutStep];
+  if(!step){ root.innerHTML=''; stopSpeaking(); return; }
+  const isLast=tutStep===TUTORIAL_STEPS.length-1;
+  root.innerHTML='<div class="tutorial-overlay"><div class="tutorial-card">'+
+    '<div class="tutorial-progress"><div class="bar"><i style="width:'+(((tutStep+1)/TUTORIAL_STEPS.length)*100)+'%"></i></div><span>Step '+(tutStep+1)+' of '+TUTORIAL_STEPS.length+'</span></div>'+
+    '<h4>'+step.title+'</h4><p>'+step.body+'</p>'+
+    '<div class="tutorial-actions">'+
+      '<button class="btn-ghost btn-sm" id="tut-prev" '+(tutStep===0?'disabled':'')+'>&larr; Previous</button>'+
+      '<button class="btn-brass btn-sm" id="tut-next">'+(isLast?'Done':'Next')+'</button>'+
+      '<button class="btn-ghost btn-sm" id="tut-skip">Skip</button>'+
+      '<button class="btn-ghost btn-sm" id="tut-play">&#9654; Play</button>'+
+    '</div>'+
+  '</div></div>';
+  document.getElementById('tut-prev').onclick=()=>{ stopSpeaking(); tutStep=Math.max(0,tutStep-1); renderTutorialCard(); };
+  document.getElementById('tut-next').onclick=()=>{ stopSpeaking(); if(isLast){ root.innerHTML=''; localStorage.setItem('defense.tutorialSeen','1'); return; } tutStep++; renderTutorialCard(); };
+  document.getElementById('tut-skip').onclick=()=>{ stopSpeaking(); root.innerHTML=''; localStorage.setItem('defense.tutorialSeen','1'); };
+  document.getElementById('tut-play').onclick=()=> speak(stripTags(step.title)+'. '+stripTags(step.body));
+  speak(stripTags(step.title)+'. '+stripTags(step.body));
+}
+document.getElementById('btn-tutorial').onclick=startTutorial;
+
+const state={ phase:'intake', claims:[], history:[], turnCount:0, attachedText:'', attachedNames:[], pendingAnalysis:null, analysisPromises:[], pendingReviews:0 };
+
+const transcriptEl=document.getElementById('transcript');
+const inputEl=document.getElementById('user-input');
+const sendBtn=document.getElementById('send-btn');
+const uploadBtn=document.getElementById('upload-btn');
+const fileInput=document.getElementById('file-input');
+const uploadTags=document.getElementById('upload-tags');
+const ledgerBody=document.getElementById('ledger-body');
+const metaRow=document.getElementById('meta-row');
+const caseNo=document.getElementById('case-no');
+
+caseNo.textContent='FILE NO. '+Math.floor(1000+Math.random()*9000)+'-'+new Date().getFullYear();
+renderProviderBadge();
+
+function scrollDown(){ transcriptEl.scrollTop=transcriptEl.scrollHeight; }
+function addMessage(role,text){
+  const wrap=document.createElement('div'); wrap.className='msg '+role;
+  const who=document.createElement('div'); who.className='who'; who.textContent=role==='ai'?'Examiner':'You';
+  const bubble=document.createElement('div'); bubble.className='bubble'; bubble.textContent=text;
+  wrap.appendChild(who); wrap.appendChild(bubble); transcriptEl.appendChild(wrap); scrollDown();
+}
+function addThinking(){
+  const wrap=document.createElement('div'); wrap.className='msg ai'; wrap.id='thinking-el';
+  wrap.innerHTML='<div class="who">Examiner</div><div class="thinking"><span></span><span></span><span></span></div>';
+  transcriptEl.appendChild(wrap); scrollDown();
+}
+function removeThinking(){ const el=document.getElementById('thinking-el'); if(el) el.remove(); }
+function addOptions(options){
+  const wrap=document.createElement('div'); wrap.className='options';
+  lockInput();
+  options.forEach((opt,i)=>{
+    const b=document.createElement('button'); b.className='opt-btn';
+    b.innerHTML='<span class="tag">'+String.fromCharCode(65+i)+'</span>'+escapeHTML(opt);
+    b.onclick=()=>{ wrap.remove(); submitAnswer(opt); };
+    wrap.appendChild(b);
+  });
+  const other=document.createElement('button'); other.className='opt-btn';
+  other.innerHTML='<span class="tag">'+String.fromCharCode(65+options.length)+'</span>Other — type your own answer';
+  other.onclick=()=>{ wrap.remove(); unlockInput(); };
+  wrap.appendChild(other);
+  transcriptEl.appendChild(wrap); scrollDown();
+}
+function lockInput(){
+  inputEl.disabled=true; inputEl.placeholder='Pick an option above, or choose "Other" to type your own…';
+}
+function unlockInput(){
+  inputEl.disabled=false; inputEl.placeholder='Type your answer…'; inputEl.focus();
+  sendBtn.disabled=false; uploadBtn.disabled=false;
+}
+function renderLedger(){
+  if(!state.claims.length){
+    ledgerBody.innerHTML='<div class="ledger-empty">No claims on record yet. The file builds as you speak.</div>';
+  } else {
+    ledgerBody.innerHTML='';
+    state.claims.forEach((c,i)=>{
+      const div=document.createElement('div'); div.className='exhibit';
+      const statusClass=c.status==='held'?'status-held':c.status==='weak'?'status-weak':'status-open';
+      const statusLabel=c.status==='held'?'Held':c.status==='weak'?'Contested':'Open';
+      div.innerHTML='<div class="ex-head"><span class="ex-id">EXHIBIT '+String(i+1).padStart(2,'0')+'</span><span class="status-pill '+statusClass+'">'+statusLabel+'</span></div><div class="ex-title">'+escapeHTML(c.text)+'</div>';
+      ledgerBody.appendChild(div);
+    });
+  }
+  if(state.pendingReviews>0){
+    const rev=document.createElement('div'); rev.className='exhibit'; rev.id='reviewing-row';
+    rev.innerHTML='<div class="ex-title" style="display:flex;align-items:center;gap:8px;color:var(--parchment-dim);font-style:italic;">Reviewing your last answer<span class="thinking" style="margin:0;"><span></span><span></span><span></span></span></div>';
+    ledgerBody.appendChild(rev);
+  }
+  const progress = state.phase==='verdict' ? 'Complete' : ('Question '+Math.min(state.qIndex+1, QUESTIONS.length)+' of '+QUESTIONS.length);
+  metaRow.innerHTML='<span>Status <b>'+progress+'</b></span><span>Phase <b>'+(state.qIndex<QUESTIONS.length?(QUESTIONS[state.qIndex]?QUESTIONS[state.qIndex].phase:'—'):(state.phase||'verdict'))+'</b></span>';
+}
+
+uploadBtn.onclick=()=>fileInput.click();
+fileInput.onchange=async (e)=>{
+  const files=Array.from(e.target.files);
+  for(const f of files){
+    try{
+      let text='';
+      const lname=f.name.toLowerCase();
+      if(lname.endsWith('.pdf')){
+        addMessage('ai','Reading '+f.name+'…');
+        text=await extractPdfText(f);
+        transcriptEl.lastChild.remove();
+      } else if(lname.endsWith('.docx')){
+        addMessage('ai','Reading '+f.name+'…');
+        text=await extractDocxText(f);
+        transcriptEl.lastChild.remove();
+      } else {
+        text=await f.text();
+      }
+      state.attachedText += '\n\n--- '+f.name+' ---\n'+text.slice(0,10000);
+      state.attachedNames.push(f.name);
+    }catch(err){
+      addMessage('ai','Could not read '+f.name+': '+err.message);
+    }
+  }
+  renderTags();
+  fileInput.value='';
+  // Send the moment the file(s) are read — no need to also hit Answer.
+  if(state.attachedText) triggerSend();
+};
+function renderTags(){
+  uploadTags.innerHTML='';
+  state.attachedNames.forEach(n=>{
+    const t=document.createElement('span'); t.className='file-tag'; t.textContent=n; uploadTags.appendChild(t);
+  });
+}
+
+inputEl.addEventListener('input',()=>{ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,140)+'px'; });
+inputEl.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); triggerSend(); } });
+sendBtn.onclick=triggerSend;
+function triggerSend(){
+  const val=inputEl.value.trim();
+  const attachment=state.attachedText;
+  if(!val && !attachment) return;
+  let combined=val;
+  if(attachment){
+    combined=(val?val+'\n\n':'')+'[Attached material]'+attachment;
+    state.attachedText=''; state.attachedNames=[]; renderTags();
+  }
+  inputEl.value=''; inputEl.style.height='auto';
+  submitAnswer(combined, val || '(attached material)');
+}
+
+// Fixed, hardcoded interview. A model must be connected after question 1; from then on,
+// every answer is sent to the AI in the background as soon as it's given, and the result
+// is cached in state.claims / entry.analysis — so the closing verdict at the end is fast.
+const QUESTIONS=[
+  {id:'q1',  phase:'intake',    text:"Let's begin. In a sentence or two — what experience are you here to defend? A project, a role, a decision, a body of research?"},
+  {id:'q2',  phase:'intake',    text:"How would you categorize it?", options:["A work project","Academic or research work","A career or role","A personal project"]},
+  {id:'q3',  phase:'intake',    text:"State your central claim plainly — the one thing you want to prove you did well."},
+  {id:'q4',  phase:'evidence',  text:"What was your specific role or contribution? Be precise about what was yours versus the team's."},
+  {id:'q5',  phase:'evidence',  text:"What's the strongest evidence you have for your claim?", options:["Data or metrics","A documented artifact (code, paper, design)","Feedback from others","A measurable outcome or impact"]},
+  {id:'q6',  phase:'technical', text:"Walk me through the most technically or intellectually difficult part of this work."},
+  {id:'q7',  phase:'technical', text:"If someone challenged the impact you're claiming, what's your response?"},
+  {id:'q8',  phase:'judgment',  text:"Looking back, what would you have done differently?"},
+  {id:'q9',  phase:'judgment',  text:"Describe a moment of disagreement or pushback you faced during this work, and how you handled it."},
+  {id:'q10', phase:'weakness',  text:"What's the weakest part of your case — the part you're least sure would hold up?"},
+  {id:'q11', phase:'scenario',  text:"Sketch a scenario where your approach might fail. How would you respond if it did?"},
+  {id:'q12', phase:'closing',   text:"Last question: if you had thirty seconds to convince a skeptical panel this was well done, what would you say?"},
+  {id:'q13', phase:'proof',     text:"One more thing before I rule: do you have anything to back this up — a resume, project write-up, or notes? Use the ＋ file button to attach a .txt, .md, .pdf, or .docx, then hit Answer to submit it. If you don't have anything to attach, just say so and I'll rule on the interview alone."}
+];
+
+const PER_Q_SYSTEM_PROMPT=`You are quietly analyzing ONE question/answer pair from a longer interview in an app called "The Defense", where a person defends real experience (work, project, research, or career). You will see many of these one at a time, out of context of the rest.
+
+Given the single question and answer below, extract 0 to 2 concrete, specific CLAIMS the person is making about what they did — defensible statements, not vague summaries. For each, judge its status from this one answer alone: "held" (specific, confident, evidenced), "weak" (vague, hedged, or self-contradicted), or "open" (asserted but not really backed up here). If the answer is just a category pick, a "no" to the proof question, or contains no real claim, return an empty claims array.
+
+Never break character, never explain yourself. Respond with ONLY a raw JSON object, no markdown fences, no prose outside it:
+{"claims":[{"text":"short claim statement","status":"open"|"held"|"weak"}]}`;
+
+const VERDICT_SYSTEM_PROMPT=`You are "The Examiner" in an application called The Defense. You have just finished a fixed thirteen-question interview with a person defending their real experience (work, project, research, or career). Their answers have already been analyzed one by one as the interview went along, and a running list of extracted claims (with status: held/weak/open) is provided below, along with the full transcript for reference.
+
+Write ONLY the closing verdict message: 2-4 short paragraphs, precise and a little formal, like a rigorous but fair examiner. Name real strengths, name 1-2 specific weak points drawn from the "weak" or "open" claims, and end with brief encouragement.
+
+Never break character. Respond with ONLY the verdict prose — no JSON, no markdown fences, no preamble.`;
+
+function buildFinalTranscript(){
+  return state.qa.map((h,i)=>'Q'+(i+1)+' ('+h.phase+'): '+h.question+'\nA'+(i+1)+': '+h.answer).join('\n\n');
+}
+function buildClaimsSummary(){
+  if(!state.claims.length) return '(no claims extracted yet)';
+  return state.claims.map((c,i)=>(i+1)+'. ['+c.status+'] '+c.text).join('\n');
+}
+
+// Sends a single answered question to the AI in the background as soon as it's given,
+// and caches whatever claims come back into state.claims (and onto the qa entry itself).
+function analyzeAnswer(entry){
+  state.pendingReviews=(state.pendingReviews||0)+1;
+  renderLedger();
+  const p=(async()=>{
+    try{
+      const userText='Question ('+entry.phase+'): '+entry.question+'\nAnswer: '+entry.answer;
+      const r=await PM.chat({system:PER_Q_SYSTEM_PROMPT, user:userText});
+      let raw=(r.text||'{}').trim().replace(/^```json/,'').replace(/^```/,'').replace(/```$/,'').trim();
+      let parsed; try{ parsed=JSON.parse(raw); }catch(e){ parsed={claims:[]}; }
+      entry.analysis=parsed;
+      if(Array.isArray(parsed.claims) && parsed.claims.length){
+        state.claims=state.claims.concat(parsed.claims);
+      }
+    }catch(err){
+      entry.analysisError=err.message; // stay quiet — a background miss shouldn't interrupt the interview
+    }finally{
+      state.pendingReviews=Math.max(0,(state.pendingReviews||1)-1);
+      renderLedger();
+    }
+  })();
+  state.analysisPromises.push(p);
+  return p;
+}
+
+function askNext(){
+  if(state.qIndex>=QUESTIONS.length){ finalizeCase(); return; }
+  const q=QUESTIONS[state.qIndex];
+  addMessage('ai', q.text);
+  if(q.options && q.options.length){ addOptions(q.options); }
+  else { unlockInput(); }
+}
+
+async function finalizeCase(){
+  const active=PM.getActive(); const cfg=active?PM.getConfig(PM.activeId):null;
+  const configured = !!active && (active.noKeyRequired || !!cfg.apiKey);
+  if(!configured){
+    addMessage('ai', 'All thirteen questions are answered, but no model is connected yet. Open Settings, add a key or local endpoint for a provider, then send anything to continue — I will pick up the verdict from there.');
+    state.awaitingProvider=true;
+    return;
+  }
+  addThinking(); sendBtn.disabled=true;
+  try{
+    // Each answer was already analyzed as it came in — just make sure any still in flight finish.
+    await Promise.allSettled(state.analysisPromises);
+    const userText='Claims already extracted while the interview was in progress:\n'+buildClaimsSummary()+
+      '\n\nFull transcript, for reference only:\n\n'+buildFinalTranscript()+
+      '\n\nWrite the closing verdict now, following the system instructions exactly.';
+    const r=await PM.chat({system:VERDICT_SYSTEM_PROMPT, user:userText});
+    removeThinking(); sendBtn.disabled=false;
+
+    state.phase='verdict';
+    renderLedger();
+
+    const verdictText=(r.text||'').trim();
+    const wrap=document.createElement('div'); wrap.className='verdict';
+    wrap.innerHTML='<h3>Closing assessment</h3><p>'+escapeHTML(verdictText).replace(/\n/g,'<br>')+'</p>';
+    transcriptEl.appendChild(wrap); scrollDown();
+    speak(stripTags(verdictText));
+  }catch(err){
+    removeThinking(); sendBtn.disabled=false;
+    addMessage('ai', 'The record dropped a line: '+err.message);
+    state.awaitingProvider=true;
+  }
+}
+
+function submitAnswer(fullText, displayText){
+  const toShow=displayText!==undefined?displayText:fullText;
+
+  if(state.awaitingProvider){
+    // Provider was just connected — analyze the answer that was waiting, then carry on.
+    if(toShow) addMessage('user', toShow);
+    state.awaitingProvider=false;
+    const pending=state.pendingAnalysis; state.pendingAnalysis=null;
+    if(pending) analyzeAnswer(pending);
+    askNext();
+    return;
+  }
+
+  // Question one is always asked up front, before any provider is required.
+  // Only once it's answered do we check whether a model is connected — if not,
+  // throw up the settings wall and drop this attempt; when a provider connects,
+  // maybeResumeFromProviderWall() wipes the screen and re-asks question one fresh.
+  if(state.qIndex===0){
+    const active0=PM.getActive(); const cfg0=active0?PM.getConfig(PM.activeId):null;
+    const configured0 = !!active0 && (active0.noKeyRequired || !!cfg0.apiKey);
+    if(!configured0){
+      addMessage('ai', 'Before we continue — connect a model. Open Settings, add a key (or a local endpoint), and test it. Once connected, the interview restarts fresh from question one.');
+      state.awaitingProvider=true;
+      openSettings();
+      return;
+    }
+  }
+
+  if(toShow) addMessage('user', toShow);
+  state.turnCount++;
+  const q=QUESTIONS[state.qIndex];
+  const entry={phase:q?q.phase:'—', question:q?q.text:'', answer:fullText};
+  state.qa.push(entry);
+  state.qIndex++;
+  renderLedger();
+
+  const active=PM.getActive(); const cfg=active?PM.getConfig(PM.activeId):null;
+  const configured = !!active && (active.noKeyRequired || !!cfg.apiKey);
+  if(!configured){
+    addMessage('ai', 'The model connection dropped. Open Settings, reconnect one, then send anything here to continue.');
+    state.awaitingProvider=true;
+    state.pendingAnalysis=entry;
+    openSettings();
+    return;
+  }
+
+  // Fire off the background analysis for this answer right away — don't wait on it.
+  analyzeAnswer(entry);
+  // Small pause with a thinking indicator before the next question lands, so it
+  // doesn't feel instant/robotic — the questions are fixed, but the pacing shouldn't give that away.
+  sendBtn.disabled=true; uploadBtn.disabled=true;
+  addThinking();
+  setTimeout(()=>{
+    removeThinking();
+    sendBtn.disabled=false; uploadBtn.disabled=false;
+    askNext();
+  }, 1800+Math.random()*1200);
+}
+
+state.qa=[]; state.qIndex=0; state.awaitingProvider=false;
+renderLedger();
+
+(function beginInterview(){
+  // Question one always shows right away — no provider is required to see or
+  // answer it. The connection is only checked once that first answer is submitted.
+  askNext();
+})();
+
+if(!localStorage.getItem('defense.tutorialSeen')){
+  setTimeout(startTutorial, 600);
+}
+</script>
+</body>
+</html>
