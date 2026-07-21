@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarForge — Version 1.0 (Slides)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #070A12;
+      --bg-1: #0C1120;
+      --bg-2: #121A2E;
+      --bg-3: #182236;
+      --glass-fill: rgba(237, 235, 227, 0.045);
+      --glass-fill-strong: rgba(237, 235, 227, 0.09);
+      --glass-border: rgba(237, 235, 227, 0.13);
+      --glass-border-strong: rgba(237, 235, 227, 0.24);
+      --gold: #C9A15A;
+      --gold-soft: #E7CE94;
+      --teal: #63E6C6;
+      --violet: #9089FC;
+      --plum: #A66B8E;
+      --ink: #EDEBE3;
+      --muted: #8C93A8;
+      --muted-2: #5C6478;
+      --font-display: 'Fraunces', serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 15% -5%, rgba(144, 137, 252, 0.14), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 90% 10%, rgba(201, 161, 90, 0.10), transparent 55%),
+        radial-gradient(ellipse 900px 700px at 50% 100%, rgba(99, 230, 198, 0.06), transparent 60%),
+        var(--bg-0);
+      color: var(--ink);
+      font-family: var(--font-body);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: rgba(201, 161, 90, 0.35);
+      color: #fff;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 32px);
+      width: 100%;
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--teal);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: clamp(10px, 2vh, 18px);
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 22px;
+      height: 1px;
+      background: var(--teal);
+      opacity: .6;
+      display: inline-block;
+    }
+
+    h2.section-title {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: clamp(22px, calc(2vw + 1.6vh), 42px);
+      letter-spacing: -0.01em;
+      margin: 0 0 clamp(6px, 1.2vh, 12px);
+      line-height: 1.1;
+    }
+
+    .section-lede {
+      color: var(--muted);
+      font-size: clamp(13px, 1.1vw + 0.6vh, 15.5px);
+      max-width: 640px;
+      line-height: 1.55;
+      margin-bottom: clamp(16px, 3vh, 32px);
+    }
+
+    .glass {
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      border-radius: 18px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 20px 60px -25px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ---------- ambient ---------- */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .35;
+    }
+
+    /* ---------- progress bar (autoplay) ---------- */
+    .autoplay-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--gold-soft));
+      width: 0%;
+      z-index: 300;
+    }
+
+    .autoplay-bar.animating {
+      transition: width linear;
+    }
+
+    /* ---------- top nav ---------- */
+    nav {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 12px 24px;
+      background: rgba(12, 17, 32, 0.6);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      border-radius: 100px;
+      font-size: 12.5px;
+      font-family: var(--font-mono);
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    nav .brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--gold-soft);
+      margin-right: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: .02em;
+      transition: color .2s;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--ink);
+    }
+
+    @media (max-width:1050px) {
+      nav {
+        display: none;
+      }
+    }
+
+    /* ---------- slide deck ---------- */
+    .slide-deck {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(64px, 14vh, 110px) 0 clamp(32px, 9vh, 70px);
+      opacity: 0;
+      transform: translateX(24px);
+      transition: opacity .45s ease, transform .5s cubic-bezier(.2, .7, .3, 1);
+      pointer-events: none;
+      overflow-y: auto;
+      z-index: 1;
+
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .slide::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    .slide.exit-left {
+      transform: translateX(-24px);
+    }
+
+    /* ---------- controls ---------- */
+    .deck-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(12, 17, 32, 0.6);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      border-radius: 100px;
+      padding: 10px 14px;
+      max-width: calc(100vw - 16px);
+    }
+
+    .nav-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border-strong);
+      background: var(--glass-fill-strong);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background .2s, transform .15s;
+      flex-shrink: 0;
+    }
+
+    .nav-btn.text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      width: auto;
+      padding: 0 12px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(201, 161, 90, 0.18);
+    }
+
+    .nav-btn:active {
+      transform: scale(.92);
+    }
+
+    .nav-btn:disabled {
+      opacity: .3;
+      cursor: default;
+    }
+
+    .nav-btn.on {
+      background: rgba(99, 230, 198, 0.22);
+      border-color: rgba(99, 230, 198, 0.5);
+      color: var(--teal);
+    }
+
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: var(--glass-border-strong);
+      flex-shrink: 0;
+    }
+
+    .dots {
+      display: none;
+    }
+
+    @media (min-width: 480px) {
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+    }
+
+    .dot-btn {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted-2);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background .2s, transform .2s;
+      flex-shrink: 0;
+    }
+
+    .dot-btn.active {
+      background: var(--gold-soft);
+      transform: scale(1.3);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--muted);
+      min-width: 44px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ---------- speaker notes panel ---------- */
+    .notes-panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 340px;
+      max-width: 88vw;
+      z-index: 250;
+      background: rgba(9, 12, 22, 0.92);
+      border-left: 1px solid var(--glass-border-strong);
+      backdrop-filter: blur(24px);
+      padding: 90px 28px 28px;
+      transform: translateX(100%);
+      transition: transform .4s cubic-bezier(.2, .7, .3, 1);
+      overflow-y: auto;
+
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .notes-panel::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    .notes-panel.open {
+      transform: translateX(0);
+    }
+
+    .notes-panel h3 {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--teal);
+      margin: 0 0 16px;
+    }
+
+    .notes-panel .notes-slide-title {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 600;
+      margin: 0 0 16px;
+      color: var(--gold-soft);
+    }
+
+    .notes-panel p {
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c7cbdb;
+      margin: 0 0 14px;
+    }
+
+    .notes-panel .close-notes {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--glass-fill-strong);
+      border: 1px solid var(--glass-border-strong);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ---------- tutorial overlay ---------- */
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      background: rgba(4, 6, 12, 0.86);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity .35s ease;
+      padding: 16px;
+    }
+
+    .tutorial-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tutorial-card {
+      max-width: 480px;
+      width: 100%;
+      padding: clamp(20px, 4vh, 32px) clamp(18px, 3vw, 30px);
+      border-radius: 20px;
+      text-align: left;
+    }
+
+    .tutorial-card h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--gold-soft);
+      margin: 0 0 14px;
+    }
+
+    .tutorial-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 13.5px;
+      color: #c7cbdb;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .tutorial-step kbd {
+      flex-shrink: 0;
+    }
+
+    .tutorial-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 22px;
+    }
+
+    .tutorial-skip {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .tutorial-next {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      padding: 10px 20px;
+      border-radius: 100px;
+      border: 1px solid var(--glass-border-strong);
+      background: rgba(99, 230, 198, 0.14);
+      color: var(--teal);
+      cursor: pointer;
+    }
+
+    /* ---------- hero ---------- */
+    .hero-inner {
+      position: relative;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: clamp(28px, calc(3.4vw + 1.6vh), 68px);
+      line-height: 1.08;
+      letter-spacing: -0.015em;
+      max-width: 880px;
+      margin: 0 0 clamp(12px, 2vh, 22px);
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold-soft);
+      font-weight: 450;
+    }
+
+    .hero p.sub {
+      max-width: 560px;
+      font-size: clamp(13.5px, 1vw + 0.7vh, 17px);
+      line-height: 1.6;
+      color: var(--muted);
+      margin-bottom: clamp(18px, 3vh, 34px);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: clamp(20px, 4vh, 44px);
+    }
+
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: clamp(6px, 1vh, 9px) 14px;
+      border-radius: 100px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chip .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      flex-wrap: wrap;
+      row-gap: 16px;
+    }
+
+    .pipe-card {
+      flex: 1 1 150px;
+      max-width: 190px;
+      min-width: 140px;
+      padding: clamp(14px, 2vh, 20px) clamp(12px, 1.6vw, 18px);
+      border-radius: 16px;
+    }
+
+    .pipe-card .num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .1em;
+    }
+
+    .pipe-card svg {
+      width: 22px;
+      height: 22px;
+      margin: 10px 0 8px;
+      opacity: .9;
+    }
+
+    .pipe-card h4 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 5px;
+    }
+
+    .pipe-card p {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .pipe-arrow {
+      width: 24px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--glass-border-strong), transparent);
+      position: relative;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .pipe-arrow::after {
+      content: '→';
+      position: absolute;
+      right: -14px;
+      top: -9px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width:640px) {
+      .pipeline {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pipe-card {
+        max-width: none;
+      }
+
+      .pipe-arrow {
+        display: none;
+      }
+    }
+
+    /* ---------- problem ---------- */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .compare-card {
+      padding: clamp(16px, 2.4vh, 24px) 18px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: unset;
+    }
+
+    .compare-card h4 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: .04em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+
+    .compare-card .gap {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #c7cbdb;
+      flex: 1;
+    }
+
+    .compare-card.win {
+      border-color: var(--glass-border-strong);
+      background: linear-gradient(160deg, rgba(201, 161, 90, 0.08), rgba(99, 230, 198, 0.05));
+    }
+
+    .compare-card.win h4 {
+      color: var(--gold-soft);
+    }
+
+    .cross {
+      color: var(--plum);
+    }
+
+    .check {
+      color: var(--teal);
+    }
+
+    /* ---------- personas ---------- */
+    .persona-cols {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: clamp(20px, 4vw, 44px);
+    }
+
+    .persona-cols h3 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .persona-card {
+      padding: 12px 16px;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .persona-card .mark {
+      font-family: var(--font-display);
+      font-size: 19px;
+      color: var(--gold-soft);
+      font-weight: 600;
+      width: 26px;
+      flex-shrink: 0;
+    }
+
+    .persona-card h5 {
+      margin: 0 0 3px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .persona-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .persona-card .need {
+      color: var(--teal);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      margin-top: 5px;
+      display: block;
+    }
+
+    /* ---------- scope ---------- */
+    .scope-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card {
+      padding: 16px 18px;
+      border-radius: 16px;
+    }
+
+    .feature-card .tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .feature-card h4 {
+      font-family: var(--font-display);
+      font-size: 16px;
+      margin: 7px 0 6px;
+      font-weight: 600;
+    }
+
+    .feature-card p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0 0 10px;
+    }
+
+    .std-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .std-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--gold-soft);
+    }
+
+    .exclusions {
+      margin-top: 8px;
+      padding: 18px 22px;
+      border-radius: 16px;
+    }
+
+    .exclusions h4 {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    .excl-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .excl-list li {
+      font-size: 12px;
+      color: #6b7286;
+      text-decoration: line-through;
+      text-decoration-color: rgba(166, 107, 142, 0.5);
+    }
+
+    /* ---------- architecture ---------- */
+    .arch-principle {
+      padding: clamp(14px, 2.4vh, 26px) clamp(16px, 2.4vw, 28px);
+      border-radius: 18px;
+      margin-bottom: clamp(12px, 2.4vh, 26px);
+      border-left: 2px solid var(--gold);
+    }
+
+    .arch-principle p {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: clamp(13px, 1vw + 0.6vh, 16.5px);
+      line-height: 1.45;
+      color: var(--gold-soft);
+      margin: 0;
+    }
+
+    .stack {
+      position: relative;
+    }
+
+    .layer {
+      position: relative;
+      padding: clamp(8px, 1.4vh, 14px) clamp(14px, 2vw, 22px);
+      border-radius: 14px;
+      margin-bottom: clamp(6px, 1vh, 10px);
+      display: grid;
+      grid-template-columns: minmax(130px, 190px) 1fr;
+      gap: clamp(10px, 2vw, 22px);
+      align-items: center;
+    }
+
+    .layer .lname {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: clamp(13px, 0.9vw + 0.5vh, 16px);
+    }
+
+    .layer .lidx {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .layer .lowns {
+      font-size: clamp(10.5px, 0.65vw + 0.4vh, 12.5px);
+      color: #c7cbdb;
+      line-height: 1.4;
+    }
+
+    .layer .lowns b {
+      color: var(--teal);
+      font-weight: 500;
+    }
+
+    @media (max-width:800px) {
+      .layer {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+
+    /* ---------- constraints ---------- */
+    .constraint-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .cbox {
+      flex: 1 1 180px;
+      padding: clamp(14px, 2.4vh, 22px);
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .cbox .cval {
+      font-family: var(--font-mono);
+      font-size: clamp(20px, 1.6vw + 1vh, 26px);
+      color: var(--gold-soft);
+      font-weight: 500;
+    }
+
+    .cbox .clabel {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ---------- timeline ---------- */
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+    }
+
+    .tl-card {
+      padding: 14px 18px;
+      border-radius: 14px;
+    }
+
+    .tl-day {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--gold-soft);
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .tl-obj {
+      font-size: 12px;
+      color: #c7cbdb;
+      line-height: 1.45;
+    }
+
+    /* ---------- metrics ---------- */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      align-items: flex-start;
+    }
+
+    .metric-item .ck {
+      color: var(--teal);
+      font-size: 15px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .metric-item p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #c7cbdb;
+    }
+
+    /* ---------- risks ---------- */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .risk-card {
+      padding: 16px;
+      border-radius: 14px;
+      border-left: 2px solid var(--plum);
+    }
+
+    .risk-card h5 {
+      margin: 0 0 7px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--plum);
+    }
+
+    .risk-card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* ---------- v2 vision ---------- */
+    .v2-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .v2-card {
+      padding: 14px 10px;
+      border-radius: 14px;
+      text-align: center;
+      opacity: .75;
+    }
+
+    .v2-card .lock {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      display: block;
+    }
+
+    .v2-card span.label {
+      font-size: 11.5px;
+      color: #c7cbdb;
+      line-height: 1.35;
+      display: block;
+    }
+
+    .v2-note {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    /* ---------- closing ---------- */
+    .closing {
+      text-align: center;
+    }
+
+    .closing .quote {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: clamp(17px, 1.6vw + 1vh, 28px);
+      max-width: 760px;
+      margin: 0 auto clamp(16px, 2.6vh, 26px);
+      line-height: 1.45;
+      color: var(--gold-soft);
+    }
+
+    .closing .seal {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: clamp(9.5px, 0.9vw + 0.5vh, 11px);
+      padding: 9px 18px;
+      border-radius: 100px;
+      color: var(--teal);
+      text-align: center;
+      max-width: calc(100% - 32px);
+      margin: 0 auto;
+    }
+
+    .closing .fine {
+      margin-top: clamp(16px, 3vh, 34px);
+      font-size: 11px;
+      color: #565d70;
+      font-family: var(--font-mono);
+      padding: 0 8px;
+    }
+
+    kbd {
+      font-family: var(--font-mono);
+      background: var(--glass-fill-strong);
+      border: 1px solid var(--glass-border-strong);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+    }
+
+    /* ---------- short-viewport / split-screen compaction ---------- */
+    @media (max-height: 760px) {
+      .slide {
+        padding: 60px 0 26px;
+      }
+
+      nav {
+        top: 10px;
+        padding: 10px 20px;
+      }
+
+      .deck-controls {
+        bottom: 12px;
+        padding: 8px 12px;
+      }
+
+      .eyebrow {
+        margin-bottom: 10px;
+      }
+
+      .section-lede {
+        margin-bottom: 16px;
+      }
+
+      .badge-row {
+        margin-bottom: 22px;
+      }
+
+      .hero p.sub {
+        margin-bottom: 18px;
+      }
+
+      .arch-principle {
+        padding: 14px 18px;
+        margin-bottom: 12px;
+      }
+
+      .layer {
+        padding: 8px 16px;
+        margin-bottom: 5px;
+      }
+
+      .persona-card {
+        padding: 10px 14px;
+        margin-bottom: 6px;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .slide {
+        padding: 48px 0 18px;
+      }
+
+      nav {
+        display: none;
+      }
+
+      .layer {
+        grid-template-columns: 1fr;
+        gap: 2px;
+        padding: 7px 14px;
+      }
+
+      .arch-principle p {
+        font-size: 13px;
+      }
+
+      .hero h1 {
+        margin-bottom: 10px;
+      }
+
+      .badge-row {
+        margin-bottom: 16px;
+      }
+
+      .pipe-card {
+        padding: 10px 12px;
+      }
+
+      .notes-panel {
+        padding-top: 60px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        padding: 0 16px;
+      }
+
+      .chip {
+        font-size: 10.5px;
+        padding: 6px 11px;
+      }
+
+      .cbox {
+        flex-basis: 140px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="autoplay-bar" id="autoplayBar"></div>
+
+  <div class="tutorial-overlay glass" id="tutorialOverlay">
+    <div class="tutorial-card glass" id="tutorialCard"></div>
+  </div>
+
+  <div class="ambient">
+    <div class="orb" style="width:520px;height:520px;background:var(--violet);top:-140px;left:-120px;"></div>
+    <div class="orb" style="width:420px;height:420px;background:var(--gold);top:60px;right:-100px;"></div>
+    <div class="orb" style="width:380px;height:380px;background:var(--teal);bottom:-160px;left:38%;"></div>
+  </div>
+
+  <nav>
+    <span class="brand" data-goto="0">ScholarForge</span>
+    <a data-goto="1">Problem</a>
+    <a data-goto="2">Personas</a>
+    <a data-goto="3">Scope</a>
+    <a data-goto="4">Architecture</a>
+    <a data-goto="6">Build</a>
+    <a data-goto="7">Metrics</a>
+    <a data-goto="8">Risks</a>
+    <a data-goto="9">V2</a>
+  </nav>
+
+  <div class="slide-deck" id="deck">
+
+    <!-- 0 HERO -->
+    <section class="slide active wrap" data-index="0">
+      <div class="hero-inner">
+        <div class="eyebrow">Version 1.0 — Approved Product Vision</div>
+        <h1>Your notes. <em>Your voice.</em><br>Never someone else's server.</h1>
+        <p class="sub">ScholarForge turns structured research notes into a properly formatted academic paper — entirely
+          on your own machine, in your own writing style, with nothing sent anywhere.</p>
+        <div class="badge-row">
+          <span class="chip glass"><span class="dot" style="background:var(--teal)"></span>100% offline after
+            setup</span>
+          <span class="chip glass"><span class="dot" style="background:var(--gold)"></span>Runs on a 4GB GPU</span>
+          <span class="chip glass"><span class="dot" style="background:var(--violet)"></span>Qwen2.5‑3B, local
+            inference</span>
+          <span class="chip glass"><span class="dot" style="background:var(--plum)"></span>$0 — zero paid
+            dependencies</span>
+        </div>
+        <div class="pipeline">
+          <div class="pipe-card glass">
+            <span class="num">01 / NOTES</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6">
+              <path d="M4 4h13l3 3v13H4z" />
+              <path d="M8 9h9M8 13h9M8 17h5" />
+            </svg>
+            <h4>Structured Notes</h4>
+            <p>Organized research input, captured before a word of prose exists.</p>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-card glass">
+            <span class="num">02 / GENERATE</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.6">
+              <rect x="6" y="6" width="12" height="12" rx="1.5" />
+              <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
+            </svg>
+            <h4>Local Generation</h4>
+            <p>Qwen2.5‑3B drafts prose in your configured voice — nothing leaves the device.</p>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-card glass">
+            <span class="num">03 / FORMAT</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6">
+              <path d="M4 20V4h16v16z" />
+              <path d="M4 9h16M9 9v11" />
+            </svg>
+            <h4>Deterministic Template</h4>
+            <p>IEEE, APA, MLA, or Chicago rules applied — with zero LLM involvement.</p>
+          </div>
+          <div class="pipe-arrow"></div>
+          <div class="pipe-card glass">
+            <span class="num">04 / EXPORT</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--plum)" stroke-width="1.6">
+              <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" />
+              <path d="M14 3v5h5" />
+            </svg>
+            <h4>DOCX Draft</h4>
+            <p>A valid, openable file, ready to submit — a real deliverable, not a demo.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 PROBLEM -->
+    <section class="slide wrap" data-index="1">
+      <div class="eyebrow">The Problem</div>
+      <h2 class="section-title">Two mechanical tasks, none of it thinking.</h2>
+      <p class="section-lede">Students and independent researchers lose disproportionate time converting notes into
+        publication-style prose, then reformatting that prose to satisfy a citation standard. Nothing on the market
+        solves both without a cost.</p>
+      <div class="compare-grid">
+        <div class="compare-card glass">
+          <h4>Cloud "Paper Writer" Tools</h4>
+          <div class="gap"><span class="cross">✕</span> Requires constant internet + paid API keys<br><br><span
+              class="cross">✕</span> Routes unpublished research through third-party servers<br><br><span
+              class="cross">✕</span> Generic, voice-erasing output</div>
+        </div>
+        <div class="compare-card glass">
+          <h4>Reference Managers</h4>
+          <div class="gap"><span class="check">✓</span> Handle citations well<br><br><span class="cross">✕</span>
+            Generate no prose at all<br><br><span class="cross">✕</span> Not a writing workspace</div>
+        </div>
+        <div class="compare-card glass">
+          <h4>Word Processor Plugins</h4>
+          <div class="gap"><span class="check">✓</span> Handle formatting<br><br><span class="cross">✕</span> No
+            language generation<br><br><span class="cross">✕</span> Still manual, notes → prose</div>
+        </div>
+        <div class="compare-card win glass">
+          <h4>ScholarForge</h4>
+          <div class="gap"><span class="check">✓</span> Local inference, fully offline<br><br><span
+              class="check">✓</span> Notes → formatted draft, one workspace<br><br><span class="check">✓</span> Author's
+            own voice, author's own machine</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 PERSONAS -->
+    <section class="slide wrap" data-index="2">
+      <div class="eyebrow">Who It's For</div>
+      <h2 class="section-title">Built around one narrow workflow, for people who actually live in it.</h2>
+      <p class="section-lede">Primary users write the papers. Secondary users review, produce, or occasionally reach for
+        the same tool without wanting a subscription.</p>
+      <div class="persona-cols">
+        <div>
+          <h3>Primary</h3>
+          <div class="persona-card glass"><span class="mark">01</span>
+            <div>
+              <h5>Undergraduate Student</h5>
+              <p>Coursework papers, limited formatting experience.</p><span class="need">need → fast, correct formatting
+                + coherent draft</span>
+            </div>
+          </div>
+          <div class="persona-card glass"><span class="mark">02</span>
+            <div>
+              <h5>Postgraduate Student</h5>
+              <p>Thesis chapters or journal-adjacent drafts.</p><span class="need">need → consistent voice across a long
+                document</span>
+            </div>
+          </div>
+          <div class="persona-card glass"><span class="mark">03</span>
+            <div>
+              <h5>Final-Year Project Student</h5>
+              <p>Capstone or dissertation, under deadline pressure.</p><span class="need">need → reliable structure, no
+                manual rework</span>
+            </div>
+          </div>
+          <div class="persona-card glass"><span class="mark">04</span>
+            <div>
+              <h5>Independent Researcher</h5>
+              <p>Outside institutional tooling, privacy-conscious.</p><span class="need">need → fully offline, nothing
+                leaves the machine</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Secondary</h3>
+          <div class="persona-card glass"><span class="mark">05</span>
+            <div>
+              <h5>Professor</h5>
+              <p>Reviewing or drafting academic material.</p><span class="need">need → trustworthy formatting
+                compliance</span>
+            </div>
+          </div>
+          <div class="persona-card glass"><span class="mark">06</span>
+            <div>
+              <h5>Technical Writer</h5>
+              <p>Producing structured technical documents.</p><span class="need">need → style consistency, template
+                flexibility</span>
+            </div>
+          </div>
+          <div class="persona-card glass"><span class="mark">07</span>
+            <div>
+              <h5>Engineer</h5>
+              <p>Writing technical/academic reports occasionally.</p><span class="need">need → low-friction, no
+                subscription overhead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 SCOPE -->
+    <section class="slide wrap" data-index="3">
+      <div class="eyebrow">Version 1.0 Scope</div>
+      <h2 class="section-title">Seven features. Nothing borrowed from the roadmap.</h2>
+      <p class="section-lede">Everything below ships in V1. Everything in the exclusions panel was deliberately left for
+        later — not forgotten, refused.</p>
+      <div class="scope-grid">
+        <div class="feature-card glass"><span class="tag">FR-1</span>
+          <h4>Structured Notes Editor</h4>
+          <p>Captures organized research input — the only thing the system assumes you've already done the thinking for.
+          </p>
+        </div>
+        <div class="feature-card glass"><span class="tag">FR-2 · FR-5</span>
+          <h4>Local Generation + Voice Profile</h4>
+          <p>Qwen2.5‑3B via llama.cpp or Ollama drafts academic prose from notes, shaped by a configurable writing-voice
+            profile via prompt engineering.</p>
+        </div>
+        <div class="feature-card glass">
+          <span class="tag">FR-3 · FR-4</span>
+          <h4>Multi-Standard Template Engine</h4>
+          <p>Deterministic formatting, independent of LLM output quality.</p>
+          <div class="std-chips"><span class="std-chip">IEEE · US Letter, A4</span><span class="std-chip">APA · 6th,
+              7th</span><span class="std-chip">MLA · 8th, 9th</span><span class="std-chip">Chicago · 17th, 18th</span>
+          </div>
+        </div>
+        <div class="feature-card glass"><span class="tag">FR-9</span>
+          <h4>DOCX Export</h4>
+          <p>A valid, openable file conforming to the selected template — the finish line of the pipeline.</p>
+        </div>
+        <div class="feature-card glass"><span class="tag">FR-8</span>
+          <h4>Academic Reviewer Mode</h4>
+          <p>Structured, draft-specific feedback before you finalize — not generic boilerplate notes.</p>
+        </div>
+        <div class="feature-card glass"><span class="tag">FR-6 · FR-7</span>
+          <h4>Session Save / Reload</h4>
+          <p>Notes, draft progress, and template selection persist locally with no data loss across sessions.</p>
+        </div>
+      </div>
+      <div class="exclusions glass">
+        <h4>Explicitly Out of Scope for V1</h4>
+        <ul class="excl-list">
+          <li>Fine-tuning / LoRA</li>
+          <li>Model training</li>
+          <li>Authentication / multi-user</li>
+          <li>Cloud deployment</li>
+          <li>Paid APIs</li>
+          <li>PDF export</li>
+          <li>Automatic citation lookup</li>
+          <li>Automatic literature search</li>
+          <li>Advanced RAG</li>
+          <li>Journal submission workflow</li>
+          <li>Collaboration features</li>
+          <li>Mobile app</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4 ARCHITECTURE -->
+    <section class="slide wrap" data-index="4">
+      <div class="eyebrow">System Architecture</div>
+      <h2 class="section-title">Seven layers. One rule that governs all of them.</h2>
+      <p class="section-lede">A layered, offline-first monolith — not a distributed system. One user, one process, one
+        4GB GPU. Ports &amp; adapters shape, so V2 additions plug in behind existing interfaces.</p>
+      <div class="arch-principle glass">
+        <p>"The AI Generation Layer and the Deterministic Formatting Layer never share responsibility for the same
+          output. The model only ever produces language — every margin, heading, and citation mark is computed by code
+          that has no dependency on model behavior."</p>
+      </div>
+      <div class="stack">
+        <div class="layer glass">
+          <div><span class="lidx">01 · PRESENTATION</span><span class="lname">Notes Editor · Template Picker · Draft
+              &amp; Reviewer View</span></div>
+          <div class="lowns">Owns rendering and input capture. <b>Never</b> touches business logic, formatting math, or
+            the model directly.</div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">02 · APPLICATION</span><span class="lname">Workflow Orchestrators</span></div>
+          <div class="lowns">Owns use-case orchestration — generate, review, save, export — and dependency wiring.
+            <b>Never</b> knows how a layer works internally.
+          </div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">03 · AI</span><span class="lname">PromptBuilder · ModelClient · OutputCleaner ·
+              ReviewerEngine</span></div>
+          <div class="lowns">Owns prompting, inference, voice injection, cleanup. <b>Never</b> decides a margin,
+            heading, or file format.</div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">04 · FORMATTING</span><span class="lname">Template Engine · Style Rules</span></div>
+          <div class="lowns">Owns per-standard layout and citation structure. <b>Never</b> generates prose or calls the
+            model.</div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">05 · PERSISTENCE</span><span class="lname">Session Store · Autosave</span></div>
+          <div class="lowns">Owns serialization, autosave, load-with-recovery. <b>Never</b> makes formatting or AI
+            decisions.</div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">06 · EXPORT</span><span class="lname">DOCX Builder</span></div>
+          <div class="lowns">Owns assembling the final file from what it's given. <b>Never</b> decides what the content
+            should be.</div>
+        </div>
+        <div class="layer glass">
+          <div><span class="lidx">07 · CONFIGURATION</span><span class="lname">Model · Voice · Template Registry ·
+              Paths</span></div>
+          <div class="lowns">Owns every tunable in the system. <b>Never</b> contains runtime business logic.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 CONSTRAINTS -->
+    <section class="slide wrap" data-index="5">
+      <div class="eyebrow">Technical Constraints</div>
+      <h2 class="section-title">Everything here was a limit before it was a feature.</h2>
+      <div class="constraint-strip">
+        <div class="cbox glass">
+          <div class="cval">10</div>
+          <div class="clabel">days, solo developer</div>
+        </div>
+        <div class="cbox glass">
+          <div class="cval">4GB</div>
+          <div class="clabel">GPU ceiling</div>
+        </div>
+        <div class="cbox glass">
+          <div class="cval">$0</div>
+          <div class="clabel">paid APIs or services</div>
+        </div>
+        <div class="cbox glass">
+          <div class="cval">1</div>
+          <div class="clabel">user, single session, local-only</div>
+        </div>
+        <div class="cbox glass">
+          <div class="cval">3B</div>
+          <div class="clabel">params — Qwen2.5, via llama.cpp / Ollama</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 TIMELINE -->
+    <section class="slide wrap" data-index="6">
+      <div class="eyebrow">The 10-Day Build</div>
+      <h2 class="section-title">Each day adds one working layer — never a promise of one.</h2>
+      <p class="section-lede">Day 2 through Day 10, in the order the architecture actually gets built, ending in a
+        stable, cold-start-demoable Version 1.0.</p>
+      <div class="timeline-grid">
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 2</div>
+          <div class="tl-obj">Project skeleton + Notes Module: the structured research notes editor, zero AI or
+            formatting dependencies yet.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 3</div>
+          <div class="tl-obj">Configuration Layer + AI connectivity skeleton (IModelClient, Ollama &amp; llama.cpp).
+            Answers the riskiest question: does Qwen2.5‑3B run acceptably on 4GB?</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 4</div>
+          <div class="tl-obj">Full prose-generation pipeline: PromptBuilder, VoiceProfile, OutputCleaner,
+            GenerationWorkflow. Notes → generated prose becomes real.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 5</div>
+          <div class="tl-obj">Data-driven Template Engine + the first complete TemplateDefinition: IEEE (US Letter).
+            Depth over breadth, exactly as scoped.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 6</div>
+          <div class="tl-obj">Export Layer: DocxExporter/DocxRenderer. Notes → Generation → IEEE Formatting → DOCX works
+            end-to-end for the first time.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 7</div>
+          <div class="tl-obj">Session/Persistence Layer: manual save, autosave, reload-with-recovery. Nothing survives
+            an app restart by accident — it's engineered to.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 8</div>
+          <div class="tl-obj">Reviewer Mode end-to-end, plus a dedicated error-handling hardening pass across every
+            layer built so far.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 9</div>
+          <div class="tl-obj">Stretch: template coverage beyond IEEE — APA (6th, 7th), MLA (8th, 9th), Chicago (17th,
+            18th). Additive, not required to hit Day 10.</div>
+        </div>
+        <div class="tl-card glass">
+          <div class="tl-day">DAY 10</div>
+          <div class="tl-obj">Integration, polish, full regression, live demo rehearsal. No new features — just a
+            submittable Version 1.0.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 METRICS -->
+    <section class="slide wrap" data-index="7">
+      <div class="eyebrow">Success Metrics</div>
+      <h2 class="section-title">How Day 10 gets judged.</h2>
+      <div class="metric-grid">
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>At least one full template standard works end-to-end with zero manual reformatting after export.</p>
+        </div>
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>100% of the generation-to-export pipeline runs offline, with no network calls at any point.</p>
+        </div>
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>Session save/load succeeds with no data loss across repeated test cycles.</p>
+        </div>
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>Reviewer Mode output reads as content-specific, not generic, in manual review of test drafts.</p>
+        </div>
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>Generated text is recognizably distinct from unedited, generic AI output once the voice profile is applied.
+          </p>
+        </div>
+        <div class="metric-item glass"><span class="ck">✓</span>
+          <p>The system survives a live, cold-start demo without failure.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 RISKS -->
+    <section class="slide wrap" data-index="8">
+      <div class="eyebrow">Known Risks</div>
+      <h2 class="section-title">Named early, not discovered on Day 9.</h2>
+      <div class="risk-grid">
+        <div class="risk-card glass">
+          <h5>Model Quality</h5>
+          <p>Qwen2.5‑3B is small; generated prose may need heavier prompt scaffolding to sound competent and on-voice.
+          </p>
+        </div>
+        <div class="risk-card glass">
+          <h5>Hardware</h5>
+          <p>4GB VRAM is tight for a 3B model at reasonable context length — needs empirical testing, not assumption.
+          </p>
+        </div>
+        <div class="risk-card glass">
+          <h5>Scope</h5>
+          <p>Six citation-standard/edition combinations is a lot of deterministic logic to finish correctly in 10 days.
+          </p>
+        </div>
+        <div class="risk-card glass">
+          <h5>Style Preservation</h5>
+          <p>Voice preservation via prompting is inherently approximate — success criteria stay honest about that.</p>
+        </div>
+        <div class="risk-card glass">
+          <h5>Timeline</h5>
+          <p>Solo 10-day builds fail most often on integration and polish time, not core feature time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 V2 VISION -->
+    <section class="slide wrap" data-index="9">
+      <div class="eyebrow">Looking Past Version 1.0</div>
+      <h2 class="section-title">Directional only. Deliberately out of focus.</h2>
+      <p class="section-lede">Nothing below is designed yet — only named as a place the architecture already has room
+        for, behind interfaces V1 already built.</p>
+      <div class="v2-grid">
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">LoRA Personalization</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Fine-Tuned Academic Model</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Citation Manager Integration</span>
+        </div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Research Paper Library</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">PDF Export</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Semantic Search</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Journal Templates</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Multi-Language Support</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Cloud Synchronization</span></div>
+        <div class="v2-card glass"><span class="lock">◐</span><span class="label">Plugin Architecture</span></div>
+      </div>
+      <p class="v2-note">Every item above extends an existing interface — TemplateEngine, IModelClient, SessionStore —
+        without touching a line of V1 code.</p>
+    </section>
+
+    <!-- 10 CLOSING -->
+    <section class="slide wrap closing" data-index="10">
+      <p class="quote">"A researcher's own notes and own voice — not a cloud server's guess at either — become a
+        properly formatted academic paper, entirely under the researcher's control."</p>
+      <span class="seal glass">◆ Approved Version 1.0 Product Vision — Source of Truth</span>
+      <div class="fine">ScholarForge · Offline-first · Local-only · Built solo in 10 days · <kbd>←</kbd> <kbd>→</kbd>
+        navigate · <kbd>N</kbd> notes · <kbd>F</kbd> fullscreen · <kbd>P</kbd> autoplay</div>
+    </section>
+
+  </div>
+
+  <div class="notes-panel" id="notesPanel">
+    <button class="close-notes" id="closeNotes">✕</button>
+    <h3>Speaker Notes</h3>
+    <div class="notes-slide-title" id="notesTitle"></div>
+    <div id="notesBody"></div>
+  </div>
+
+  <div class="deck-controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous slide">←</button>
+    <span class="slide-counter" id="counter">01 / 11</span>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn" aria-label="Next slide">→</button>
+    <div class="divider"></div>
+    <button class="nav-btn" id="playBtn" aria-label="Toggle autoplay" title="Autoplay">▶</button>
+    <button class="nav-btn" id="notesBtn" aria-label="Toggle speaker notes" title="Speaker notes">🗒</button>
+    <button class="nav-btn" id="fsBtn" aria-label="Toggle fullscreen" title="Fullscreen">⛶</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const total = slides.length;
+    let current = 0;
+
+    const dotsEl = document.getElementById('dots');
+    slides.forEach((_, i) => {
+      const b = document.createElement('button');
+      b.className = 'dot-btn' + (i === 0 ? ' active' : '');
+      b.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(b);
+    });
+    const dotEls = Array.from(dotsEl.children);
+    const counterEl = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const navLinks = Array.from(document.querySelectorAll('nav a, nav .brand'));
+
+    // ---------- speaker notes content ----------
+    const notes = [
+      { title: "Hero", body: ["Open with the privacy angle first — that's the real hook, not the feature list.", "Don't read the badges aloud verbatim; use them as a visual anchor while you describe the pipeline in your own words.", "Land on: this is a real deliverable, not a tech demo."] },
+      { title: "The Problem", body: ["Walk the grid left to right — each competitor solves half the problem.", "The point isn't that these tools are bad, it's that nothing bridges both halves without a subscription or a privacy trade-off.", "Pause on the ScholarForge column last for contrast."] },
+      { title: "Personas", body: ["Spend most of your time on Primary — that's who V1 is actually designed for.", "Secondary personas exist to show the tool has legs beyond students, but don't oversell them.", "If asked 'who is this NOT for': anyone needing collaboration or multi-user, at least in V1."] },
+      { title: "Scope", body: ["Frame the exclusions list as a strength — it's evidence of discipline under a 10-day constraint, not a gap.", "If pushed on 'why no PDF export,' the honest answer is time, not difficulty.", "Reviewer Mode is the feature most likely to impress in a live demo — consider showing it if possible."] },
+      { title: "Architecture", body: ["This is the slide to slow down on. The one-sentence rule (AI never touches formatting) is the core reliability guarantee of the whole system.", "If someone asks 'why not let the LLM format too' — answer: because LLM output is nondeterministic and formatting standards are not.", "Ports & adapters framing matters for the V2 conversation later — plant that seed here."] },
+      { title: "Constraints", body: ["These five numbers explain almost every architectural decision in the deck — connect back to them if asked 'why Qwen2.5-3B' or 'why offline.'", "Keep this slide brief; it's a bridge, not a destination."] },
+      { title: "The 10-Day Build", body: ["Point out that Day 3 exists specifically to de-risk the biggest unknown (does the model even run acceptably) before anything else is built on top of it.", "Day 9 is explicitly a stretch day — if it slips, the product is still complete without it.", "Day 10 is deliberately feature-frozen — stability over ambition."] },
+      { title: "Success Metrics", body: ["These are the actual Day-10 acceptance criteria — read them as a checklist, not a wishlist.", "Note that 'recognizably distinct from generic AI output' is judged qualitatively — be upfront about that."] },
+      { title: "Known Risks", body: ["Naming these risks proactively is itself a credibility move — it shows the plan was stress-tested, not just optimistic.", "If asked 'what worries you most' — Timeline and Scope are the honest answers."] },
+      { title: "V2 Vision", body: ["Keep this vague on purpose — nothing here is designed, only named.", "The through-line: everything extends an existing V1 interface, so V2 isn't a rewrite.", "Don't let this slide run long — it's a teaser, not a roadmap commitment."] },
+      { title: "Closing", body: ["End on the quote, then open the floor.", "If there's time, offer to jump back to Architecture or Risks for deeper questions — those are usually where the real discussion happens."] }
+    ];
+
+    const notesPanel = document.getElementById('notesPanel');
+    const notesTitle = document.getElementById('notesTitle');
+    const notesBody = document.getElementById('notesBody');
+    const notesBtn = document.getElementById('notesBtn');
+    const closeNotes = document.getElementById('closeNotes');
+
+    function renderNotes(index) {
+      const n = notes[index];
+      notesTitle.textContent = n.title;
+      notesBody.innerHTML = n.body.map(p => `<p>${p}</p>`).join('');
+    }
+    function toggleNotes(force) {
+      const open = force !== undefined ? force : !notesPanel.classList.contains('open');
+      notesPanel.classList.toggle('open', open);
+      notesBtn.classList.toggle('on', open);
+    }
+    notesBtn.addEventListener('click', () => toggleNotes());
+    closeNotes.addEventListener('click', () => toggleNotes(false));
+
+    // ---------- fullscreen ----------
+    const fsBtn = document.getElementById('fsBtn');
+    fsBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => { }); }
+      else { document.exitFullscreen().catch(() => { }); }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      fsBtn.classList.toggle('on', !!document.fullscreenElement);
+    });
+
+    // ---------- autoplay (kiosk mode) ----------
+    const AUTOPLAY_MS = 8000;
+    const playBtn = document.getElementById('playBtn');
+    const autoplayBar = document.getElementById('autoplayBar');
+    let autoplayOn = false;
+    let autoplayTimeout = null;
+
+    function clearAutoplayVisual() {
+      autoplayBar.classList.remove('animating');
+      autoplayBar.style.width = '0%';
+    }
+    function runAutoplayVisual() {
+      autoplayBar.classList.remove('animating');
+      autoplayBar.style.width = '0%';
+      void autoplayBar.offsetWidth;
+      autoplayBar.classList.add('animating');
+      autoplayBar.style.transitionDuration = AUTOPLAY_MS + 'ms';
+      autoplayBar.style.width = '100%';
+    }
+    function scheduleAutoplay() {
+      clearTimeout(autoplayTimeout);
+      if (!autoplayOn) { clearAutoplayVisual(); return; }
+      runAutoplayVisual();
+      autoplayTimeout = setTimeout(() => {
+        const next = (current + 1) % total;
+        goTo(next);
+      }, AUTOPLAY_MS);
+    }
+    function setAutoplay(on) {
+      autoplayOn = on;
+      playBtn.textContent = on ? '⏸' : '▶';
+      playBtn.classList.toggle('on', on);
+      if (on) scheduleAutoplay(); else { clearTimeout(autoplayTimeout); clearAutoplayVisual(); }
+    }
+    playBtn.addEventListener('click', () => setAutoplay(!autoplayOn));
+
+    // ---------- tutorial overlay ----------
+    const tutorialSteps = [
+      { kbd: '← →', text: "Move between slides with the arrow keys or the buttons at the bottom." },
+      { kbd: 'N', text: "Open speaker notes for context on whatever slide you're viewing." },
+      { kbd: 'P', text: "Autoplay the deck — it'll advance every 8 seconds, looping at the end." },
+      { kbd: 'F', text: "Go fullscreen for presenting." }
+    ];
+    let tutorialIndex = 0;
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutorialCard = document.getElementById('tutorialCard');
+
+    function renderTutorial() {
+      const s = tutorialSteps[tutorialIndex];
+      const isLast = tutorialIndex === tutorialSteps.length - 1;
+      tutorialCard.innerHTML = `
+        <h3>Quick tour (${tutorialIndex + 1}/${tutorialSteps.length})</h3>
+        <div class="tutorial-step"><kbd>${s.kbd}</kbd><span>${s.text}</span></div>
+        <div class="tutorial-actions">
+          <button class="tutorial-skip" id="tutorialSkip">Skip tour</button>
+          <button class="tutorial-next" id="tutorialNext">${isLast ? 'Start presenting →' : 'Next'}</button>
+        </div>`;
+      document.getElementById('tutorialSkip').onclick = closeTutorial;
+      document.getElementById('tutorialNext').onclick = () => {
+        if (isLast) { closeTutorial(); }
+        else { tutorialIndex++; renderTutorial(); }
+      };
+    }
+    function closeTutorial() {
+      tutorialOverlay.classList.add('hidden');
+      setTimeout(() => tutorialOverlay.remove(), 400);
+    }
+    renderTutorial();
+
+    // ---------- core navigation ----------
+    function goTo(index) {
+      if (index < 0 || index >= total || index === current) return;
+      slides[current].classList.remove('active');
+      slides[current].classList.add('exit-left');
+      slides[index].classList.remove('exit-left');
+      slides[index].classList.add('active');
+      setTimeout(() => slides[current].classList.remove('exit-left'), 500);
+      current = index;
+      update();
+    }
+
+    function update() {
+      dotEls.forEach((d, i) => d.classList.toggle('active', i === current));
+      counterEl.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+      prevBtn.disabled = current === 0;
+      navLinks.forEach(l => {
+        const target = parseInt(l.dataset.goto, 10);
+        l.classList.toggle('active', target === current);
+      });
+      slides[current].scrollTop = 0;
+      renderNotes(current);
+      if (autoplayOn) scheduleAutoplay();
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+    navLinks.forEach(l => l.addEventListener('click', () => goTo(parseInt(l.dataset.goto, 10))));
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { goTo(current + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { goTo(current - 1); }
+      else if (e.key === 'Home') { goTo(0); }
+      else if (e.key === 'End') { goTo(total - 1); }
+      else if (e.key.toLowerCase() === 'n') { toggleNotes(); }
+      else if (e.key.toLowerCase() === 'f') { fsBtn.click(); }
+      else if (e.key.toLowerCase() === 'p') { setAutoplay(!autoplayOn); }
+    });
+
+    // swipe support for touch devices
+    let touchStartX = null;
+    document.getElementById('deck').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+    document.getElementById('deck').addEventListener('touchend', e => {
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 60) { dx < 0 ? goTo(current + 1) : goTo(current - 1); }
+      touchStartX = null;
+    });
+
+    update();
+  </script>
+</body>
+
+</html>
