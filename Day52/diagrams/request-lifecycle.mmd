@@ -1,0 +1,86 @@
+%% ScholarForge V1 — Request Lifecycle
+%% Source: Derived from Architecture Document §5 + API.md endpoint design
+%% Shows the full lifecycle of a "Generate Draft" request from browser to DOCX export
+
+sequenceDiagram
+    autonum
+    actor User
+    participant UI as Next.js Frontend<br/>(Browser)
+    participant API as Express Backend<br/>(localhost:3001)
+    participant GenWF as GenerationWorkflow
+    participant Val as NotesValidator
+    participant PB as PromptBuilder
+    participant MC as IModelClient
+    participant Model as Qwen2.5-3B<br/>(via Ollama/llama.cpp)
+    participant OC as OutputCleaner
+    participant TE as TemplateEngine
+    participant DE as DocxExporter
+    participant FS as Local Filesystem
+
+    User->>UI: Enter structured notes,<br/>select template, click "Generate"
+    UI->>UI: Validate UI-side (basic checks)
+    UI->>API: POST /api/generate/draft<br/>{ notesDocument, voiceProfile, templateSelection }
+
+    API->>GenWF: generateDraft(notes, voice, modelClient)
+    GenWF->>Val: validate(notesDocument)
+
+    alt Notes invalid
+        Val-->>GenWF: ValidationResult { errors: [...] }
+        GenWF-->>API: Error: "Notes validation failed: Section 2 has no bullets"
+        API-->>UI: 400 Bad Request<br/>{ error: "NOTES_INVALID", details: [...] }
+        UI-->>User: Display specific validation errors inline
+    end
+
+    Val-->>GenWF: ValidationResult { valid: true }
+
+    loop For each NoteSection (section-by-section generation)
+        GenWF->>PB: build(section, voiceProfile, sectionTemplate)
+        PB-->>GenWF: Prompt string (context-budget-respecting)
+        GenWF->>MC: generate(prompt, options)
+        MC->>Model: localhost HTTP / IPC call<br/>(timeout: configured ms)
+
+        alt Model call succeeds
+            Model-->>MC: Raw text response
+            MC-->>GenWF: rawText
+        else Model fails (OOM, timeout, not running)
+            MC-->>GenWF: throws ModelClientError
+            GenWF->>GenWF: Log failure, flag section,<br/>continue to next section<br/>(partial-failure tolerance)
+        end
+
+        GenWF->>OC: clean(rawText)
+        OC-->>GenWF: cleanedText + isAcceptable flag
+
+        alt Output unacceptable (empty/degenerate)
+            GenWF->>PB: rebuild with "write at least N sentences" instruction
+            PB-->>GenWF: adjusted prompt
+            GenWF->>MC: generate(adjustedPrompt)
+            MC-->>GenWF: retryRawText
+            GenWF->>OC: clean(retryRawText)
+            OC-->>GenWF: cleanedText
+        end
+
+        GenWF->>GenWF: Assemble DraftSection<br/>{ id, sourceSectionId, heading, content }
+    end
+
+    GenWF-->>API: Draft { sections: DraftSection[] }<br/>(possibly with failedSectionIds[])
+
+    API-->>UI: 200 OK<br/>{ draft, failedSections }
+
+    opt User clicks "Apply IEEE Formatting"
+        UI->>API: POST /api/format/apply<br/>{ draft, templateSelection: "ieee_us_letter" }
+        API->>TE: apply(draft, selection)
+        TE-->>API: FormattedDocument { sections, styleSheet, references }
+        API-->>UI: 200 OK { formattedDocument }
+    end
+
+    opt User clicks "Export DOCX"
+        UI->>API: POST /api/export/docx<br/>{ formattedDocument, outputPath }
+        API->>DE: export(formattedDocument, path)
+        DE->>FS: Write .docx (via DocxRenderer + StyleMapper)
+        FS-->>DE: file path
+        DE-->>API: ExportResult { path, sizeBytes }
+        API-->>UI: 200 OK { filePath, sizeBytes }
+        UI-->>User: "Export complete — file saved to {path}"
+    end
+
+    Note over UI,FS: Throughout: AutosaveScheduler fires on every<br/>state-changing event, atomically writing<br/>the full SessionState to a .scholarforge file.

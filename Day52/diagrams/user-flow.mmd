@@ -1,0 +1,72 @@
+%% ScholarForge V1 — User Flow (Screen Flow + Navigation)
+%% Source: UI-WIREFRAMES.md, PRD user stories, Architecture §3.1 (NotesModule views)
+%% Shows the primary user journey and navigation between screens.
+
+flowchart TB
+    START([App Launch]) --> HOME{Has saved<br/>project?}
+
+    HOME -->|No| NEWPROJ["New Project<br/>(empty NotesDocument)"]
+    HOME -->|Yes| OPEN["Open Project Dialog<br/>(select .scholarforge file)"]
+    OPEN --> LOAD["SessionStore.load()<br/>deserialize + validate schema"]
+    LOAD -->|corrupt| RECOVER[Autosave recovery flow]
+    RECOVER -->|recovered| NOTES
+    RECOVER -->|unrecoverable| ERR[Show corruption error]
+    ERR --> NEWPROJ
+
+    NEWPROJ --> NOTES["Notes Editor Screen<br/>(primary workspace)"]
+
+    subgraph NOTES_SCREEN["Notes Editor Screen"]
+        NOTES_ADD[Add section]
+        NOTES_EDIT[Edit heading / bullets]
+        NOTES_SRC[Add source references]
+        NOTES_VAL["Validate<br/>(NotesValidator)"]
+        NOTES_ADD --> NOTES_VAL
+        NOTES_EDIT --> NOTES_VAL
+        NOTES_SRC --> NOTES_VAL
+    end
+
+    NOTES -->|click "Select Template"| TEMPLATE["Template Picker Screen<br/>(IEEE / APA / MLA / Chicago<br/>+ edition + page size)"]
+    TEMPLATE -->|select + confirm| NOTES
+
+    NOTES -->|click "Generate Draft"| GENWF["GenerationWorkflow<br/>(section-by-section,<br/>progress bar)"]
+    GENWF -->|partial failure| GENWARN["Show warning<br/>(which sections failed)"]
+    GENWARN --> DRAFT
+    GENWF -->|success| DRAFT["Draft View Screen<br/>(generated prose,<br/>section by section)"]
+
+    DRAFT -->|click "Run Reviewer"| REV["ReviewerEngine.review(draft)"]
+    REV --> REVPANEL["Reviewer Panel<br/>(feedback grouped by section,<br/>severity indicated)"]
+    REVPANEL -->|revise notes| NOTES
+    REVPANEL -->|accept + continue| DRAFT
+
+    DRAFT -->|click "Apply Formatting"| FMT["TemplateEngine.apply()<br/>(deterministic)"]
+    FMT --> DRAFTFMT["Draft View<br/>(formatted preview)"]
+
+    DRAFTFMT -->|click "Export DOCX"| EXP["DocxExporter.export()"]
+    EXP --> EXPSAVE["File Save Dialog<br/>(choose output path)"]
+    EXPSAVE --> EXPSUCCESS["Export Complete<br/>(file path + size shown)"]
+
+    EXPSUCCESS -->|done| END([End of workflow])
+    EXPSUCCESS -->|iterate| NOTES
+
+    subgraph AUTOSAVE["Continuous (background)"]
+        AS[("AutosaveScheduler<br/>fires on every state change<br/>→ atomic write to .scholarforge")]
+    end
+
+    NOTES -.-> AS
+    DRAFT -.-> AS
+    REVPANEL -.-> AS
+    TEMPLATE -.-> AS
+
+    classDef screen fill:#dbeafe,stroke:#1e40af
+    classDef workflow fill:#dcfce7,stroke:#166534
+    classDef decision fill:#fef3c7,stroke:#92400e
+    classDef error fill:#fee2e2,stroke:#991b1b
+    classDef autosave fill:#f3e8ff,stroke:#6b21a8,stroke-dasharray:5
+    classDef terminal fill:#f1f5f9,stroke:#475569
+
+    class NOTES,TEMPLATE,DRAFT,REVPANEL,DRAFTFMT,EXPSAVE,EXPSUCCESS screen
+    class GENWF,REV,FMT,EXP,LOAD workflow
+    class HOME,GENWARN decision
+    class ERR,RECOVER error
+    class AS,AUTOSAVE autosave
+    class START,END,NEWPROJ,OPEN terminal

@@ -1,0 +1,77 @@
+%% ScholarForge V1 — AI Pipeline (Writing Intelligence Engine)
+%% Source: Architecture Document §3.3, §7 + Master Persona §"Writing Intelligence Engine"
+%% Shows how intelligence is applied BEFORE the model (prompt composition)
+%% and AFTER the model (output cleaning), with the model as one component in the middle.
+
+flowchart LR
+    subgraph INPUT["Input"]
+        N1["NoteSection<br/>{ heading, bullets[], sourceRefs[] }"]
+        N2["VoiceProfile<br/>{ formality, sentenceLength,<br/>personPreference, hedging,<br/>exemplarSnippets[] }"]
+        N3["SectionPromptTemplate<br/>(JSON data file — Introduction,<br/>Methodology, Discussion, etc.)"]
+        N4["ModelConfig<br/>{ temperature, topP,<br/>contextWindow, timeout }"]
+    end
+
+    subgraph WIE_BEFORE["Writing Intelligence Engine — PRE-GENERATION"]
+        direction TB
+        PB1["PromptBuilder.build()"]
+        PB1 --> PB2["1. Load section template<br/>(from data file, not hardcoded)"]
+        PB2 --> PB3["2. Inject note content<br/>(structured bullets → prompt context)"]
+        PB3 --> PB4["3. Inject VoiceProfile<br/>(style instructions + exemplars<br/>at prompt START, not buried)"]
+        PB4 --> PB5["4. Apply academic rules<br/>(tone, structure, citation-awareness)"]
+        PB5 --> PB6["5. Enforce context budget<br/>(truncate to fit 4GB VRAM limit)"]
+        PB6 --> PB7["Composed Prompt<br/>(instruction-dense, small context)"]
+    end
+
+    subgraph MODEL["Model Layer"]
+        MC["IModelClient.generate()"]
+        SEL{Backend selector<br/>(config-driven)}
+        OLLAMA["OllamaClient<br/>(localhost:11434)"]
+        LLAMACPP["LlamaCppClient<br/>(local process)"]
+        QWEN["Qwen2.5-3B Instruct<br/>(quantized, not fine-tuned)"]
+    end
+
+    subgraph WIE_AFTER["Writing Intelligence Engine — POST-GENERATION"]
+        direction TB
+        OC1["OutputCleaner.clean()"]
+        OC1 --> OC2["1. Strip markdown artifacts<br/>(stray **, ##, etc.)"]
+        OC2 --> OC3["2. Strip boilerplate/refusals<br/>(repeated preambles)"]
+        OC3 --> OC4["3. Repair truncation boundary<br/>(drop incomplete trailing sentence)"]
+        OC4 --> OC5["4. Normalize whitespace"]
+        OC5 --> OC6["5. Validate non-empty + min-length<br/>(triggers retry if unacceptable)"]
+        OC6 --> OC7["Cleaned Prose<br/>(ready for Formatting Layer)"]
+    end
+
+    subgraph OUTPUT["Output"]
+        DRAFT["DraftSection<br/>{ id, sourceSectionId,<br/>heading, content }"]
+    end
+
+    N1 --> PB1
+    N2 --> PB1
+    N3 --> PB1
+    N4 --> MC
+
+    PB7 --> MC
+    MC --> SEL
+    SEL -->|backend: ollama| OLLAMA
+    SEL -->|backend: llamacpp| LLAMACPP
+    OLLAMA --> QWEN
+    LLAMACPP --> QWEN
+    QWEN -->|raw text response| MC
+    MC -->|rawText| OC1
+
+    OC7 --> DRAFT
+
+    OC6 -.->|unacceptable| RETRY["Retry once<br/>with adjusted prompt"]
+    RETRY -.-> PB1
+
+    classDef input fill:#dbeafe,stroke:#1e40af
+    classDef wie fill:#dcfce7,stroke:#166534
+    classDef model fill:#fef3c7,stroke:#92400e
+    classDef output fill:#f1f5f9,stroke:#475569
+    classDef retry fill:#fee2e2,stroke:#991b1b,stroke-dasharray:5
+
+    class N1,N2,N3,N4 input
+    class PB1,PB2,PB3,PB4,PB5,PB6,PB7,OC1,OC2,OC3,OC4,OC5,OC6,OC7 wie
+    class MC,SEL,OLLAMA,LLAMACPP,QWEN model
+    class DRAFT output
+    class RETRY retry

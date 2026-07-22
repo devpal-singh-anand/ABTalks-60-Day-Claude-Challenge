@@ -1,0 +1,57 @@
+%% ScholarForge V1 — Data Flow
+%% Source: Software Architecture Document §5
+%% Shows how data moves through the pipeline: Notes → Draft → FormattedDocument → DOCX
+
+flowchart TB
+    START([User enters structured notes]) --> NOTES["NotesDocument<br/>{ sections: NoteSection[] }"]
+    NOTES --> VAL["NotesValidator.validate()<br/>checks structure completeness"]
+    VAL -->|invalid| REJECT[Reject with specific issues]
+    VAL -->|valid| PB["PromptBuilder.build()<br/>injects VoiceProfile + section template"]
+    PB --> PROMPT["Per-section Prompt<br/>(context-budget-respecting)"]
+    PROMPT --> MC["IModelClient.generate()<br/>Ollama or llama.cpp"]
+    MC -->|localhost HTTP / IPC| MODEL["Qwen2.5-3B<br/>(local, 4GB VRAM)"]
+    MODEL --> RAW["Raw model output<br/>(may contain artifacts)"]
+    RAW --> OC["OutputCleaner.clean()<br/>strip artifacts, repair truncation,<br/>validate non-empty/min-length"]
+    OC -->|unacceptable| RETRY[Retry once with adjusted prompt]
+    RETRY --> PB
+    OC -->|acceptable| DRAFT["DraftSection<br/>{ id, sourceSectionId, heading, content }"]
+    DRAFT --> LOOP{More sections?}
+    LOOP -->|yes| PB
+    LOOP -->|no| FULLDRAFT["Draft<br/>{ sections: DraftSection[] }"]
+
+    FULLDRAFT --> BRANCH{User action?}
+    BRANCH -->|Run Reviewer| RE["ReviewerEngine.review(draft)<br/>critique-framed prompts per section"]
+    RE --> FEEDBACK["ReviewerFeedback[]<br/>{ sectionId, issue, suggestion, severity }"]
+    FEEDBACK --> PERSIST
+
+    BRANCH -->|Apply Template| TE["TemplateEngine.apply(draft, selection)"]
+    TE --> LR["LayoutResolver<br/>margins, headings, spacing<br/>(from TemplateDefinition JSON)"]
+    TE --> CF["CitationFormatter<br/>numeric or author-date strategy<br/>(from TemplateDefinition JSON)"]
+    LR --> FORMATTED["FormattedDocument<br/>{ sections, styleSheet, references }"]
+    CF --> FORMATTED
+    FORMATTED --> PERSIST
+
+    BRANCH -->|Export DOCX| EXP["DocxExporter.export(formattedDocument, path)"]
+    EXP --> DR["DocxRenderer<br/>structure → OOXML mapping"]
+    DR --> SM["StyleMapper<br/>StyleSheet → DOCX styles"]
+    SM --> DOCXFILE[(".docx file on disk")]
+    EXP --> DOCXFILE
+
+    PERSIST["SessionStore.save()<br/>atomic write to .scholarforge file"]
+    PERSIST --> SESSIONFILE[(".scholarforge project file<br/>{ schemaVersion, notes, draft,<br/>templateSelection, voiceProfile,<br/>reviewerFeedback, metadata }")]
+
+    AS[("AutosaveScheduler<br/>debounced — fires on every<br/>state-changing event")] -.->|triggers| PERSIST
+
+    classDef data fill:#dbeafe,stroke:#1e40af
+    classDef process fill:#dcfce7,stroke:#166534
+    classDef decision fill:#fef3c7,stroke:#92400e
+    classDef ai fill:#fce7f3,stroke:#9f1239
+    classDef file fill:#f1f5f9,stroke:#475569
+    classDef reject fill:#fee2e2,stroke:#991b1b
+
+    class NOTES,DRAFT,DRAFTSECTION,FORMATTED,FEEDBACK,PROMPT,RAW data
+    class VAL,PB,OC,TE,LR,CF,EXP,DR,SM,RE,SS process
+    class BRANCH,LOOP decision
+    class MC,MODEL ai
+    class DOCXFILE,SESSIONFILE file
+    class REJECT,RETRY reject

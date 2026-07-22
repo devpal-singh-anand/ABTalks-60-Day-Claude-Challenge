@@ -1,0 +1,126 @@
+%% ScholarForge V1 — Component Diagram
+%% Source: Software Architecture Document §2, §3
+%% Layered offline-first monolith with hard internal module boundaries (Ports & Adapters)
+
+graph TB
+    subgraph CLIENT["Client (Browser)"]
+        UI["Next.js Frontend<br/>(React + TypeScript + TailwindCSS + shadcn/ui)"]
+    end
+
+    subgraph LOCAL_HOST["Localhost (User's Machine)"]
+        subgraph EXPRESS["Express Backend — Port 3001"]
+            API["API Routes<br/>(REST endpoints)"]
+            subgraph APP_LAYER["Application Layer"]
+                GEN_WF["GenerationWorkflow"]
+                REV_WF["ReviewWorkflow"]
+                EXP_WF["ExportWorkflow"]
+                SES_WF["SessionWorkflow"]
+            end
+            subgraph AI_LAYER["AI Layer"]
+                PB["PromptBuilder"]
+                MC["IModelClient<br/>(OllamaClient / LlamaCppClient)"]
+                OC["OutputCleaner"]
+                VP["VoiceProfile"]
+                RE["ReviewerEngine"]
+            end
+            subgraph FMT_LAYER["Formatting Layer (Deterministic)"]
+                TE["TemplateEngine"]
+                LR["LayoutResolver"]
+                CF["CitationFormatter"]
+                TF["TemplateDefinition JSON<br/>(IEEE, APA, MLA, Chicago)"]
+            end
+            subgraph PERS_LAYER["Persistence Layer"]
+                SS["SessionStore"]
+                AS["AutosaveScheduler"]
+            end
+            subgraph EXP_LAYER["Export Layer"]
+                DE["DocxExporter"]
+                DR["DocxRenderer"]
+                SM["StyleMapper"]
+            end
+            subgraph CFG_LAYER["Configuration Layer"]
+                CS["ConfigurationService"]
+                CFG["model.config.json<br/>voice_profile.default.json<br/>reviewer.config.json"]
+            end
+            SHARED["shared/<br/>(Data Models + I* Interfaces)"]
+        end
+        subgraph AI_RUNTIME["Local AI Runtime"]
+            OLLAMA["Ollama Daemon<br/>(localhost:11434)"]
+            LLAMACPP["llama.cpp<br/>(local process)"]
+            QWEN["Qwen2.5-3B Instruct<br/>(quantized, 4GB VRAM)"]
+        end
+        subgraph FS["Local Filesystem"]
+            PROJ[".scholarforge project files<br/>(session state)"]
+            DOCX[".docx exports"]
+            TEMPLATES["formatting/templates/*.json"]
+        end
+    end
+
+    subgraph CLOUD["Cloud (Deployment Only)"]
+        VERCEL["Vercel<br/>(static + SSR hosting<br/>for Next.js bundle)"]
+    end
+
+    UI -.deployed to.-> VERCEL
+    UI -->|HTTPS fetch to localhost| API
+    UI -->|localhost:3000 dev mode| API
+
+    API --> GEN_WF
+    API --> REV_WF
+    API --> EXP_WF
+    API --> SES_WF
+
+    GEN_WF --> PB
+    GEN_WF --> MC
+    GEN_WF --> OC
+    PB --> VP
+    REV_WF --> RE
+    RE --> MC
+    RE --> OC
+
+    GEN_WF -->|Draft| TE
+    TE --> LR
+    TE --> CF
+    TE --> TF
+    CF --> TF
+
+    EXP_WF --> DE
+    DE --> DR
+    DE --> SM
+    DR -->|FormattedDocument| DOCX
+
+    SES_WF --> SS
+    AS --> SS
+    SS -->|atomic write| PROJ
+    SS -->|load| PROJ
+
+    CS --> CFG
+    CS -.->|read by all layers| SHARED
+
+    MC -->|localhost HTTP| OLLAMA
+    MC -->|local process| LLAMACPP
+    OLLAMA --> QWEN
+    LLAMACPP --> QWEN
+
+    TE --> TEMPLATES
+
+    classDef client fill:#dbeafe,stroke:#1e40af,stroke-width:2px
+    classDef express fill:#dcfce7,stroke:#166534,stroke-width:2px
+    classDef ai fill:#fef3c7,stroke:#92400e,stroke-width:2px
+    classDef fmt fill:#fce7f3,stroke:#9f1239,stroke-width:2px
+    classDef pers fill:#e0e7ff,stroke:#3730a3,stroke-width:2px
+    classDef exp fill:#fed7aa,stroke:#9a3412,stroke-width:2px
+    classDef cfg fill:#f3e8ff,stroke:#6b21a8,stroke-width:2px
+    classDef runtime fill:#fee2e2,stroke:#991b1b,stroke-width:2px
+    classDef fs fill:#f1f5f9,stroke:#475569,stroke-width:1px
+    classDef cloud fill:#f8fafc,stroke:#64748b,stroke-width:1px,stroke-dasharray:5
+
+    class UI,VERCEL client
+    class API,APP_LAYER,GEN_WF,REV_WF,EXP_WF,SES_WF,SHARED express
+    class AI_LAYER,PB,MC,OC,VP,RE ai
+    class FMT_LAYER,TE,LR,CF,TF fmt
+    class PERS_LAYER,SS,AS pers
+    class EXP_LAYER,DE,DR,SM exp
+    class CFG_LAYER,CS,CFG cfg
+    class AI_RUNTIME,OLLAMA,LLAMACPP,QWEN runtime
+    class FS,PROJ,DOCX,TEMPLATES fs
+    class CLOUD cloud
